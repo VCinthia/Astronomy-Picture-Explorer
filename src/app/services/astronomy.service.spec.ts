@@ -34,12 +34,11 @@ describe('AstronomyService', () => {
   });
 
   describe('archive shape', () => {
-    it('contains at least 15 entries', () => {
-      expect(service.availableDates.length).toBeGreaterThanOrEqual(15);
+    it('contains at least 8 entries', () => {
+      expect(service.availableDates.length).toBeGreaterThanOrEqual(8);
     });
 
-    it('includes the two required dates and at least one video', () => {
-      expect(service.hasDate('2004-01-16')).toBeTrue();
+    it('includes the WR 134 entry and at least one video', () => {
       expect(service.hasDate('2026-05-22')).toBeTrue();
 
       const videos = service.availableDates

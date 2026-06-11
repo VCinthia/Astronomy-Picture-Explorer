@@ -53,6 +53,24 @@ describe('extractPalette', () => {
     expect(palette[0]).toEqual({ r: 241, g: 17, b: 17 });
   });
 
+  it('skips a near-black background so the actual colors win', () => {
+    const sky = { r: 6, g: 6, b: 10 };
+    const nebula = { r: 210, g: 60, b: 90 };
+    const image = imageDataFrom([sky, sky, sky, sky, sky, nebula, nebula]);
+
+    const palette = extractPalette(image, 3);
+
+    expect(palette[0]).toEqual(nebula);
+    expect(palette).not.toContain(sky);
+  });
+
+  it('falls back to all pixels for a near-monochrome dark image', () => {
+    const sky = { r: 6, g: 6, b: 10 };
+    const image = imageDataFrom([sky, sky, sky]);
+
+    expect(extractPalette(image, 3)).toEqual([sky]);
+  });
+
   it('ignores transparent pixels', () => {
     const data = new Uint8ClampedArray([
       0, 255, 0, 0, // transparent green -> ignored

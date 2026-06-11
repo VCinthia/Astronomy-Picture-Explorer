@@ -43,3 +43,6 @@ Thumbs.db
 
 # Planning docs - contain MinData interview context, not for the public repo
 /docs/
+
+# Private implementation/defense notes (interview prep, not for the public repo)
+/IMPLEMENTATION_NOTES.md

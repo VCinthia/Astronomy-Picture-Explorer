@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AstronomyService } from './services/astronomy.service';
+import { AUTHOR_NAME, AUTHOR_SITE_URL, SITE_CREATED } from './config/site.config';
 import { formatApodDate } from './utils/format-date';
 
 @Component({
@@ -13,6 +14,10 @@ import { formatApodDate } from './utils/format-date';
 })
 export class AppComponent {
   private readonly astronomy = inject(AstronomyService);
+
+  readonly authorName = AUTHOR_NAME;
+  readonly authorSiteUrl = AUTHOR_SITE_URL;
+  readonly siteCreated = SITE_CREATED;
 
   readonly selectedDate = this.astronomy.selectedDate;
   readonly formattedDate = computed(() => formatApodDate(this.selectedDate()));

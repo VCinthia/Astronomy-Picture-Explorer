@@ -1,3 +1,5 @@
+import { IMAGE_PROXY_ORIGIN } from '../config/site.config';
+
 /**
  * Rewrite an image URL so it can be read pixel-by-pixel from a `<canvas>`.
  *
@@ -17,5 +19,5 @@ export function toCorsSafeImageUrl(url: string): string {
   const withoutScheme = url.replace(/^https?:\/\//i, '');
   // `ssl:` tells the proxy to fetch the upstream over HTTPS; `w=120` downscales
   // the sample (a tiny image is plenty for a dominant-color palette).
-  return `https://images.weserv.nl/?url=ssl:${encodeURIComponent(withoutScheme)}&w=120`;
+  return `${IMAGE_PROXY_ORIGIN}/?url=ssl:${encodeURIComponent(withoutScheme)}&w=120`;
 }

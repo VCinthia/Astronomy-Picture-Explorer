@@ -71,4 +71,30 @@
   <main id="main-content" class="mx-auto max-w-content px-page py-10 lg:py-14">
     <router-outlet />
   </main>
+
+  <footer class="mt-12 border-t border-space-border">
+    <div
+      class="mx-auto flex max-w-content flex-col items-start gap-4 px-page py-8 text-caption text-content-secondary sm:flex-row sm:items-center sm:justify-between"
+    >
+      <p>
+        Created {{ siteCreated }} · Built by {{ authorName }} · Imagery from
+        <a
+          href="https://apod.nasa.gov"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline decoration-space-border underline-offset-2 transition hover:text-content-primary"
+        >
+          NASA APOD
+        </a>
+      </p>
+      <a
+        [href]="authorSiteUrl"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="inline-flex items-center gap-1.5 rounded-button border border-space-border bg-space-surface-hi px-4 py-2 text-meta font-medium text-content-primary transition hover:border-accent hover:text-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+      >
+        Visit my portfolio ↗
+      </a>
+    </div>
+  </footer>
 </div>
