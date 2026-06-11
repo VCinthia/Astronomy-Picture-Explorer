@@ -1,0 +1,93 @@
+<article class="flex flex-col">
+  <!-- Media -->
+  <div class="relative overflow-hidden rounded-card border border-space-border">
+    @if (isVideo()) {
+      <div class="relative h-hero-sm w-full bg-space-video lg:h-hero">
+        @if (entry().thumbnail_url) {
+          <img
+            class="absolute inset-0 size-full object-cover opacity-80"
+            [src]="entry().thumbnail_url"
+            [alt]="entry().title"
+          />
+        }
+        <span
+          class="absolute left-4 top-4 rounded-chip bg-accent/20 px-2.5 py-1 text-badge font-semibold uppercase tracking-widest text-accent"
+        >
+          Video
+        </span>
+        <div class="absolute inset-0 flex flex-col items-center justify-center gap-4">
+          <a
+            [href]="entry().url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="flex size-18 items-center justify-center rounded-full bg-accent/15 text-accent transition hover:bg-accent/25 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            [attr.aria-label]="'Play video: ' + entry().title"
+          >
+            <svg class="size-7" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path d="M8 5v14l11-7z" />
+            </svg>
+          </a>
+          <a
+            [href]="entry().url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="rounded-button bg-accent/12 px-5 py-3 text-meta font-medium text-accent transition hover:bg-accent/20 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Watch video ↗
+          </a>
+        </div>
+      </div>
+    } @else {
+      <a
+        [href]="entry().hdurl || entry().url"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="block focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        [attr.aria-label]="'Open high-resolution image: ' + entry().title"
+      >
+        <img
+          class="h-hero-sm w-full object-cover lg:h-hero"
+          [src]="entry().url"
+          [alt]="entry().explanation"
+        />
+      </a>
+    }
+    <div
+      class="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-b from-transparent to-space-base"
+    ></div>
+  </div>
+
+  <!-- Dominant colors -->
+  <div class="mt-6">
+    @if (isVideo()) {
+      <div class="flex items-center gap-4">
+        <p class="text-micro font-medium uppercase tracking-widest text-content-secondary">
+          Dominant Colors
+        </p>
+        <p class="text-caption text-content-tertiary">Not available for video content</p>
+      </div>
+    } @else {
+      <app-color-palette [imageUrl]="entry().url" />
+    }
+  </div>
+
+  <!-- Meta -->
+  <div class="mt-8 max-w-xl">
+    <span
+      class="inline-block rounded-chip bg-space-surface-hi px-2.5 py-1 text-caption text-content-secondary"
+    >
+      {{ formattedDate() }}
+    </span>
+    <h1 class="mt-5 text-title font-bold text-content-primary lg:text-display">
+      {{ entry().title }}
+    </h1>
+    <p class="mt-4 line-clamp-4 text-body text-content-secondary lg:line-clamp-none">
+      {{ entry().explanation }}
+    </p>
+    @if (entry().copyright) {
+      <p class="mt-5 text-caption text-content-tertiary">
+        Image Credit &amp; Copyright: {{ entry().copyright }}
+      </p>
+    }
+  </div>
+</article>

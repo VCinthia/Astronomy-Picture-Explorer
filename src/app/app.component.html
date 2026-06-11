@@ -1,7 +1,68 @@
-<main class="min-h-screen bg-space-base px-page py-page text-content-primary">
-  <h1 class="text-display font-semibold">Astronomy Picture Explorer</h1>
-  <p class="mt-2 text-body text-content-secondary">
-    Scaffold ready. Home and Explorer views arrive in the next wave.
-  </p>
-  <router-outlet />
-</main>
+<div class="min-h-screen bg-space-base">
+  <header
+    class="sticky top-0 z-10 border-b border-space-border bg-space-base/90 backdrop-blur"
+  >
+    <div
+      class="mx-auto flex h-14 max-w-content items-center justify-between gap-4 px-page lg:h-16"
+    >
+      <a
+        routerLink="/"
+        class="flex items-center gap-2 text-logo font-semibold text-content-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
+      >
+        <span aria-hidden="true" class="text-accent">✦</span>
+        Astronomy Explorer
+      </a>
+
+      <div class="flex items-center gap-2 sm:gap-3">
+        <nav class="hidden items-center gap-1 text-meta sm:flex" aria-label="Primary">
+          <a
+            routerLink="/"
+            routerLinkActive="text-content-primary"
+            [routerLinkActiveOptions]="{ exact: true }"
+            class="rounded-button px-3 py-1.5 text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Home
+          </a>
+          <a
+            routerLink="/explorer"
+            routerLinkActive="text-content-primary"
+            class="rounded-button px-3 py-1.5 text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Explore
+          </a>
+        </nav>
+
+        <div class="flex items-center gap-2" role="group" aria-label="Step through dates">
+          <button
+            type="button"
+            (click)="prev()"
+            [disabled]="!canPrev()"
+            aria-label="Previous date"
+            class="flex size-9 items-center justify-center rounded-button bg-space-surface-hi text-nav text-content-secondary transition hover:text-content-primary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            <span aria-hidden="true">←</span>
+          </button>
+          <span
+            class="min-w-24 text-center text-meta font-medium text-content-primary"
+            aria-live="polite"
+          >
+            {{ formattedDate() }}
+          </span>
+          <button
+            type="button"
+            (click)="next()"
+            [disabled]="!canNext()"
+            aria-label="Next date"
+            class="flex size-9 items-center justify-center rounded-button bg-space-surface-hi text-nav text-content-secondary transition hover:text-content-primary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            <span aria-hidden="true">→</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <main class="mx-auto max-w-content px-page py-10 lg:py-14">
+    <router-outlet />
+  </main>
+</div>

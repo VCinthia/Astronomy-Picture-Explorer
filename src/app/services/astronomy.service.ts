@@ -20,8 +20,11 @@ export class AstronomyService {
   /** Most recent date in the archive; used as the default when today is absent. */
   readonly latestDate = this.availableDates[this.availableDates.length - 1];
 
+  /** The "home" date: today's entry if present, otherwise the latest. */
+  readonly defaultDate = this.resolveInitialDate();
+
   /** Currently selected archive date. Defaults to today, or the latest entry. */
-  readonly selectedDate = signal<string>(this.resolveInitialDate());
+  readonly selectedDate = signal<string>(this.defaultDate);
 
   /** Entry for the selected date, or `undefined` when the date has no entry. */
   readonly currentPicture = computed<ApodEntry | undefined>(() =>

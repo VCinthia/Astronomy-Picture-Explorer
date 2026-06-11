@@ -3,57 +3,68 @@
 /**
  * Named design tokens (Tailwind CSS v4, CSS-first `@theme`).
  *
- * Each `--color-*` / `--text-*` / `--spacing-*` / `--radius-*` / `--font-*`
- * entry generates both a `:root` CSS custom property and the matching utility
- * (`bg-space-base`, `text-display`, `px-page`, `rounded-card`, ...), so tokens
- * stay the single source of truth and arbitrary classes (`bg-[#...]`) are never
- * needed. Dark "space" palette derived from ADR-0001; values to be reconciled
- * against the Figma design system in the UI waves (P1-W2).
+ * Each `--color-*` / `--text-*` / `--spacing-*` / `--radius-*` / `--font-*` /
+ * `--container-*` entry generates both a `:root` CSS custom property and the
+ * matching utility (`bg-space-base`, `text-display`, `px-page`, `rounded-card`,
+ * `max-w-content`, ...), so tokens stay the single source of truth and arbitrary
+ * classes (`bg-[#...]`, `p-[...]`) are never needed.
  *
- * Tailwind v4 moves theme config from `tailwind.config.ts` into this block; see
- * ADR-0001 for the documented adjustment (the token strategy is unchanged).
+ * Values reconciled 1:1 against the Figma design system
+ * (file `01_Astronomy_Picture_Explorer`, frames Desktop/Mobile Home + Video) in
+ * P1-W2. Tailwind v4 moves theme config from `tailwind.config.ts` into this
+ * block; see ADR-0001 for the documented adjustment.
  */
 @theme {
   /* Background / surfaces */
   --color-space-base: #08080f;
-  --color-space-surface: #12121c;
-  --color-space-surface-hi: #1e1e2e;
-  --color-space-border: #2a2a3c;
+  --color-space-surface: #11111c;
+  --color-space-surface-hi: #191927;
+  --color-space-video: #0a0a14;
+  --color-space-border: #1e1e30;
 
   /* Text */
-  --color-content-primary: #f4f4f8;
-  --color-content-secondary: #b4b4c4;
-  --color-content-tertiary: #8484a0;
+  --color-content-primary: #f0f0f5;
+  --color-content-secondary: #8888aa;
+  --color-content-tertiary: #555577;
 
-  /* Accent */
-  --color-accent: #7c6cf0;
+  /* Accent (used solid and via opacity modifiers, e.g. bg-accent/15) */
+  --color-accent: #4d78ff;
 
-  /* Typography: Inter, display/title/body/caption = 40/26/15/11px */
+  /* Typography: Inter */
   --font-sans: 'Inter', system-ui, sans-serif;
 
-  --text-display: 2.5rem;
-  --text-display--line-height: 1.1;
+  --text-display: 2.5rem; /* 40px */
+  --text-display--line-height: 3.125rem; /* 50px */
   --text-display--letter-spacing: -0.02em;
 
-  --text-title: 1.625rem;
-  --text-title--line-height: 1.25;
+  --text-title: 1.625rem; /* 26px, mobile headline */
+  --text-title--line-height: 2rem;
   --text-title--letter-spacing: -0.01em;
 
-  --text-body: 0.9375rem;
-  --text-body--line-height: 1.6;
+  --text-logo: 1.0625rem; /* 17px */
+  --text-nav: 0.875rem; /* 14px */
 
-  --text-caption: 0.6875rem;
-  --text-caption--line-height: 1.4;
-  --text-caption--letter-spacing: 0.02em;
+  --text-body: 0.9375rem; /* 15px */
+  --text-body--line-height: 1.625rem; /* 26px */
+
+  --text-meta: 0.8125rem; /* 13px */
+  --text-caption: 0.6875rem; /* 11px */
+  --text-badge: 0.625rem; /* 10px */
+  --text-micro: 0.5625rem; /* 9px */
 
   /* Spacing */
-  --spacing-page: 1.5rem;
-  --spacing-card: 1.25rem;
+  --spacing-page: 1.25rem; /* 20px gutter (desktop margins emerge from max-w) */
+  --spacing-hero: 31.25rem; /* 500px desktop media height */
+  --spacing-hero-sm: 15rem; /* 240px mobile media height */
+
+  /* Content width (desktop content is 1200px, centered -> 120px margins) */
+  --container-content: 75rem; /* 1200px */
 
   /* Radii */
-  --radius-card: 1rem;
-  --radius-chip: 0.75rem;
-  --radius-swatch: 0.5rem;
+  --radius-card: 0.625rem; /* 10px media */
+  --radius-button: 0.5rem; /* 8px nav / cta buttons */
+  --radius-swatch: 0.375rem; /* 6px palette swatch */
+  --radius-chip: 0.25rem; /* 4px date chip */
 }
 
 html,
