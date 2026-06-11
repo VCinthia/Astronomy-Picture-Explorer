@@ -25,7 +25,8 @@
   /* Text */
   --color-content-primary: #f0f0f5;
   --color-content-secondary: #8888aa;
-  --color-content-tertiary: #555577;
+  /* Lifted from Figma's #555577 (2.8:1) to meet WCAG AA 4.5:1 on space.base. */
+  --color-content-tertiary: #7c7ca4;
 
   /* Accent (used solid and via opacity modifiers, e.g. bg-accent/15) */
   --color-accent: #4d78ff;

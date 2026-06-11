@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
 
 import { type Rgb, extractPalette, rgbToHex } from '../../utils/palette/extract-palette';
+import { toCorsSafeImageUrl } from '../../utils/cors-proxy';
 
 /** Brand-token fallback palette used when pixels cannot be read (ADR-0002). */
 const FALLBACK_PALETTE: Rgb[] = [
@@ -110,7 +111,8 @@ export class ColorPaletteComponent {
         }
       };
       image.onerror = () => reject(new Error('Image failed to load'));
-      image.src = url;
+      // Sample through a CORS-friendly proxy so getImageData is not blocked.
+      image.src = toCorsSafeImageUrl(url);
     });
   }
 }

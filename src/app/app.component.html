@@ -1,4 +1,10 @@
 <div class="min-h-screen bg-space-base">
+  <a
+    href="#main-content"
+    class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-20 focus:rounded-button focus:bg-space-surface-hi focus:px-4 focus:py-2 focus:text-meta focus:text-content-primary focus:outline-2 focus:outline-accent"
+  >
+    Skip to content
+  </a>
   <header
     class="sticky top-0 z-10 border-b border-space-border bg-space-base/90 backdrop-blur"
   >
@@ -62,7 +68,7 @@
     </div>
   </header>
 
-  <main class="mx-auto max-w-content px-page py-10 lg:py-14">
+  <main id="main-content" class="mx-auto max-w-content px-page py-10 lg:py-14">
     <router-outlet />
   </main>
 </div>

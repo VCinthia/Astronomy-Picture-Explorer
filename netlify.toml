@@ -1,0 +1,17 @@
+# Netlify deploy configuration for Astronomy Picture Explorer (P1).
+# Connect the repo in Netlify (or `netlify deploy`) and these settings apply.
+
+[build]
+  command = "npm run build"
+  # Angular's application builder emits the browser bundle under /browser.
+  publish = "dist/astronomy-picture-explorer/browser"
+
+[build.environment]
+  NODE_VERSION = "20"
+
+# SPA fallback: deep links (e.g. /explorer) must serve index.html so the
+# Angular router can resolve the route client-side.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
