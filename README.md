@@ -7,6 +7,8 @@ browser.
 
 🔭 **Live demo:** https://astronomy-picture-explorer.netlify.app/
 
+🎨 **Design:** [Figma file](https://www.figma.com/design/miqqmNJAcF0Mbe1WizAJIu/01_Astronomy_Picture_Explorer?node-id=0-1&t=N9ZRRaB7gVw4pvpS-1)
+
 ![Astronomy Picture Explorer — home view](screenshots/home.png)
 
 ---
@@ -28,13 +30,13 @@ browser.
 
 A portfolio piece built around a real, recognizable data source. The goal is a
 small but production-quality front end: a clean component architecture, a design
-implemented faithfully from Figma, in-browser image processing, and accessibility
+implemented faithfully from [Figma](https://www.figma.com/design/miqqmNJAcF0Mbe1WizAJIu/01_Astronomy_Picture_Explorer?node-id=0-1&t=N9ZRRaB7gVw4pvpS-1), in-browser image processing, and accessibility
 treated as a first-class concern rather than an afterthought.
 
 ## Tech stack
 
 - **Angular 19** — standalone components and **Signals** for state (no NgModules).
-- **Tailwind CSS v4** — design implemented from Figma using named design tokens.
+- **Tailwind CSS v4** — design implemented from [Figma](https://www.figma.com/design/miqqmNJAcF0Mbe1WizAJIu/01_Astronomy_Picture_Explorer?node-id=0-1&t=N9ZRRaB7gVw4pvpS-1) using named design tokens.
 - **Canvas API** — dominant-color extraction performed entirely client-side, with
   no third-party color libraries.
 - **TypeScript**, unit tests with **Karma + Jasmine**.
