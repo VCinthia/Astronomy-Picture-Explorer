@@ -1,0 +1,65 @@
+@import 'tailwindcss';
+
+/**
+ * Named design tokens (Tailwind CSS v4, CSS-first `@theme`).
+ *
+ * Each `--color-*` / `--text-*` / `--spacing-*` / `--radius-*` / `--font-*`
+ * entry generates both a `:root` CSS custom property and the matching utility
+ * (`bg-space-base`, `text-display`, `px-page`, `rounded-card`, ...), so tokens
+ * stay the single source of truth and arbitrary classes (`bg-[#...]`) are never
+ * needed. Dark "space" palette derived from ADR-0001; values to be reconciled
+ * against the Figma design system in the UI waves (P1-W2).
+ *
+ * Tailwind v4 moves theme config from `tailwind.config.ts` into this block; see
+ * ADR-0001 for the documented adjustment (the token strategy is unchanged).
+ */
+@theme {
+  /* Background / surfaces */
+  --color-space-base: #08080f;
+  --color-space-surface: #12121c;
+  --color-space-surface-hi: #1e1e2e;
+  --color-space-border: #2a2a3c;
+
+  /* Text */
+  --color-content-primary: #f4f4f8;
+  --color-content-secondary: #b4b4c4;
+  --color-content-tertiary: #8484a0;
+
+  /* Accent */
+  --color-accent: #7c6cf0;
+
+  /* Typography: Inter, display/title/body/caption = 40/26/15/11px */
+  --font-sans: 'Inter', system-ui, sans-serif;
+
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.02em;
+
+  --text-title: 1.625rem;
+  --text-title--line-height: 1.25;
+  --text-title--letter-spacing: -0.01em;
+
+  --text-body: 0.9375rem;
+  --text-body--line-height: 1.6;
+
+  --text-caption: 0.6875rem;
+  --text-caption--line-height: 1.4;
+  --text-caption--letter-spacing: 0.02em;
+
+  /* Spacing */
+  --spacing-page: 1.5rem;
+  --spacing-card: 1.25rem;
+
+  /* Radii */
+  --radius-card: 1rem;
+  --radius-chip: 0.75rem;
+  --radius-swatch: 0.5rem;
+}
+
+html,
+body {
+  min-height: 100%;
+  background-color: var(--color-space-base);
+  color: var(--color-content-primary);
+  font-family: var(--font-sans);
+}
