@@ -36,6 +36,18 @@ describe('AppComponent', () => {
     expect(compiled.querySelector('router-outlet')).not.toBeNull();
   });
 
+  it('mounts mobile navigation and reserves its height only below md', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const layout = compiled.firstElementChild;
+
+    expect(compiled.querySelector('app-bottom-nav')).not.toBeNull();
+    expect(compiled.querySelector('app-bottom-nav nav')?.classList).toContain('md:hidden');
+    expect(layout?.classList).toContain('pb-14');
+    expect(layout?.classList).toContain('md:pb-0');
+  });
+
   it('shows the selected date in the header stepper', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
@@ -45,6 +57,20 @@ describe('AppComponent', () => {
     expect(compiled.textContent).toMatch(/[A-Z][a-z]{2} \d{2}, \d{4}/);
     expect(compiled.querySelector('button[aria-label="Previous date"]')).not.toBeNull();
     expect(compiled.querySelector('button[aria-label="Next date"]')).not.toBeNull();
+  });
+
+  it('uses SVGs instead of Unicode arrows for controls and external links', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const compiled = fixture.nativeElement as HTMLElement;
+    const previousButton = compiled.querySelector('button[aria-label="Previous date"]');
+    const nextButton = compiled.querySelector('button[aria-label="Next date"]');
+    const portfolioLink = compiled.querySelector(`a[href] svg path[d="M7 17 17 7"]`);
+
+    expect(previousButton?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(nextButton?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+    expect(portfolioLink).not.toBeNull();
+    expect(compiled.textContent).not.toMatch(/[←→↗]/);
   });
 
   it('renders the desktop Home, Explore and Favorites destinations with visible focus', () => {

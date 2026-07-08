@@ -132,6 +132,16 @@ describe('PictureCardComponent', () => {
       expect(el.querySelector('iframe')).toBeNull();
     });
 
+    it('uses an SVG external-link marker instead of a Unicode arrow', () => {
+      const el = renderWith(videoEntry);
+      const watchLink = Array.from(el.querySelectorAll('a')).find((link) =>
+        link.textContent?.includes('Watch video')
+      );
+
+      expect(watchLink?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
+      expect(watchLink?.textContent).not.toContain('↗');
+    });
+
     it('does not render the color palette for video', () => {
       const el = renderWith(videoEntry);
 
