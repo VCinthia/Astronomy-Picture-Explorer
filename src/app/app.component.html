@@ -20,21 +20,42 @@
       </a>
 
       <div class="flex items-center gap-2 sm:gap-3">
-        <nav class="hidden items-center gap-1 text-meta sm:flex" aria-label="Primary">
+        <nav class="hidden items-center gap-1 text-meta md:flex" aria-label="Primary">
           <a
             routerLink="/"
-            routerLinkActive="text-content-primary"
+            #homeActive="routerLinkActive"
+            routerLinkActive=""
+            ariaCurrentWhenActive="page"
             [routerLinkActiveOptions]="{ exact: true }"
-            class="rounded-button px-3 py-1.5 text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            [class.text-accent]="homeActive.isActive"
+            [class.text-content-secondary]="!homeActive.isActive"
+            class="rounded-button px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Home
           </a>
           <a
             routerLink="/explorer"
-            routerLinkActive="text-content-primary"
-            class="rounded-button px-3 py-1.5 text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            #exploreActive="routerLinkActive"
+            routerLinkActive=""
+            ariaCurrentWhenActive="page"
+            [routerLinkActiveOptions]="{ exact: true }"
+            [class.text-accent]="exploreActive.isActive"
+            [class.text-content-secondary]="!exploreActive.isActive"
+            class="rounded-button px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Explore
+          </a>
+          <a
+            routerLink="/favorites"
+            #favoritesActive="routerLinkActive"
+            routerLinkActive=""
+            ariaCurrentWhenActive="page"
+            [routerLinkActiveOptions]="{ exact: true }"
+            [class.text-accent]="favoritesActive.isActive"
+            [class.text-content-secondary]="!favoritesActive.isActive"
+            class="rounded-button px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Favorites
           </a>
         </nav>
 

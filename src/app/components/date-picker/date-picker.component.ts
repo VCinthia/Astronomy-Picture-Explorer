@@ -24,13 +24,13 @@ import { formatApodDate } from '../../utils/format-date';
   selector: 'app-date-picker',
   changeDetection: ChangeDetectionStrategy.OnPush,
   template: `
-    <div class="flex flex-col gap-3">
+    <div class="flex w-full flex-col gap-3">
       <button
         type="button"
         (click)="toggle()"
         [attr.aria-expanded]="expanded()"
         aria-controls="date-picker-listbox"
-        class="flex items-center justify-between gap-3 rounded-button border border-space-border bg-space-surface-hi px-4 py-2.5 text-meta text-content-primary transition hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent sm:min-w-72"
+        class="flex h-11 w-full items-center justify-between gap-3 rounded-button border border-space-border bg-space-surface-hi px-4 text-meta text-content-primary transition hover:border-accent focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         <span class="flex items-center gap-2">
           <span class="text-micro font-medium uppercase tracking-widest text-content-secondary">
