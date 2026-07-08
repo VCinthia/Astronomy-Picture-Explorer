@@ -1,7 +1,16 @@
-import { ChangeDetectionStrategy, Component, computed, effect, input, signal } from '@angular/core';
+import {
+  ChangeDetectionStrategy,
+  Component,
+  computed,
+  effect,
+  inject,
+  input,
+  signal
+} from '@angular/core';
 
 import { ColorPaletteComponent } from '../color-palette/color-palette.component';
 import type { ApodEntry } from '../../models/apod.model';
+import { AstronomyService } from '../../services/astronomy.service';
 import { formatApodDate } from '../../utils/format-date';
 
 /**
@@ -18,9 +27,12 @@ import { formatApodDate } from '../../utils/format-date';
   styleUrl: './picture-card.component.css'
 })
 export class PictureCardComponent {
+  private readonly astronomy = inject(AstronomyService);
+
   readonly entry = input.required<ApodEntry>();
 
   readonly isVideo = computed(() => this.entry().media_type === 'video');
+  readonly isFavorite = computed(() => this.astronomy.favorites().includes(this.entry().date));
   readonly formattedDate = computed(() => formatApodDate(this.entry().date));
 
   /** False while the current media is still loading (drives the spinner). */
@@ -36,5 +48,9 @@ export class PictureCardComponent {
 
   onMediaSettled(): void {
     this.mediaLoaded.set(true);
+  }
+
+  toggleFavorite(): void {
+    this.astronomy.toggleFavorite(this.entry().date);
   }
 }

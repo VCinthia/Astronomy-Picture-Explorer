@@ -1,7 +1,10 @@
 import { TestBed } from '@angular/core/testing';
 
 import type { ApodEntry } from '../../models/apod.model';
+import { AstronomyService } from '../../services/astronomy.service';
 import { PictureGridComponent } from './picture-grid.component';
+
+const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
 
 const entries: ApodEntry[] = [
   {
@@ -26,6 +29,7 @@ const entries: ApodEntry[] = [
 
 describe('PictureGridComponent', () => {
   beforeEach(async () => {
+    localStorage.removeItem(FAVORITES_STORAGE_KEY);
     await TestBed.configureTestingModule({ imports: [PictureGridComponent] }).compileComponents();
   });
 
@@ -84,5 +88,43 @@ describe('PictureGridComponent', () => {
 
   it('renders an empty grid when there are no entries', () => {
     expect(render([]).querySelectorAll('article').length).toBe(0);
+  });
+
+  it('keeps the favorite controls outside media links and reflects their pressed state', () => {
+    const service = TestBed.inject(AstronomyService);
+    const fixture = TestBed.createComponent(PictureGridComponent);
+    fixture.componentRef.setInput('entries', entries);
+    fixture.detectChanges();
+
+    const firstCard = fixture.nativeElement.querySelector('article') as HTMLElement;
+    const mediaLink = firstCard.querySelector('a') as HTMLAnchorElement;
+    const button = firstCard.querySelector('button') as HTMLButtonElement;
+    const icon = button.querySelector('svg') as SVGElement;
+
+    expect(button.parentElement).toBe(firstCard);
+    expect(mediaLink.contains(button)).toBeFalse();
+    expect(button.classList).toContain('size-9');
+    expect(icon).not.toBeNull();
+    expect(icon.getAttribute('aria-hidden')).toBe('true');
+    expect(icon.classList).toContain('size-5');
+    expect(icon.getAttribute('fill')).toBe('none');
+    expect(icon.getAttribute('stroke')).toBe('currentColor');
+    expect(button.textContent).not.toContain('\u2665');
+    expect(button.textContent).not.toContain('\u2661');
+    expect(button.getAttribute('aria-pressed')).toBe('false');
+    expect(button.getAttribute('aria-label')).toContain('Add');
+    expect(button.classList).toContain('text-content-secondary');
+    expect(button.classList).not.toContain('text-accent');
+
+    button.click();
+    fixture.detectChanges();
+
+    expect(service.isFavorite(entries[0].date)).toBeTrue();
+    expect(button.getAttribute('aria-pressed')).toBe('true');
+    expect(button.getAttribute('aria-label')).toContain('Remove');
+    expect(button.classList).toContain('text-accent');
+    expect(button.classList).not.toContain('text-content-secondary');
+    expect(icon.getAttribute('fill')).toBe('currentColor');
+    expect(icon.getAttribute('stroke')).toBe('currentColor');
   });
 });
