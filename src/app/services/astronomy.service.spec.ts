@@ -2,10 +2,13 @@ import { TestBed } from '@angular/core/testing';
 
 import { AstronomyService } from './astronomy.service';
 
+const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
+
 describe('AstronomyService', () => {
   let service: AstronomyService;
 
   beforeEach(() => {
+    localStorage.removeItem(FAVORITES_STORAGE_KEY);
     TestBed.configureTestingModule({});
     service = TestBed.inject(AstronomyService);
   });
@@ -22,6 +25,12 @@ describe('AstronomyService', () => {
 
     it('returns undefined for a date with no entry', () => {
       expect(service.getByDate('1999-12-31')).toBeUndefined();
+    });
+
+    it('does not treat inherited object properties as archive entries', () => {
+      expect(service.hasDate('__proto__')).toBeFalse();
+      expect(service.hasDate('toString')).toBeFalse();
+      expect(service.getByDate('__proto__')).toBeUndefined();
     });
 
     it('returns a video entry with a thumbnail_url', () => {
@@ -83,6 +92,124 @@ describe('AstronomyService', () => {
     it('starts settled with no error', () => {
       expect(service.loading()).toBeFalse();
       expect(service.error()).toBeNull();
+    });
+  });
+
+  describe('favorite signals', () => {
+    it('toggles valid dates without duplicates', () => {
+      service.toggleFavorite('2026-05-22');
+      service.toggleFavorite('2026-06-09');
+
+      expect(service.favorites()).toEqual(['2026-05-22', '2026-06-09']);
+      expect(service.isFavorite('2026-05-22')).toBeTrue();
+
+      service.toggleFavorite('2026-05-22');
+
+      expect(service.favorites()).toEqual(['2026-06-09']);
+      expect(service.isFavorite('2026-05-22')).toBeFalse();
+    });
+
+    it('ignores dates that do not exist in the archive', () => {
+      service.toggleFavorite('1999-12-31');
+      service.toggleFavorite('__proto__');
+
+      expect(service.favorites()).toEqual([]);
+    });
+
+    it('persists favorites and restores them in a new service instance', () => {
+      service.toggleFavorite('2026-05-22');
+      TestBed.flushEffects();
+
+      expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) ?? '[]')).toEqual([
+        '2026-05-22'
+      ]);
+
+      TestBed.resetTestingModule();
+      TestBed.configureTestingModule({});
+      service = TestBed.inject(AstronomyService);
+
+      expect(service.favorites()).toEqual(['2026-05-22']);
+    });
+
+    it('deduplicates stored dates and discards absent or inherited property names', () => {
+      TestBed.resetTestingModule();
+      localStorage.setItem(
+        FAVORITES_STORAGE_KEY,
+        JSON.stringify([
+          '2026-05-22',
+          '2026-05-22',
+          '1999-12-31',
+          'toString',
+          '2026-06-09'
+        ])
+      );
+      TestBed.configureTestingModule({});
+
+      service = TestBed.inject(AstronomyService);
+
+      expect(service.favorites()).toEqual(['2026-05-22', '2026-06-09']);
+      expect(service.isFavorite('toString')).toBeFalse();
+    });
+
+    it('falls back to an empty list for corrupt JSON or an invalid shape', () => {
+      TestBed.resetTestingModule();
+      localStorage.setItem(FAVORITES_STORAGE_KEY, '{not-json');
+      TestBed.configureTestingModule({});
+
+      expect(TestBed.inject(AstronomyService).favorites()).toEqual([]);
+
+      TestBed.resetTestingModule();
+      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(['2026-05-22', 7]));
+      TestBed.configureTestingModule({});
+
+      expect(TestBed.inject(AstronomyService).favorites()).toEqual([]);
+    });
+
+    it('continues to work in memory when storage writes fail', () => {
+      const setItem = spyOn(localStorage, 'setItem').and.throwError('storage denied');
+
+      expect(() => {
+        service.toggleFavorite('2026-05-22');
+        TestBed.flushEffects();
+      }).not.toThrow();
+      expect(setItem).toHaveBeenCalled();
+      expect(service.favorites()).toEqual(['2026-05-22']);
+    });
+
+    it('initializes with an empty list when storage reads fail', () => {
+      TestBed.resetTestingModule();
+      spyOn(localStorage, 'getItem').and.throwError('storage denied');
+      TestBed.configureTestingModule({});
+
+      expect(() => (service = TestBed.inject(AstronomyService))).not.toThrow();
+      expect(service.favorites()).toEqual([]);
+    });
+  });
+
+  describe('search signals', () => {
+    it('returns an empty result for an empty or whitespace-only query', () => {
+      expect(service.searchResults()).toEqual([]);
+
+      service.searchQuery.set('   ');
+
+      expect(service.searchResults()).toEqual([]);
+    });
+
+    it('matches keywords in titles and explanations', () => {
+      service.searchQuery.set('Helmet');
+      expect(service.searchResults().map((entry) => entry.date)).toEqual(['2026-06-09']);
+
+      service.searchQuery.set('neutron star');
+      expect(service.searchResults().map((entry) => entry.date)).toEqual(['2026-06-02']);
+    });
+
+    it('trims the query and matches case-insensitively', () => {
+      service.searchQuery.set('  wOlF-rAyEt  ');
+
+      expect(service.searchResults().map((entry) => entry.date)).toEqual([
+        '2026-05-22',
+        '2026-06-09'
+      ]);
     });
   });
 });

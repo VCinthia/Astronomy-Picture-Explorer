@@ -57,6 +57,7 @@
   --spacing-page: 1.25rem; /* 20px gutter (desktop margins emerge from max-w) */
   --spacing-hero: 31.25rem; /* 500px desktop media height */
   --spacing-hero-sm: 15rem; /* 240px mobile media height */
+  --spacing-grid-media: 9.375rem; /* 150px compact grid-card media */
 
   /* Content width (desktop content is 1200px, centered -> 120px margins) */
   --container-content: 75rem; /* 1200px */
