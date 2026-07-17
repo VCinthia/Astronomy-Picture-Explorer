@@ -201,6 +201,24 @@ ocasionales son suficientes y observables.
 - Cookie refresh no declara Domain y usa HttpOnly, SameSite=Lax, Path `/auth`, Max-Age,
   Expires y Secure. Solo Development sobre HTTP loopback permite `Secure=false`.
 
+## Implementation clarification - P3-W4 (2026-07-17)
+
+- NASA autentica mediante `X-Api-Key` redacted, no query string. Las requests APOD
+  contienen solo `date` y `thumbs=true`; redirects automaticos estan deshabilitados para
+  impedir reenviar el header a otro host.
+- `service_version` se deserializa y valida como `v1` dentro del adaptador, pero no entra
+  al DTO, entidad ni JSON publico. URLs requeridas/opcionales deben ser HTTP(S) absolutas;
+  strings opcionales vacios se normalizan a null.
+- `today` usa la fecha UTC inyectable de `TimeProvider`. Formato/rango invalido devuelve
+  400; rate limit NASA 503, timeout 504 y respuesta/falla upstream 502, siempre mediante
+  ProblemDetails sanitizado.
+- 429 y redirects no se reintentan. Network, timeout de HttpClient y 5xx permiten como
+  maximo dos intentos; una operacion APOD completa tiene timeout adicional y cancela al
+  detenerse la aplicacion.
+- La cache en memoria tiene lifetime/capacidad validados. El single-flight removible por
+  fecha crea scope propio; lee PostgreSQL antes de NASA y persiste mediante `ON CONFLICT`
+  atomico, por lo que tambien tolera carreras entre instancias.
+
 ## Consequences
 
 - Search sigue siendo real y eficiente usando campos APOD disponibles.

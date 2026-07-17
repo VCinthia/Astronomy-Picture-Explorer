@@ -1,7 +1,7 @@
 # Wave P3-W4 - NASA APOD y cache
 
-Date: 2026-07-16
-Status: READY - Not Started
+Date: 2026-07-17
+Status: DONE
 Wave ID: `P3-W4`
 Depends On: P3-W1 merged
 Suggested Branch: `wave/p3-w4-nasa-apod-cache`
@@ -18,19 +18,18 @@ cache en memoria + PostgreSQL. No implementa ingestion historica ni search.
 - `backend/AstronomyExplorer.Api/Apod/ApodCacheService.cs`
 - `backend/AstronomyExplorer.Api/Apod/ApodEndpoints.cs`
 - `backend/AstronomyExplorer.Api/Program.cs`
-- `backend/AstronomyExplorer.Api.Tests/Nasa/`
-- `backend/AstronomyExplorer.Api.Tests/Apod/Cache/`
+- `backend/AstronomyExplorer.Api.Tests/Apod/`
 
 ## Checklist
 
-- [ ] W4.1 Typed HttpClient con API key por environment y timeout/retry acotado.
-- [ ] W4.2 Requests usan solamente `date` y `thumbs=true`.
-- [ ] W4.3 Deserializar campos NASA reales y mapear DTO sin `service_version`; strings
+- [x] W4.1 Typed HttpClient con API key por environment y timeout/retry acotado.
+- [x] W4.2 Requests usan solamente `date` y `thumbs=true`.
+- [x] W4.3 Deserializar campos NASA reales y mapear DTO sin `service_version`; strings
   opcionales vacios se normalizan a null.
-- [ ] W4.4 `GET /api/apod/today` y `/date/{date}` validan rango
+- [x] W4.4 `GET /api/apod/today` y `/date/{date}` validan rango
   `1995-06-16..hoy` y devuelven ProblemDetails consistente.
-- [ ] W4.5 Lectura memory -> DB -> NASA; miss hace upsert idempotente y llena memoria.
-- [ ] W4.6 Tests de imagen, video sin thumbnail, copyright/hdurl ausentes, 429, timeout y
+- [x] W4.5 Lectura memory -> DB -> NASA; miss hace upsert idempotente y llena memoria.
+- [x] W4.6 Tests de imagen, video sin thumbnail, copyright/hdurl ausentes, 429, timeout y
   5xx sin filtrar API key.
 
 ## Acceptance criteria
@@ -47,6 +46,18 @@ dotnet build backend/AstronomyExplorer.sln
 dotnet test backend/AstronomyExplorer.sln --filter "FullyQualifiedName~Nasa|FullyQualifiedName~ApodCache"
 ```
 
+## Completion evidence
+
+- Build backend PASS con 0 warnings y 0 errors.
+- 31/31 tests W4 y 78/78 tests backend PASS con PostgreSQL Testcontainers.
+- El cliente usa `X-Api-Key` redacted; la query contiene solo `date` y `thumbs=true`.
+- Redirects y 429 no se reintentan; network/timeout/5xx tienen como maximo dos intentos.
+- El DTO valida `service_version=v1` solo en el adaptador y nunca expone metadata NASA.
+- Cache acotada y single-flight por fecha leen memoria -> PostgreSQL -> NASA; el miss
+  persiste mediante `ON CONFLICT` y un fallo no queda cacheado.
+- `today` significa fecha UTC del backend mediante `TimeProvider`; todos los tests NASA
+  usan handlers/fakes en memoria y no consumen red ni cuota real.
+
 ## Parent sync
 
-- [ ] Actualizar `R3.4`, master/readiness y estado con evidencia.
+- [x] Actualizar `R3.4`, ADR, flow, PRD, master/readiness y estado con evidencia.

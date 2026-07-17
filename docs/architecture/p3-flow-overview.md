@@ -282,6 +282,17 @@ La migracion inicial implementa el diagrama con estas precisiones:
 - JWT no se persiste. Cookie y respuestas auth usan `Cache-Control: no-store`.
 - W13 debe verificar forwarders Netlify/Render antes de sustituir la IP de transporte.
 
+### W4 APOD/provider alignment
+
+- `today` se define como fecha UTC del backend mediante `TimeProvider` y converge con la
+  misma validacion/cache usada por `date/{date}`.
+- La API key NASA viaja en `X-Api-Key`, queda redacted en logs y nunca forma parte de la
+  URI. Redirects automaticos estan deshabilitados.
+- Cada miss concurrente por fecha comparte una operacion con scope propio; memory cache
+  queda acotada y PostgreSQL resuelve reinicios antes de volver a NASA.
+- El upsert `ON CONFLICT` es seguro entre instancias. Fallos no se cachean y liberan el
+  single-flight para que Retry pueda recuperar.
+
 ## 9. Waves y dependencias
 
 ```mermaid

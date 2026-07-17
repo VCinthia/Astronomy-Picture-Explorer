@@ -34,6 +34,7 @@ public sealed class AccountApiFactory : WebApplicationFactory<Program>
     builder.UseSetting("Session:Issuer", "https://api.example.test");
     builder.UseSetting("Session:Audience", "astronomy-explorer-tests");
     builder.UseSetting("Session:SigningKey", "test-signing-key-at-least-32-bytes-long");
+    builder.UseSetting("NasaApod:ApiKey", "test-nasa-api-key");
 
     foreach (var setting in _settings)
     {

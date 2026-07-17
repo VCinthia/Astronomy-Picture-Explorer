@@ -1,8 +1,8 @@
 # PRD - Astronomy Picture Explorer
 
 Date: 2026-07-08
-Last revised: 2026-07-16
-Status: P1 DONE; P2 DONE; P3 READY - Not Started
+Last revised: 2026-07-17
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W4 DONE
 
 ## Vision
 

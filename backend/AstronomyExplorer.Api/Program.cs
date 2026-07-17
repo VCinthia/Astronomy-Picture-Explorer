@@ -3,6 +3,8 @@ using AstronomyExplorer.Api.Domain;
 using AstronomyExplorer.Api.Auth;
 using AstronomyExplorer.Api.Email;
 using AstronomyExplorer.Api.Security;
+using AstronomyExplorer.Api.Apod;
+using AstronomyExplorer.Api.Nasa;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -40,7 +42,24 @@ builder.Services.AddSingleton<IValidateOptions<AuthSessionOptions>, SessionOptio
 builder.Services.AddOptions<AuthSessionOptions>()
   .Bind(builder.Configuration.GetSection(AuthSessionOptions.SectionName))
   .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<NasaApodOptions>, NasaApodOptionsValidator>();
+builder.Services.AddOptions<NasaApodOptions>()
+  .Bind(builder.Configuration.GetSection(NasaApodOptions.SectionName))
+  .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<ApodCacheOptions>, ApodCacheOptionsValidator>();
+builder.Services.AddOptions<ApodCacheOptions>()
+  .Bind(builder.Configuration.GetSection(ApodCacheOptions.SectionName))
+  .ValidateOnStart();
 builder.Services.AddSingleton(TimeProvider.System);
+
+var nasaApodOptions = builder.Configuration
+  .GetSection(NasaApodOptions.SectionName)
+  .Get<NasaApodOptions>() ?? new NasaApodOptions();
+var apodCacheOptions = builder.Configuration
+  .GetSection(ApodCacheOptions.SectionName)
+  .Get<ApodCacheOptions>() ?? new ApodCacheOptions();
+builder.Services.AddMemoryCache(options =>
+  options.SizeLimit = apodCacheOptions.MaxEntries);
 
 var accountRateLimitOptions = builder.Configuration
   .GetSection(AccountRateLimitOptions.SectionName)
@@ -76,6 +95,16 @@ builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<RefreshSessionService>();
 builder.Services.AddScoped<RefreshCookieService>();
 builder.Services.AddScoped<LoginPasswordVerifier>();
+builder.Services.AddSingleton<ApodSingleFlight>();
+builder.Services.AddSingleton<ApodCacheService>();
+builder.Services.AddHttpClient<INasaApodClient, NasaApodClient>(client =>
+{
+  client.BaseAddress = new Uri("https://api.nasa.gov/");
+  client.DefaultRequestHeaders.UserAgent.ParseAdd("AstronomyExplorer/1.0");
+  client.Timeout = nasaApodOptions.Timeout;
+})
+  .ConfigurePrimaryHttpMessageHandler(NasaApodHttpClientConfiguration.CreatePrimaryHandler)
+  .RedactLoggedHeaders(["X-Api-Key"]);
 builder.Services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
 {
   client.BaseAddress = new Uri("https://api.resend.com/");
@@ -130,6 +159,7 @@ if (app.Environment.IsDevelopment())
 app.MapHealthChecks("/health");
 app.MapAccountEndpoints();
 app.MapSessionEndpoints();
+app.MapApodEndpoints();
 
 app.Run();
 

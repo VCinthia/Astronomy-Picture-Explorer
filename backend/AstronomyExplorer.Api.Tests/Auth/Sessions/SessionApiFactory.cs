@@ -48,6 +48,7 @@ public sealed class SessionApiFactory : WebApplicationFactory<Program>
     builder.UseSetting("Session:AccessTokenLifetime", "00:10:00");
     builder.UseSetting("Session:RefreshTokenLifetime", "30.00:00:00");
     builder.UseSetting("Session:RefreshCookieName", CookieName);
+    builder.UseSetting("NasaApod:ApiKey", "test-nasa-api-key");
 
     foreach (var setting in _settings)
     {

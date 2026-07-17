@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-17
-Status: IN PROGRESS - W1-W3 DONE
+Status: IN PROGRESS - W1-W4 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -78,7 +78,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.1** Foundation y schema PostgreSQL (W1).
 - [x] **R3.2** Registro, email y confirmacion segura (W2).
 - [x] **R3.3** Login, JWT y refresh sessions robustas (W3).
-- [ ] **R3.4** NASA today/date + cache + DTO app-owned (W4).
+- [x] **R3.4** NASA today/date + cache + DTO app-owned (W4).
 - [ ] **R3.5** Catalog CLI resumible y status observable (W5).
 - [ ] **R3.6** PostgreSQL FTS y endpoint search (W6).
 - [ ] **R3.7** Favorites API protegida e hidratada (W7).
@@ -102,6 +102,11 @@ W3 se cerro el 2026-07-17 con 23/23 tests Sessions y 47/47 backend PASS. Login u
 Identity con hash dummy anti-timing y JWT HS256 corto. Refresh/logout se serializan con
 advisory lock familiar; replay revoca la familia, logout es idempotente y ambos exigen
 Origin exacto en Production.
+
+W4 se cerro el 2026-07-17 con 31/31 tests W4 y 78/78 backend PASS. Los endpoints
+publicos today/date exponen solo el DTO app-owned; cache acotada y single-flight leen
+memoria -> PostgreSQL -> NASA y persisten misses con upsert atomico. La key viaja en
+`X-Api-Key`, redirects/429 no se reintentan y ninguna prueba consume NASA real.
 
 ## 6. Exit criteria
 

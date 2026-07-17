@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-17
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W3 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W4 DONE
 
 ## Verdict
 
@@ -12,7 +12,8 @@ persistencia de favoritos entre rutas y breakpoints desktop/mobile.
 P3 fue corregida antes de iniciar codigo. P3-W1 implemento la foundation .NET 10,
 Identity user-only, schema PostgreSQL, FTS ponderado y health DB-aware. P3-W2 completo
 registro, email y confirmacion con key ring persistido y rate limits. P3-W3 implemento
-sesiones seguras; las 10 waves restantes conservan el contrato aceptado.
+sesiones seguras y P3-W4 cerro NASA today/date con cache; las 9 waves restantes
+conservan el contrato aceptado.
 
 ## Closed gates
 
@@ -68,6 +69,21 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   depende de un Bearer vigente.
 - Login se limita por IP sin particion email para no habilitar DoS dirigido. W13 mantiene
   el gate de forwarders confiables antes de interpretar la IP publica.
+
+## P3-W4 completion gate
+
+- Build backend PASS con 0 warnings y 0 errors.
+- 31/31 tests W4 y 78/78 backend PASS; cache/persistencia usan PostgreSQL Testcontainers.
+- `GET /api/apod/today` usa fecha UTC inyectable y `/date/{date}` acepta exclusivamente
+  `1995-06-16..hoy`; formato/rango y upstream devuelven ProblemDetails observables.
+- El adaptador valida imagen/video, URLs HTTP(S), fecha solicitada y `service_version=v1`;
+  opcionales vacios pasan a null y metadata NASA no cruza el DTO app-owned.
+- `X-Api-Key` queda fuera de la query y redacted en logging; redirects y 429 no se
+  reintentan. Timeout/network/5xx usan como maximo dos intentos y errores sanitizados.
+- Memory cache tiene lifetime/capacidad validados. Single-flight por fecha usa scope
+  propio, timeout operativo y cleanup; PostgreSQL persiste con upsert `ON CONFLICT`.
+- Tests prueban reutilizacion entre instancias, concurrencia y retry posterior a fallo;
+  handlers/fakes en memoria garantizan cero llamadas NASA reales.
 
 Antes de cada wave restante:
 
@@ -130,6 +146,6 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W4 desde `codex/p3-integration`. W4 agrega NASA today/date y cache sin crear
-Neon/Render/Resend prematuramente; los recursos externos siguen postergados hasta la
-wave que realmente los necesita.
+Ejecutar P3-W5 desde `codex/p3-integration`. W5 reutiliza el adaptador y upsert W4 para
+la ingestion CLI local resumible; requiere una NASA key propia antes del backfill, pero
+Neon/Render/Resend siguen postergados hasta la wave que realmente los necesita.

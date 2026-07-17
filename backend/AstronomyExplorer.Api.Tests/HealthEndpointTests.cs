@@ -74,6 +74,7 @@ public sealed class HealthEndpointTests(PostgreSqlFixture database)
         .UseSetting("Frontend:PublicBaseUrl", "https://portfolio.example")
         .UseSetting("Session:Issuer", "https://api.example.test")
         .UseSetting("Session:Audience", "astronomy-explorer-tests")
-        .UseSetting("Session:SigningKey", "test-signing-key-at-least-32-bytes-long"));
+        .UseSetting("Session:SigningKey", "test-signing-key-at-least-32-bytes-long")
+        .UseSetting("NasaApod:ApiKey", "test-nasa-api-key"));
   }
 }

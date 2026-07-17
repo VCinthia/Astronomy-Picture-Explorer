@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-17
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W3 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W4 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -77,6 +77,14 @@ P3-W3 quedo DONE el 2026-07-17:
 - Rotacion PostgreSQL atomica, deteccion de replay y revocacion de familia.
 - Logout cookie-only idempotente, CSRF por Origin exacto y limiter login IP-only.
 - 23/23 tests Sessions y 47/47 backend PASS.
+
+P3-W4 quedo DONE el 2026-07-17:
+
+- Typed NASA client con key en header redacted, redirects deshabilitados y retry acotado.
+- DTO app-owned exacto; metadata provider-only se valida pero no se expone ni persiste.
+- Endpoints UTC today/date con ProblemDetails y cache memoria -> PostgreSQL -> NASA.
+- Single-flight removible y `ON CONFLICT` evitan duplicados; 31/31 tests W4 y 78/78
+  backend PASS sin llamadas NASA reales.
 
 ## 4. Execution contract
 

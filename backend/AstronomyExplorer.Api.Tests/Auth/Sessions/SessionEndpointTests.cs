@@ -522,7 +522,8 @@ public sealed class SessionEndpointTests(PostgreSqlFixture database)
         .UseSetting("Frontend:PublicBaseUrl", SessionApiFactory.AllowedOrigin)
         .UseSetting("Session:Issuer", SessionApiFactory.Issuer)
         .UseSetting("Session:Audience", SessionApiFactory.Audience)
-        .UseSetting("Session:SigningKey", "too-short"));
+        .UseSetting("Session:SigningKey", "too-short")
+        .UseSetting("NasaApod:ApiKey", "test-nasa-api-key"));
 
     var exception = Assert.Throws<OptionsValidationException>(() => factory.CreateClient());
     Assert.Contains("at least 32", exception.Message);
