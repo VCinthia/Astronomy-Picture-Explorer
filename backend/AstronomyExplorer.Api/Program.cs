@@ -5,9 +5,12 @@ using AstronomyExplorer.Api.Email;
 using AstronomyExplorer.Api.Security;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
+using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.AspNetCore.RateLimiting;
+using Microsoft.Extensions.Options;
 using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -27,10 +30,16 @@ builder.Services.AddDataProtection()
   .PersistKeysToDbContext<AppDbContext>();
 builder.Services.Configure<AccountRateLimitOptions>(
   builder.Configuration.GetSection(AccountRateLimitOptions.SectionName));
-builder.Services.Configure<FrontendOptions>(
-  builder.Configuration.GetSection(FrontendOptions.SectionName));
+builder.Services.AddSingleton<IValidateOptions<FrontendOptions>, FrontendOptionsValidator>();
+builder.Services.AddOptions<FrontendOptions>()
+  .Bind(builder.Configuration.GetSection(FrontendOptions.SectionName))
+  .ValidateOnStart();
 builder.Services.Configure<ResendEmailOptions>(
   builder.Configuration.GetSection(ResendEmailOptions.SectionName));
+builder.Services.AddSingleton<IValidateOptions<AuthSessionOptions>, SessionOptionsValidator>();
+builder.Services.AddOptions<AuthSessionOptions>()
+  .Bind(builder.Configuration.GetSection(AuthSessionOptions.SectionName))
+  .ValidateOnStart();
 builder.Services.AddSingleton(TimeProvider.System);
 
 var accountRateLimitOptions = builder.Configuration
@@ -53,10 +62,20 @@ builder.Services.AddRateLimiter(options =>
       _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
         accountRateLimitOptions.ResendConfirmationIpPermitLimit,
         accountRateLimitOptions.Window)));
+  options.AddPolicy(AccountRateLimitPolicies.LoginByIp, httpContext =>
+    RateLimitPartition.GetFixedWindowLimiter(
+      AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
+      _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
+        accountRateLimitOptions.LoginIpPermitLimit,
+        accountRateLimitOptions.Window)));
 });
 
 builder.Services.AddSingleton<IAccountEmailRateLimiter, AccountEmailRateLimiter>();
 builder.Services.AddSingleton<EmailConfirmationLinkFactory>();
+builder.Services.AddScoped<JwtTokenService>();
+builder.Services.AddScoped<RefreshSessionService>();
+builder.Services.AddScoped<RefreshCookieService>();
+builder.Services.AddScoped<LoginPasswordVerifier>();
 builder.Services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
 {
   client.BaseAddress = new Uri("https://api.resend.com/");
@@ -81,6 +100,17 @@ builder.Services
     .AddEntityFrameworkStores<AppDbContext>()
     .AddDefaultTokenProviders();
 
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+  .AddJwtBearer();
+builder.Services.AddOptions<JwtBearerOptions>(JwtBearerDefaults.AuthenticationScheme)
+  .Configure<IOptions<AuthSessionOptions>>((jwtOptions, sessionOptions) =>
+  {
+    jwtOptions.MapInboundClaims = false;
+    jwtOptions.TokenValidationParameters =
+      JwtTokenService.CreateValidationParameters(sessionOptions.Value);
+  });
+builder.Services.AddAuthorization();
+
 builder.Services
     .AddHealthChecks()
     .AddDbContextCheck<AppDbContext>("postgresql");
@@ -89,6 +119,8 @@ var app = builder.Build();
 
 app.UseExceptionHandler();
 app.UseRateLimiter();
+app.UseAuthentication();
+app.UseAuthorization();
 
 if (app.Environment.IsDevelopment())
 {
@@ -97,6 +129,7 @@ if (app.Environment.IsDevelopment())
 
 app.MapHealthChecks("/health");
 app.MapAccountEndpoints();
+app.MapSessionEndpoints();
 
 app.Run();
 

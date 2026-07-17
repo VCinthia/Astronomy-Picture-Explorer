@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-17
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W2 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W3 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -70,6 +70,13 @@ P3-W2 quedo DONE el 2026-07-17:
 - Resend queda tras `IEmailSender`; tests usan fake y no realizan red real.
 - Key ring Data Protection persiste en PostgreSQL y se valida entre dos instancias.
 - 13/13 tests Account y 24/24 backend PASS; sin paquetes NuGet vulnerables conocidos.
+
+P3-W3 quedo DONE el 2026-07-17:
+
+- Login Identity, JWT HMAC 10 minutos y refresh cookie host-only segura.
+- Rotacion PostgreSQL atomica, deteccion de replay y revocacion de familia.
+- Logout cookie-only idempotente, CSRF por Origin exacto y limiter login IP-only.
+- 23/23 tests Sessions y 47/47 backend PASS.
 
 ## 4. Execution contract
 

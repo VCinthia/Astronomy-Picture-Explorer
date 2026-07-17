@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-17
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W2 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W3 DONE
 
 ## Verdict
 
@@ -11,8 +11,8 @@ persistencia de favoritos entre rutas y breakpoints desktop/mobile.
 
 P3 fue corregida antes de iniciar codigo. P3-W1 implemento la foundation .NET 10,
 Identity user-only, schema PostgreSQL, FTS ponderado y health DB-aware. P3-W2 completo
-registro, email y confirmacion con key ring persistido y rate limits. Las 11 waves
-restantes conservan el contrato aceptado.
+registro, email y confirmacion con key ring persistido y rate limits. P3-W3 implemento
+sesiones seguras; las 10 waves restantes conservan el contrato aceptado.
 
 ## Closed gates
 
@@ -54,6 +54,20 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - Limites IP/email normalizado devuelven 429 ProblemDetails; adaptador Resend se prueba
   con handler en memoria y `User-Agent`, sin red real.
 - Format, migraciones y audit NuGet vulnerable/transitive PASS.
+
+## P3-W3 completion gate
+
+- Build backend PASS con 0 warnings y 0 errors.
+- 23/23 tests Sessions y 47/47 backend PASS con PostgreSQL Testcontainers.
+- JWT valida HMAC/issuer/audience/lifetime sin clock skew y expone claims requeridos.
+- Cookie refresh es host-only, HttpOnly, SameSite=Lax, Path `/auth`, expiracion explicita
+  y Secure salvo HTTP loopback exclusivamente en Development.
+- Advisory lock transaccional por familia serializa rotate/logout; carreras de replay o
+  logout contra rotation terminan sin sesiones activas en esa familia y no afectan otra.
+- Refresh/logout validan Origin exacto en Production antes de mutar DB/cookie; logout no
+  depende de un Bearer vigente.
+- Login se limita por IP sin particion email para no habilitar DoS dirigido. W13 mantiene
+  el gate de forwarders confiables antes de interpretar la IP publica.
 
 Antes de cada wave restante:
 
@@ -116,6 +130,6 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W3 desde `codex/p3-integration`. W3 agrega login/JWT/refresh/logout sin crear
+Ejecutar P3-W4 desde `codex/p3-integration`. W4 agrega NASA today/date y cache sin crear
 Neon/Render/Resend prematuramente; los recursos externos siguen postergados hasta la
 wave que realmente los necesita.

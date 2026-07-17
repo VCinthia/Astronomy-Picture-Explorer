@@ -31,6 +31,9 @@ public sealed class AccountApiFactory : WebApplicationFactory<Program>
     builder.UseEnvironment("Testing");
     builder.UseSetting("ConnectionStrings:Postgres", _connectionString);
     builder.UseSetting("Frontend:PublicBaseUrl", "https://portfolio.example");
+    builder.UseSetting("Session:Issuer", "https://api.example.test");
+    builder.UseSetting("Session:Audience", "astronomy-explorer-tests");
+    builder.UseSetting("Session:SigningKey", "test-signing-key-at-least-32-bytes-long");
 
     foreach (var setting in _settings)
     {

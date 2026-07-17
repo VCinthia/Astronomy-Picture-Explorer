@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-16
-Status: P3 IN PROGRESS - W1 foundation + W2 account/email implemented
+Status: P3 IN PROGRESS - W1-W3 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -58,7 +58,7 @@ flowchart TD
 | Confirmacion | `/confirm-email` | `POST /auth/confirm-email` | No |
 | Login | `/login` | `POST /auth/login` | No |
 | Refresh | bootstrap/interceptor | `POST /auth/refresh` | Cookie + Origin |
-| Logout | accion usuario | `POST /auth/logout` | Cookie/JWT + Origin |
+| Logout | accion usuario | `POST /auth/logout` | Cookie + Origin |
 | Favoritos | cards + `/favorites` | `/api/favorites` | JWT |
 
 ## 3. Registro y confirmacion
@@ -122,6 +122,16 @@ sequenceDiagram
 
 Ante refresh fallido se limpia memoria y una sola navegacion lleva a login. Los endpoints
 de auth no se auto-reintentan. Reusar un refresh revocado invalida toda su familia.
+
+W3 materializa este flujo con JWT HMAC de 10 minutos y refresh opaco de 32 bytes. La DB
+solo recibe SHA-256; rotate/logout serializan la familia completa con un advisory lock
+transaccional y reconsultan estado despues de adquirirlo. Dos consumos concurrentes
+producen un 200 y un 401, y el replay deja toda la familia revocada. Por eso W9 mantiene
+single-flight como requisito funcional, aunque el backend tambien falla cerrado.
+
+Refresh/logout validan un unico Origin exacto en Production antes de tocar cookie o DB.
+Logout no exige Bearer: una cookie basta incluso si el access token expiro. Login tiene
+limiter IP-only para no convertir un partition key email en bloqueo dirigido de cuentas.
 
 ## 5. APOD por fecha y DTO
 
@@ -262,6 +272,15 @@ La migracion inicial implementa el diagrama con estas precisiones:
 - Email/username respetan el limite fisico Identity de 256 caracteres.
 - El XML del key ring y la resolucion de IP real conservan gates productivos explicitos
   en W13 antes de habilitar la release.
+
+### W3 session/security alignment
+
+- `token_hash` contiene SHA-256 hexadecimal (64 caracteres), nunca refresh raw.
+- `family_id` permanece estable durante rotacion; `replaced_by_token_id` enlaza el token
+  consumido con su reemplazo. Replay y logout revocan todas las filas activas de esa
+  familia sin afectar otra familia del mismo usuario.
+- JWT no se persiste. Cookie y respuestas auth usan `Cache-Control: no-store`.
+- W13 debe verificar forwarders Netlify/Render antes de sustituir la IP de transporte.
 
 ## 9. Waves y dependencias
 

@@ -70,6 +70,10 @@ public sealed class HealthEndpointTests(PostgreSqlFixture database)
     return new WebApplicationFactory<Program>()
       .WithWebHostBuilder(builder => builder
         .UseEnvironment(environment)
-        .UseSetting("ConnectionStrings:Postgres", connectionString));
+        .UseSetting("ConnectionStrings:Postgres", connectionString)
+        .UseSetting("Frontend:PublicBaseUrl", "https://portfolio.example")
+        .UseSetting("Session:Issuer", "https://api.example.test")
+        .UseSetting("Session:Audience", "astronomy-explorer-tests")
+        .UseSetting("Session:SigningKey", "test-signing-key-at-least-32-bytes-long"));
   }
 }

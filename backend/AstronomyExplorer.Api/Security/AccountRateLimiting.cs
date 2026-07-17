@@ -20,6 +20,8 @@ public sealed class AccountRateLimitOptions
 
   public int ResendConfirmationEmailPermitLimit { get; init; } = 3;
 
+  public int LoginIpPermitLimit { get; init; } = 10;
+
   public TimeSpan Window { get; init; } = TimeSpan.FromMinutes(15);
 
   public int MaxTrackedEmailPartitions { get; init; } = 10_000;
@@ -29,6 +31,7 @@ public static class AccountRateLimitPolicies
 {
   public const string RegisterByIp = "register-by-ip";
   public const string ResendConfirmationByIp = "resend-confirmation-by-ip";
+  public const string LoginByIp = "login-by-ip";
 
   public static FixedWindowRateLimiterOptions CreateFixedWindowOptions(
     int permitLimit,
@@ -57,6 +60,8 @@ public static class AccountRateLimitProblemDetails
     CancellationToken cancellationToken)
   {
     cancellationToken.ThrowIfCancellationRequested();
+    context.HttpContext.Response.Headers.CacheControl = "no-store";
+    context.HttpContext.Response.Headers.Pragma = "no-cache";
     await Results.Problem(Create()).ExecuteAsync(context.HttpContext);
   }
 

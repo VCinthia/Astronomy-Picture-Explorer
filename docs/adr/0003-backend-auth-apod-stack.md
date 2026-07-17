@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-17
-Status: Accepted; P3-W1-W2 implemented
+Status: Accepted; P3-W1-W3 implemented
 
 ## Context
 
@@ -180,6 +180,26 @@ ocasionales son suficientes y observables.
 - W2 usa `RemoteIpAddress` fail-closed y no confia directamente en headers reenviados.
   W13 debe verificar la cadena Netlify -> Render, configurar solo forwarders confiables
   y demostrar que el limiter separa visitantes sin aceptar spoofing.
+
+## Implementation clarification - P3-W3 (2026-07-17)
+
+- JWT usa HMAC SHA-256 con key de al menos 32 bytes, lifetime default 10 minutos,
+  `ClockSkew=0` y validacion completa de issuer/audience/firma/expiracion. Secrets faltantes
+  impiden arrancar mediante opciones tipadas `ValidateOnStart`.
+- Refresh genera 32 bytes criptograficos Base64URL; PostgreSQL conserva solo SHA-256
+  hexadecimal. Rotate/logout toman un advisory lock transaccional estable por `family_id`,
+  reconsultan despues del lock y serializan cualquier mutacion de la familia completa.
+- Dos consumidores del mismo token producen un solo 200. El perdedor observa la
+  revocacion como replay y revoca toda la familia; W9 previene este caso normal mediante
+  single-flight, pero el backend falla cerrado si ocurre.
+- Refresh/logout requieren un unico Origin exacto en Production antes de leer o mutar
+  estado. Logout usa la cookie, revoca toda su familia activa y sigue funcionando con
+  Bearer ausente o vencido; otras familias del usuario permanecen vigentes.
+- Login se limita por IP de transporte, default 10 intentos/15 minutos y queue 0. No se
+  agrega particion email ni lockout por cuenta para evitar DoS dirigido; W13 conserva el
+  gate de proxies confiables para resolver la IP real.
+- Cookie refresh no declara Domain y usa HttpOnly, SameSite=Lax, Path `/auth`, Max-Age,
+  Expires y Secure. Solo Development sobre HTTP loopback permite `Secure=false`.
 
 ## Consequences
 
