@@ -1,6 +1,7 @@
 # Framework Version Policy
 
 Date: 2026-07-08
+Last reviewed: 2026-07-17
 Status: Active
 
 ## Current pinned stack
@@ -11,6 +12,19 @@ Status: Active
 - Backend SDK pin: `global.json` con `10.0.x`.
 - Backend Docker tags: `mcr.microsoft.com/dotnet/sdk:10.0` y
   `mcr.microsoft.com/dotnet/aspnet:10.0`.
+
+## Open frontend security maintenance
+
+La validacion W1 del 2026-07-17 ejecuto `npm audit --omit=dev` sobre el lockfile actual:
+
+- 6 vulnerabilidades high y 1 moderate afectan paquetes runtime Angular 19.
+- npm solo propone remediacion automatica mediante salto mayor a Angular 22.
+- `npm audit fix --force` no esta autorizado dentro de una wave backend porque puede
+  introducir cambios incompatibles sin migracion ni review dedicados.
+
+Se requiere decidir y ejecutar una rama de mantenimiento Angular antes de las waves
+frontend W8-W11 y, como maximo, antes del deploy final W13. Esa tarea debe seguir el
+checklist de validacion completa de esta politica.
 
 ## Maintenance rule
 

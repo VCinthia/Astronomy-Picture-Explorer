@@ -1,17 +1,17 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
-Date: 2026-07-16
-Status: P2 DONE in production; P3 READY FOR IMPLEMENTATION
+Date: 2026-07-17
+Status: P2 DONE in production; P3 IN PROGRESS - W1 DONE
 
 ## Verdict
 
-P1 y P2 estan cerradas. `main` y `origin/main` apuntan al commit P2-W4 `b72c7e2`, la
-aplicacion productiva responde en Netlify y el smoke del 2026-07-16 valido navegacion,
-search, persistencia de favoritos entre rutas y breakpoints desktop/mobile.
+P1 y P2 estan cerradas. El commit de cierre P2-W4 es `b72c7e2`; la aplicacion
+productiva responde en Netlify y el smoke del 2026-07-16 valido navegacion, search,
+persistencia de favoritos entre rutas y breakpoints desktop/mobile.
 
-P3 fue corregida antes de iniciar codigo. La baseline aceptada usa .NET 10, Identity,
-PostgreSQL FTS sobre titulo/explicacion, ingestion local resumible, proxy same-origin, refresh
-sessions seguras, favoritos hidratados, Testcontainers y 13 waves acotadas.
+P3 fue corregida antes de iniciar codigo. P3-W1 ya implemento la foundation .NET 10,
+Identity user-only, schema PostgreSQL, FTS ponderado, health DB-aware y tests de
+integracion. Las 12 waves restantes conservan el contrato aceptado.
 
 ## Closed gates
 
@@ -29,9 +29,18 @@ sessions seguras, favoritos hidratados, Testcontainers y 13 waves acotadas.
 - ADR-0003 revisado y aceptado el 2026-07-16.
 - Contrato APOD operativo verificado con respuestas NASA image/video.
 
-## Gate to start P3-W1
+## P3-W1 completion gate
 
-P3-W1 puede comenzar porque no necesita cuentas externas. Antes de cada wave:
+P3-W1 se cerro sin cuentas externas ni mutaciones productivas:
+
+- Build backend PASS, 0 warnings y 0 errors.
+- 11/11 tests PASS con PostgreSQL 17 Testcontainers y migracion real.
+- PK/FK/checks/delete behaviors, nullable APOD, UTC, `tsvector` stored/GIN verificados.
+- `/health` devuelve 200/503 segun disponibilidad de PostgreSQL.
+- OpenAPI existe solo en Development.
+- EF lista la migracion sin conexion; runtime/database update fallan cerrados sin config.
+
+Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
 - Crear branch desde `main` limpio.
@@ -86,8 +95,10 @@ docker compose down
 | Search costoso | tsvector ponderado + GIN + pageSize max 30; trigram solo con evidencia |
 | Cuota/cargo inesperado | Free-only, no keepalive/cron/overages; fail closed y revalidar en W13 |
 | DTO diverge de NASA/frontend | DTO app-owned congelado + contract tests image/video/nulls |
+| Angular 19 tiene 6 high + 1 moderate en `npm audit --omit=dev` | Decidir upgrade mayor en rama dedicada antes de W8-W11/W13; nunca aplicar `--force` dentro de una wave backend |
 
 ## Recommended next step
 
-Ejecutar P3-W1 desde `main`. No crear Neon/Render/Resend prematuramente: la planificacion
-deliberadamente posterga mutaciones externas hasta la wave que las necesita.
+Ejecutar P3-W2 desde `main` integrado. W2 usa un email sender fake en tests; no crear
+Neon/Render/Resend prematuramente porque los recursos externos siguen postergados hasta
+la wave que realmente los necesita.

@@ -1,8 +1,8 @@
 # Phase Plan P3 - Backend real, autenticacion y persistencia
 
 Date: 2026-07-08
-Last revised: 2026-07-16
-Status: READY FOR IMPLEMENTATION - Not Started
+Last revised: 2026-07-17
+Status: IN PROGRESS - W1 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -67,10 +67,13 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - Resend + dominio verificado son requeridos para smoke real de W13, no para tests W2.
 - NASA API key propia es requerida antes del backfill W5; `DEMO_KEY` no se usa en carga.
 - Render y URLs finales son requeridos solo en W13.
+- Antes de W8 debe resolverse el gate de mantenimiento Angular registrado en
+  `docs/maintenance/framework-version-policy.md`; el salto mayor requiere decision y
+  rama dedicada, no `npm audit fix --force` dentro de una wave funcional.
 
 ## 5. Requirements checklist
 
-- [ ] **R3.1** Foundation y schema PostgreSQL (W1).
+- [x] **R3.1** Foundation y schema PostgreSQL (W1).
 - [ ] **R3.2** Registro, email y confirmacion segura (W2).
 - [ ] **R3.3** Login, JWT y refresh sessions robustas (W3).
 - [ ] **R3.4** NASA today/date + cache + DTO app-owned (W4).
@@ -83,6 +86,10 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [ ] **R3.11** Frontend favorites migration (W11).
 - [ ] **R3.12** Contenedores y stack local (W12).
 - [ ] **R3.13** Seed, deploy $0 y smoke productivo (W13).
+
+W1 se cerro el 2026-07-17 con build limpio, migracion inicial reproducible y 11/11
+tests Testcontainers sobre PostgreSQL 17. La evidencia y las precisiones fisicas del
+schema viven en la wave W1 y ADR-0003.
 
 ## 6. Exit criteria
 

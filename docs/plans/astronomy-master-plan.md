@@ -1,8 +1,8 @@
 # Master Plan - Astronomy Picture Explorer
 
 Date: 2026-06-25
-Last revised: 2026-07-16
-Status: P1 DONE; P2 DONE in production; P3 READY - Not Started
+Last revised: 2026-07-17
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -40,12 +40,12 @@ implementar.
 - P2-W2 `b50cb87`: favorites UI/ruta.
 - P2-W3 `0bde545`: search/toolbar/nav desktop.
 - P2-W4 `b72c7e2`: bottom nav/mobile/icon polish.
-- `main == origin/main` en `b72c7e2`.
+- Commit de cierre P2: `b72c7e2`; las waves P3 se integran posteriormente sobre esa base.
 - Build PASS, 77/77 tests PASS.
 - Smoke productivo 2026-07-16 PASS: rutas, search Hydra, favorito persistido entre
   Home/Favorites y navegacion responsive 390x844. Evidencia detallada en readiness y P2.
 
-### P3 - READY, not started
+### P3 - IN PROGRESS
 
 La revision del 2026-07-16 establecio 13 waves ejecutables:
 
@@ -56,6 +56,13 @@ La revision del 2026-07-16 establecio 13 waves ejecutables:
 - Ingestion CLI local resumible; nunca backfill en Render.
 - Proxy same-origin Netlify -> Render y cookie SameSite=Lax.
 - Costo obligatorio $0 y experiencia explicita de cold start.
+
+P3-W1 quedo DONE el 2026-07-17:
+
+- Solucion .NET 10, Identity `Guid` user-only, EF Core/Npgsql y schema inicial.
+- Migracion real con APOD/FTS, refresh sessions, favorites y catalog sync state.
+- 11/11 tests Testcontainers PASS y `/health` DB-aware.
+- Ningun endpoint de negocio, secret o recurso productivo fue agregado prematuramente.
 
 ## 4. Execution contract
 

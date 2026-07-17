@@ -1,0 +1,4 @@
+@AstronomyExplorer.Api_HostAddress = http://localhost:5179
+
+GET {{AstronomyExplorer.Api_HostAddress}}/health
+Accept: application/json

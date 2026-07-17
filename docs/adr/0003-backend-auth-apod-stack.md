@@ -1,8 +1,8 @@
 # ADR-0003 - Backend, autenticacion, catalogo APOD y despliegue P3
 
 Date: 2026-07-08
-Last revised: 2026-07-16
-Status: Accepted for P3 implementation
+Last revised: 2026-07-17
+Status: Accepted; P3-W1 implemented
 
 ## Context
 
@@ -148,6 +148,20 @@ ocasionales son suficientes y observables.
   o se deja sin metodo de pago. Superar una cuota debe fallar cerrado, no facturar.
 - El cold start de Render se comunica en UI con estado de conexion y reintento; la
   experiencia de primera visita no debe parecer un error permanente.
+
+## Implementation clarification - P3-W1 (2026-07-17)
+
+- El schema Identity es user-only mediante `IdentityUserContext<ApplicationUser, Guid>`;
+  no crea tablas de roles ni expone endpoints automaticos de Identity.
+- `NormalizedEmail` tiene indice unico fisico y `RequireUniqueEmail` esta habilitado.
+- `refresh_sessions.replaced_by_token_id` usa self-FK `NO ACTION`. Esto evita cascadas
+  ciclicas y permite que el cascade desde usuario elimine una familia completa.
+- `search_vector` se materializa como generated stored `tsvector`, title peso A y
+  explanation peso B, con indice GIN desde la migracion inicial.
+- `CatalogSyncStatus` se guarda como string con CHECK; el checkpoint es unico por rango
+  y valida rango, ultima fecha y orden de timestamps.
+- EF design time puede construir el modelo sin connection string para operaciones
+  `--no-connect`; runtime y mutaciones de DB siguen exigiendo configuracion explicita.
 
 ## Consequences
 

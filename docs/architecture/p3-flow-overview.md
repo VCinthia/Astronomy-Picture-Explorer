@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-16
-Status: Accepted planning baseline - implementation not started
+Status: P3 IN PROGRESS - W1 foundation implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -235,6 +235,19 @@ erDiagram
         string last_error nullable
     }
 ```
+
+### W1 physical schema alignment
+
+La migracion inicial implementa el diagrama con estas precisiones:
+
+- Identity conserva sus tablas convencionales user-only; `users` en el diagrama es
+  conceptual y `NormalizedEmail` es unico.
+- `refresh_sessions.replaced_by_token_id` es una self-FK `NO ACTION`; eliminar usuario
+  borra por cascade favoritos y sesiones, mientras eliminar APOD favorito queda
+  restringido.
+- `search_vector` es generated stored, ponderado A/B e indexado con GIN.
+- `catalog_sync_state` es unico por rango y usa status string restringido.
+- Fechas usan `date`; instantes usan `timestamp with time zone` y valores UTC.
 
 ## 9. Waves y dependencias
 
