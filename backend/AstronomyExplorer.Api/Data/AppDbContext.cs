@@ -1,4 +1,5 @@
 using AstronomyExplorer.Api.Domain;
+using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
@@ -6,8 +7,10 @@ using Microsoft.EntityFrameworkCore;
 namespace AstronomyExplorer.Api.Data;
 
 public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
-    : IdentityUserContext<ApplicationUser, Guid>(options)
+    : IdentityUserContext<ApplicationUser, Guid>(options), IDataProtectionKeyContext
 {
+  public DbSet<DataProtectionKey> DataProtectionKeys => Set<DataProtectionKey>();
+
   public DbSet<RefreshSession> RefreshSessions => Set<RefreshSession>();
 
   public DbSet<ApodEntry> ApodEntries => Set<ApodEntry>();

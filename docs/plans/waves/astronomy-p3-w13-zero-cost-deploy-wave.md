@@ -35,6 +35,10 @@ desplegar y ejecutar el smoke que cierra P3.
 - [ ] W13.8 Smoke: cold start/retry, today, fecha, search, register, email, confirm POST,
   login, refresh/reload, favorite/list/delete, aislamiento y logout.
 - [ ] W13.9 Registrar fecha/URLs/cuenta de prueba/resultados y limpiar datos de prueba.
+- [ ] W13.10 Verificar la cadena Netlify -> Render y configurar Forwarded Headers solo
+  para proxies/redes confiables; demostrar dos IP cliente separadas y rechazo de spoofing.
+- [ ] W13.11 Verificar el cifrado/controles en reposo de Neon para el XML del key ring
+  Data Protection y documentar cualquier proteccion adicional $0 requerida.
 
 ## Acceptance criteria
 
@@ -42,6 +46,8 @@ desplegar y ejecutar el smoke que cierra P3.
 - Catalogo esta ready antes de anunciar produccion.
 - Primera visita sobre cold start termina en contenido o CTA Retry comprensible.
 - Auth y favorites funcionan mediante origen Netlify con cookie segura.
+- Rate limiting usa la IP real sin confiar en headers falsificables; links de email
+  sobreviven restart/cold start y el key ring cumple el gate en reposo.
 - Todos los exit criteria P3 tienen evidencia y docs sincronizados.
 
 ## Verification

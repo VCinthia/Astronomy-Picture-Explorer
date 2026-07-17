@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-17
-Status: P2 DONE in production; P3 IN PROGRESS - W1 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W2 DONE
 
 ## Verdict
 
@@ -9,9 +9,10 @@ P1 y P2 estan cerradas. El commit de cierre P2-W4 es `b72c7e2`; la aplicacion
 productiva responde en Netlify y el smoke del 2026-07-16 valido navegacion, search,
 persistencia de favoritos entre rutas y breakpoints desktop/mobile.
 
-P3 fue corregida antes de iniciar codigo. P3-W1 ya implemento la foundation .NET 10,
-Identity user-only, schema PostgreSQL, FTS ponderado, health DB-aware y tests de
-integracion. Las 12 waves restantes conservan el contrato aceptado.
+P3 fue corregida antes de iniciar codigo. P3-W1 implemento la foundation .NET 10,
+Identity user-only, schema PostgreSQL, FTS ponderado y health DB-aware. P3-W2 completo
+registro, email y confirmacion con key ring persistido y rate limits. Las 11 waves
+restantes conservan el contrato aceptado.
 
 ## Closed gates
 
@@ -40,10 +41,24 @@ P3-W1 se cerro sin cuentas externas ni mutaciones productivas:
 - OpenAPI existe solo en Development.
 - EF lista la migracion sin conexion; runtime/database update fallan cerrados sin config.
 
+## P3-W2 completion gate
+
+P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
+
+- Build backend PASS, 0 warnings y 0 errors.
+- 13/13 tests Account y 24/24 backend completos PASS con PostgreSQL Testcontainers.
+- Register/email fake/confirm POST, duplicado, resend, invalido, vencido y reutilizado
+  tienen evidencia observable.
+- Data Protection persiste el key ring en PostgreSQL; confirmacion factory A -> factory
+  B prueba supervivencia a reinicio.
+- Limites IP/email normalizado devuelven 429 ProblemDetails; adaptador Resend se prueba
+  con handler en memoria y `User-Agent`, sin red real.
+- Format, migraciones y audit NuGet vulnerable/transitive PASS.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
-- Crear branch desde `main` limpio.
+- Crear branch desde `codex/p3-integration` limpio y sincronizado.
 - Mantener secrets fuera del repo.
 - Ejecutar los comandos de verification de la wave.
 
@@ -91,6 +106,8 @@ docker compose down
 | CSRF sobre refresh/logout | SameSite=Lax + Origin exacto; CORS no se usa como defensa |
 | 401 simultaneos consumen refresh dos veces | Angular single-flight + backend rotation atomica |
 | Token de confirmacion ambiguo/filtrado | userId+code Base64URL; Angular POST; no mutacion GET |
+| Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; revisar cifrado en reposo en W13 |
+| IP real oculta por Netlify/Render | Fail-closed sobre peer; W13 configura solo proxies verificados y prueba particiones |
 | Render cold start confunde primera visita | Estado connecting + timeout + Retry accesible |
 | Search costoso | tsvector ponderado + GIN + pageSize max 30; trigram solo con evidencia |
 | Cuota/cargo inesperado | Free-only, no keepalive/cron/overages; fail closed y revalidar en W13 |
@@ -99,6 +116,6 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W2 desde `main` integrado. W2 usa un email sender fake en tests; no crear
-Neon/Render/Resend prematuramente porque los recursos externos siguen postergados hasta
-la wave que realmente los necesita.
+Ejecutar P3-W3 desde `codex/p3-integration`. W3 agrega login/JWT/refresh/logout sin crear
+Neon/Render/Resend prematuramente; los recursos externos siguen postergados hasta la
+wave que realmente los necesita.

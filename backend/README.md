@@ -1,9 +1,9 @@
 # Astronomy Explorer backend
 
-ASP.NET Core 10 API foundation for Astronomy Picture Explorer. P3-W1 contains the
-application host, PostgreSQL schema, Identity persistence and database integration
-tests. Business HTTP endpoints start in later waves; the only endpoint in this wave is
-the database-aware `GET /health` probe.
+ASP.NET Core 10 API for Astronomy Picture Explorer. P3-W1 established the host,
+PostgreSQL schema and Identity persistence. P3-W2 adds registration, confirmation,
+resend, rate limiting and the Resend adapter while keeping all external email traffic
+fake/in-memory during tests.
 
 ## Prerequisites
 
@@ -35,6 +35,16 @@ CI and deployed environments must use the equivalent environment variable:
 ConnectionStrings__Postgres
 ```
 
+Account email links use `Frontend:PublicBaseUrl` (local default
+`http://localhost:4200`). Real delivery is deferred to W13; when enabled, secrets and
+sender configuration are supplied only through user-secrets/provider environment:
+
+```text
+Frontend__PublicBaseUrl
+Resend__ApiKey
+Resend__FromAddress
+```
+
 The application fails at startup when this setting is absent. Do not add connection
 strings, API keys or passwords to either `appsettings.json` file.
 
@@ -52,9 +62,13 @@ strings, API keys or passwords to either `appsettings.json` file.
   is stored as a constrained string, not as a PostgreSQL enum.
 - All persisted instants use PostgreSQL `timestamp with time zone`. Application values
   must use `DateTimeOffset.UtcNow`; Npgsql rejects non-zero offsets for this type.
+- Identity Data Protection keys use application name `AstronomyExplorer` and persist in
+  PostgreSQL so confirmation links survive host restart/cold start. W13 revalidates
+  provider encryption at rest before production.
 
 The initial migration creates the Identity tables plus `refresh_sessions`,
-`apod_entries`, `favorites` and `catalog_sync_state`.
+`apod_entries`, `favorites` and `catalog_sync_state`. The W2 migration
+`PersistDataProtectionKeys` adds the shared key ring without rewriting W1 history.
 
 ## Build, migrate and run
 
@@ -70,11 +84,22 @@ dotnet run --project backend/AstronomyExplorer.Api
 OpenAPI is mapped only when `ASPNETCORE_ENVIRONMENT=Development`. Health is available
 at `GET /health` and reports unhealthy when PostgreSQL cannot be reached.
 
+Account endpoints are:
+
+- `POST /auth/register`
+- `POST /auth/resend-confirmation`
+- `POST /auth/confirm-email`
+
+Register/resend are generic to avoid direct account enumeration. Confirmation accepts
+`userId + code` and mutates state only through POST. Register/resend have independent
+limits by transport IP and normalized email; W13 must configure only verified forwarded
+proxies before treating the partition as the public client IP.
+
 ## Tests
 
-The tests start a temporary PostgreSQL 17 container, apply the real EF Core migration
-and validate relational constraints, the generated FTS vector, its GIN index and the
-database-aware health endpoint.
+The tests start a temporary PostgreSQL 17 container, apply the real EF Core migrations
+and validate relational constraints, FTS/GIN, health, account anti-enumeration, token
+expiry/reuse, rate limits, the Resend HTTP contract and cross-instance key persistence.
 
 ```powershell
 dotnet test backend/AstronomyExplorer.sln

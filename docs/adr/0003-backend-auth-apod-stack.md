@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-17
-Status: Accepted; P3-W1 implemented
+Status: Accepted; P3-W1-W2 implemented
 
 ## Context
 
@@ -162,6 +162,24 @@ ocasionales son suficientes y observables.
   y valida rango, ultima fecha y orden de timestamps.
 - EF design time puede construir el modelo sin connection string para operaciones
   `--no-connect`; runtime y mutaciones de DB siguen exigiendo configuracion explicita.
+
+## Implementation clarification - P3-W2 (2026-07-17)
+
+- Los endpoints account viven bajo `/auth`: register/resend responden 202 generico y
+  confirmacion invalida, vencida, inexistente o reutilizada comparte un 400 controlado.
+- El maximo de email queda en 256 para coincidir con las columnas Identity; rate limit
+  normaliza solo dentro de ese limite y usa hash, expiracion y capacidad acotada.
+- El adaptador Resend es un `IEmailSender` app-owned sobre `POST /emails`, Bearer y
+  `User-Agent`; tests lo sustituyen o usan handler en memoria, nunca red real.
+- Identity Data Protection usa application name `AstronomyExplorer` y persiste el key
+  ring en PostgreSQL mediante una segunda migracion. Esto evita invalidar links cuando
+  Render Free pierde su filesystem al dormir/reiniciar.
+- La persistencia EF guarda XML de claves sin un certificado externo. W13 debe verificar
+  cifrado/controles en reposo de Neon y decidir si exige una capa adicional compatible
+  con costo cero antes del deploy.
+- W2 usa `RemoteIpAddress` fail-closed y no confia directamente en headers reenviados.
+  W13 debe verificar la cadena Netlify -> Render, configurar solo forwarders confiables
+  y demostrar que el limiter separa visitantes sin aceptar spoofing.
 
 ## Consequences
 

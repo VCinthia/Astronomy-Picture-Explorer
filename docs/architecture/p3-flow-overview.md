@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-16
-Status: P3 IN PROGRESS - W1 foundation implemented
+Status: P3 IN PROGRESS - W1 foundation + W2 account/email implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -85,6 +85,12 @@ sequenceDiagram
 
 Registro/reenvio tienen rate limit y respuestas anti-enumeracion. El link contiene lo
 necesario para identificar al usuario, pero la mutacion no se ejecuta con GET.
+
+El key ring que firma los tokens Identity vive en PostgreSQL con application name
+estable; por eso un link emitido antes de un restart/cold start sigue validando en una
+nueva instancia. Register/resend se limitan separadamente por IP de transporte y por
+hash de email normalizado. W13 debe resolver la IP original solo mediante forwarders
+verificados de la cadena Netlify -> Render.
 
 ## 4. Login, refresh single-flight y logout
 
@@ -248,6 +254,14 @@ La migracion inicial implementa el diagrama con estas precisiones:
 - `search_vector` es generated stored, ponderado A/B e indexado con GIN.
 - `catalog_sync_state` es unico por rango y usa status string restringido.
 - Fechas usan `date`; instantes usan `timestamp with time zone` y valores UTC.
+
+### W2 account/security alignment
+
+- La segunda migracion agrega `DataProtectionKeys`; no modifica la migracion W1.
+- Confirmacion no persiste el token raw: almacena solo el key ring de Data Protection.
+- Email/username respetan el limite fisico Identity de 256 caracteres.
+- El XML del key ring y la resolucion de IP real conservan gates productivos explicitos
+  en W13 antes de habilitar la release.
 
 ## 9. Waves y dependencias
 

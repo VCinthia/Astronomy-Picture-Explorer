@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-17
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W2 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -64,9 +64,18 @@ P3-W1 quedo DONE el 2026-07-17:
 - 11/11 tests Testcontainers PASS y `/health` DB-aware.
 - Ningun endpoint de negocio, secret o recurso productivo fue agregado prematuramente.
 
+P3-W2 quedo DONE el 2026-07-17:
+
+- Registro/reenvio genericos, confirmacion POST Base64URL y limites IP/email.
+- Resend queda tras `IEmailSender`; tests usan fake y no realizan red real.
+- Key ring Data Protection persiste en PostgreSQL y se valida entre dos instancias.
+- 13/13 tests Account y 24/24 backend PASS; sin paquetes NuGet vulnerables conocidos.
+
 ## 4. Execution contract
 
 - Branch por wave: `wave/p<n>-w<m>-<slug>` o nombre sugerido en la wave.
+- P3 acumula waves aprobadas en `codex/p3-integration`; `main` conserva la ultima
+  release productiva hasta el gate W13.
 - Implementar -> verificar -> review -> aprobacion -> commit/merge -> sincronizar docs.
 - Una wave solo se cierra con evidencia de sus acceptance criteria.
 - No avanzar si una decision cambia ADR/phase/dependency graph sin actualizar docs primero.

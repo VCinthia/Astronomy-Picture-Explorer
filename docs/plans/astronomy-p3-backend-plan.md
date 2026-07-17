@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-17
-Status: IN PROGRESS - W1 DONE
+Status: IN PROGRESS - W1-W2 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -62,6 +62,8 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 
 - P2 debe estar `DONE` en produccion con evidencia de smoke.
 - ADR-0003 y esta planificacion deben permanecer sincronizados.
+- W1-W12 se acumulan en `codex/p3-integration`; `main` conserva P2 productivo hasta la
+  promocion validada por W13.
 - W1-W12 pueden implementarse con servicios locales/mocks.
 - Neon es requerido para ejecutar el seed productivo de W5 y W13.
 - Resend + dominio verificado son requeridos para smoke real de W13, no para tests W2.
@@ -74,7 +76,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 ## 5. Requirements checklist
 
 - [x] **R3.1** Foundation y schema PostgreSQL (W1).
-- [ ] **R3.2** Registro, email y confirmacion segura (W2).
+- [x] **R3.2** Registro, email y confirmacion segura (W2).
 - [ ] **R3.3** Login, JWT y refresh sessions robustas (W3).
 - [ ] **R3.4** NASA today/date + cache + DTO app-owned (W4).
 - [ ] **R3.5** Catalog CLI resumible y status observable (W5).
@@ -90,6 +92,11 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 W1 se cerro el 2026-07-17 con build limpio, migracion inicial reproducible y 11/11
 tests Testcontainers sobre PostgreSQL 17. La evidencia y las precisiones fisicas del
 schema viven en la wave W1 y ADR-0003.
+
+W2 se cerro el 2026-07-17 con 13/13 tests Account y 24/24 backend PASS. Registro,
+reenvio y confirmacion usan respuestas anti-enumeracion, Base64URL y sender fake; el
+key ring Identity sobrevive reinicios mediante PostgreSQL. W13 conserva los gates de
+proxy confiable para IP real y proteccion en reposo del XML de Data Protection.
 
 ## 6. Exit criteria
 
