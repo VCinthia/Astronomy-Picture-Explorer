@@ -13,7 +13,7 @@ browser.
 
 ---
 
-## What it does (Stage 1)
+## What it does (Stages 1–2)
 
 - **Picture of the day** — a hero view with the image, title, date and the full
   description, plus image credit.
@@ -25,6 +25,8 @@ browser.
   browser from the picture's pixels and shown as swatches with their hex codes.
 - **Accessible & responsive** — descriptive alt text, keyboard navigation, focus
   styles, WCAG AA color contrast, and a layout tuned from mobile to desktop.
+- **Favorites + keyword search** — local favorites, a dedicated favorites route,
+  debounced title/description search, and desktop/mobile navigation.
 
 ## Why it exists
 
@@ -44,8 +46,8 @@ treated as a first-class concern rather than an afterthought.
 
 ## How it works
 
-The app reads a local JSON dataset that mirrors the shape of NASA's real APOD API,
-so the data layer can later be pointed at a live backend without changing the UI.
+The current app reads a local JSON dataset based on NASA APOD. Stage 3 will replace
+that temporary source with an app-owned HTTP contract and PostgreSQL-backed catalog.
 A small service exposes the selected date and the current entry as signals, and the
 views react to those. For the palette, each image is drawn to an off-screen canvas
 and its pixels are sampled and grouped into the most dominant colors; if the pixels
@@ -53,9 +55,11 @@ can't be read it falls back to a fixed brand palette.
 
 ## Roadmap
 
-- **Stage 1 — this app:** picture of the day, explore by date, palette, video. ✅
-- **Stage 2:** favorites (saved locally) and keyword search.
-- **Stage 3:** a real backend (NASA API + database) replacing the mock dataset.
+- **Stage 1:** picture of the day, explore by date, palette, video. ✅
+- **Stage 2 — current production:** favorites (saved locally), keyword search,
+  responsive toolbar and mobile bottom navigation. ✅
+- **Stage 3 — planned:** .NET 10 + Identity + PostgreSQL FTS + per-user favorites,
+  deployed on a strictly zero-cost stack through small implementation waves.
 
 ## Run it locally
 
