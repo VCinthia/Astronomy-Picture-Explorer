@@ -4,6 +4,8 @@ ASP.NET Core 10 API for Astronomy Picture Explorer. P3-W1 established the host,
 PostgreSQL schema and Identity persistence. P3-W2 adds registration, confirmation,
 resend, rate limiting and the Resend adapter. P3-W3 adds Identity login, short JWTs,
 rotating PostgreSQL refresh sessions and Origin-protected logout/refresh.
+P3-W4 adds the app-owned APOD contract, public today/date endpoints and layered cache.
+P3-W5 adds the local resumable catalog CLI and public catalog status.
 
 ## Prerequisites
 
@@ -49,6 +51,9 @@ Session__SigningKey
 Session__AccessTokenLifetime
 Session__RefreshTokenLifetime
 Session__RefreshCookieName
+NasaApod__ApiKey
+Catalog__RequiredFrom
+Catalog__RequiredTo
 ```
 
 `Session__SigningKey` must contain at least 32 UTF-8 bytes and must never be committed,
@@ -81,6 +86,10 @@ strings, API keys or passwords to either `appsettings.json` file.
 The initial migration creates the Identity tables plus `refresh_sessions`,
 `apod_entries`, `favorites` and `catalog_sync_state`. The W2 migration
 `PersistDataProtectionKeys` adds the shared key ring without rewriting W1 history.
+The W5 migration `AddCatalogSyncProgress` adds `retry_not_before` and
+`synced_entry_count`. The former preserves a NASA 429 window across restarts; the
+latter counts provider entries independently from calendar days because historical
+APOD ranges can be sparse.
 
 ## Build, migrate and run
 
@@ -122,12 +131,72 @@ There is deliberately no email partition or account lockout, avoiding targeted d
 service. W13 must verify the trusted Netlify/Render forwarding chain before resolving the
 public visitor IP.
 
+Public APOD endpoints are:
+
+- `GET /api/apod/today`
+- `GET /api/apod/date/{date}`
+- `GET /api/apod/catalog-status`
+
+`catalog-status` reports total cached rows and global coverage. Readiness is anchored to
+the exact optional `Catalog__RequiredFrom`/`Catalog__RequiredTo` range; W13 sets both to
+the approved seed target. Without that configuration it reports `not_started`. With a
+target, `ready` requires `Completed`, checkpoint equal to `target_to`, and at least the
+persisted `synced_entry_count` rows inside the target. A newer ad-hoc small sync cannot
+replace the canonical target.
+
+## Local catalog synchronization
+
+The catalog loader is a local operator command. It never runs from API startup, a
+hosted service, Render, a scheduler or a paid job. Preview a range without reading a
+connection string/API key or opening DB/network connections:
+
+```powershell
+dotnet run --project backend/AstronomyExplorer.Catalog -- `
+  catalog sync --from 2026-01-01 --to 2026-01-31 --batch-size 30 --dry-run
+```
+
+Live execution requires `ConnectionStrings__Postgres` and a personal
+`NasaApod__ApiKey`; `DEMO_KEY` is rejected. Ranges must remain within
+`1995-06-16..UTC today` and batch size within `1..30`. Run migrations first, inspect the
+dry-run estimate, then execute locally:
+
+```powershell
+$env:ConnectionStrings__Postgres = "<target PostgreSQL connection>"
+$env:NasaApod__ApiKey = "<personal NASA key>"
+dotnet run --project backend/AstronomyExplorer.Catalog -- `
+  catalog sync --from 1995-06-16 --to 2026-07-17 --batch-size 30
+```
+
+An incomplete range must be continued with `--resume`. The command holds one global
+PostgreSQL advisory lock, so overlapping loaders cannot run concurrently. Each fetch
+happens outside a transaction; its upserts and checkpoint commit together. Ctrl+C,
+timeout, network/408/5xx and 429 pause safely. A 429 persists `retry_not_before`, using
+a safe one-hour fallback if `Retry-After` is absent; an early resume fails before
+contacting NASA. Invalid payloads and permanent 4xx mark the run failed.
+
+Historical NASA arrays may be empty, sparse or unordered. The client sorts valid
+entries and rejects null elements, duplicate dates and dates outside the requested
+batch; it does not require one item per calendar day. A completed run stores the number
+of entries actually returned. If later row drift drops below that count, a normal rerun
+fails safely and `--resume` deliberately replays the full range to repair it.
+
+The global lock connection is monitored by a periodic heartbeat. Losing that session
+cancels the active provider/persistence operation, leaves the current batch checkpoint
+unchanged and records `Paused`; the operator can then resume safely.
+
+Render execution is always blocked, including when an override flag is present. If a
+local shell intentionally uses `DOTNET_ENVIRONMENT=Production`, it additionally
+requires `--allow-local-production`. That flag never bypasses Render detection. W13 is
+the only wave authorized to point this command at the production Neon database, after
+revalidating free-plan quotas and zero-overage controls.
+
 ## Tests
 
 The tests start a temporary PostgreSQL 17 container, apply the real EF Core migrations
 and validate relational constraints, FTS/GIN, health, account anti-enumeration, token
 expiry/reuse, rate limits, the Resend HTTP contract, cross-instance key persistence,
-JWT claims/configuration, refresh concurrency/replay and Origin-protected logout.
+JWT claims/configuration, refresh concurrency/replay, Origin-protected logout, catalog
+range validation, resumable checkpoints, advisory locking and status readiness.
 
 ```powershell
 dotnet test backend/AstronomyExplorer.sln

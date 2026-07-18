@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-17
-Status: Accepted; P3-W1-W3 implemented
+Status: Accepted; P3-W1-W5 implemented
 
 ## Context
 
@@ -218,6 +218,31 @@ ocasionales son suficientes y observables.
 - La cache en memoria tiene lifetime/capacidad validados. El single-flight removible por
   fecha crea scope propio; lee PostgreSQL antes de NASA y persiste mediante `ON CONFLICT`
   atomico, por lo que tambien tolera carreras entre instancias.
+
+## Implementation clarification - P3-W5 (2026-07-17)
+
+- La ingestion vive en `AstronomyExplorer.Catalog`, con entry point namespaced. Dry-run
+  valida rango `1995-06-16..UTC today`, batch `1..30` y estima requests antes de leer
+  connection/key o construir clientes. Live rechaza `DEMO_KEY` y cualquier Render.
+- La exclusion advisory es global al catalogo, mantenida por una conexion PostgreSQL
+  dedicada durante toda la corrida. Esto impide simultaneidad tambien entre rangos
+  distintos o solapados. Un heartbeat cancela la operacion si se pierde la sesion,
+  evitando continuar sin poseer el lock.
+- NASA range usa `start_date`, `end_date`, `thumbs=true` y `X-Api-Key`. Antes del primer
+  write acepta arrays vacios, dispersos o desordenados, pero rechaza items null, fechas
+  duplicadas/fuera del batch, campos invalidos, URLs no HTTP(S) o service distinto de v1.
+  Ningun response body/error interno se imprime.
+- Fetch queda fuera de transaccion. Cada batch confirma `apod_entries` upserts y avance
+  de checkpoint mas `synced_entry_count` en una sola transaccion. El count suma entries
+  devueltas, no dias calendario; rollback conserva ambos valores previos.
+- 408/5xx/network/timeout son transitorios y dejan Paused; 4xx permanente o payload
+  invalido dejan Failed. 429 no espera una ventana larga: persiste `retry_not_before`,
+  usando una hora desde el reloj inyectable si falta `Retry-After`, y resume temprano
+  falla antes de llamar NASA.
+- `Catalog__RequiredFrom/To` define el target canónico de produccion que W13 fija al
+  seed. `GET /api/apod/catalog-status` ignora estados ad-hoc para readiness y serializa
+  estados lowercase. Ready exige Completed, checkpoint final y row count al menos igual
+  al synced count. Completed con drift solo se repara reejecutando el rango con resume.
 
 ## Consequences
 

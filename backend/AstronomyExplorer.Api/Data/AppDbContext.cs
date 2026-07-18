@@ -196,6 +196,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
           "ck_catalog_sync_state_status",
           "status IN ('Pending', 'Running', 'Paused', 'Completed', 'Failed')");
         tableBuilder.HasCheckConstraint(
+          "ck_catalog_sync_state_synced_entry_count",
+          "synced_entry_count >= 0");
+        tableBuilder.HasCheckConstraint(
           "ck_catalog_sync_state_updated_at",
           "updated_at >= created_at");
       });
@@ -207,12 +210,18 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
       entity.Property(state => state.TargetFrom).HasColumnName("target_from");
       entity.Property(state => state.TargetTo).HasColumnName("target_to");
       entity.Property(state => state.LastCompletedDate).HasColumnName("last_completed_date");
+      entity.Property(state => state.SyncedEntryCount)
+              .HasColumnName("synced_entry_count")
+              .HasDefaultValue(0);
       entity.Property(state => state.Status)
               .HasColumnName("status")
               .HasConversion<string>()
               .HasMaxLength(16)
               .HasDefaultValue(CatalogSyncStatus.Pending);
       entity.Property(state => state.LastError).HasColumnName("last_error");
+      entity.Property(state => state.RetryNotBefore)
+              .HasColumnName("retry_not_before")
+              .HasColumnType("timestamp with time zone");
       entity.Property(state => state.CreatedAt)
               .HasColumnName("created_at")
               .HasColumnType("timestamp with time zone")

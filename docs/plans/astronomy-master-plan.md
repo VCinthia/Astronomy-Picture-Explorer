@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-17
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W4 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W5 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -85,6 +85,15 @@ P3-W4 quedo DONE el 2026-07-17:
 - Endpoints UTC today/date con ProblemDetails y cache memoria -> PostgreSQL -> NASA.
 - Single-flight removible y `ON CONFLICT` evitan duplicados; 31/31 tests W4 y 78/78
   backend PASS sin llamadas NASA reales.
+
+P3-W5 quedo DONE el 2026-07-17:
+
+- CLI local dry-run/live con rangos de hasta 30 dias por request y key propia obligatoria.
+- Lock PostgreSQL global con heartbeat, batches atomicos y reanudacion sin saltos.
+- 429 persiste ventana segura; Render queda bloqueado incluso con override local.
+- Archivo historico disperso conserva checkpoint de rango y count de entries; status
+  valida el target canónico configurado antes de ready. 55/55 Catalog y 132/132 backend
+  PASS; tests no llaman NASA real.
 
 ## 4. Execution contract
 

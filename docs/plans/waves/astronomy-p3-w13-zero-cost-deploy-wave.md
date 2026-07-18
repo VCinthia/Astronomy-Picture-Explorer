@@ -26,7 +26,8 @@ desplegar y ejecutar el smoke que cierra P3.
 - [ ] W13.2 Crear solo planes Free; sin keepalive/cron/worker pago/overages/upgrades.
   Configurar gasto cero o no registrar metodo de pago cuando aplique.
 - [ ] W13.3 Aplicar migraciones Neon y ejecutar CLI local `--dry-run`, seed resumible y
-  verificacion `catalog-status ready`; registrar conteo/tamaño sin secrets.
+  verificacion `catalog-status ready`; fijar `Catalog__RequiredFrom/To` exactamente al
+  rango seed aprobado y registrar conteo/tamaño sin secrets.
 - [ ] W13.4 Verificar dominio/sender Resend y rate limits antes del email real.
 - [ ] W13.5 Render recibe env vars en dashboard; no ejecuta backfill ni guarda archivos.
 - [ ] W13.6 Netlify proxifica `/api/*` y `/auth/*` a Render antes de `/* -> index.html`.

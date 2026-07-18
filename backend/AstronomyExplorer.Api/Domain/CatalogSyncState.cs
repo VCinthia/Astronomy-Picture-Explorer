@@ -10,9 +10,13 @@ public sealed class CatalogSyncState
 
   public DateOnly? LastCompletedDate { get; set; }
 
+  public int SyncedEntryCount { get; set; }
+
   public CatalogSyncStatus Status { get; set; }
 
   public string? LastError { get; set; }
+
+  public DateTimeOffset? RetryNotBefore { get; set; }
 
   public DateTimeOffset CreatedAt { get; set; }
 

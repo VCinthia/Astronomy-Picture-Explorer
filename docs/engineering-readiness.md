@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-17
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W4 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W5 DONE
 
 ## Verdict
 
@@ -12,7 +12,8 @@ persistencia de favoritos entre rutas y breakpoints desktop/mobile.
 P3 fue corregida antes de iniciar codigo. P3-W1 implemento la foundation .NET 10,
 Identity user-only, schema PostgreSQL, FTS ponderado y health DB-aware. P3-W2 completo
 registro, email y confirmacion con key ring persistido y rate limits. P3-W3 implemento
-sesiones seguras y P3-W4 cerro NASA today/date con cache; las 9 waves restantes
+sesiones seguras, P3-W4 cerro NASA today/date con cache y P3-W5 completo la ingestion
+local resumible; las 8 waves restantes
 conservan el contrato aceptado.
 
 ## Closed gates
@@ -85,6 +86,26 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - Tests prueban reutilizacion entre instancias, concurrencia y retry posterior a fallo;
   handlers/fakes en memoria garantizan cero llamadas NASA reales.
 
+## P3-W5 completion gate
+
+- Build backend PASS con 0 warnings y 0 errors; 55/55 Catalog y 132/132 backend PASS.
+- Dry-run calcula rango/batches sin leer environment ni abrir DB/red. Live exige
+  PostgreSQL y key NASA personal; `DEMO_KEY` y cualquier entorno Render fallan cerrados.
+- Cliente range envia solo `start_date`, `end_date`, `thumbs=true`; la key viaja en
+  `X-Api-Key`, nunca en query/logs. Acepta arrays historicos vacios/dispersos/desordenados
+  y rechaza null, fechas duplicadas/fuera del batch o payload invalido antes de persistir.
+- Lock advisory global con conexion dedicada excluye tambien rangos solapados. Fetch
+  ocurre fuera de transaccion; upserts y checkpoint se confirman o revierten juntos.
+- 408/5xx/network/timeout pausan; payload/4xx permanente fallan. 429 persiste
+  `retry_not_before` con fallback de una hora y bloquea resume temprano sin llamar NASA.
+- `synced_entry_count` avanza atomicamente con cada checkpoint y cuenta entries NASA,
+  no dias calendario. Completed con drift exige resume y repara desde el inicio.
+- `Catalog__RequiredFrom/To` fija el target canónico; sin config/state status es
+  `not_started`. Ready exige Completed + checkpoint final + row count >= synced count;
+  un sync pequeño posterior no puede sustituirlo.
+- Heartbeat sobre la conexion dedicada detecta perdida del advisory lock, cancela el
+  trabajo linked y deja Paused sin adelantar checkpoint.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -95,7 +116,7 @@ Antes de cada wave restante:
 Recursos externos se habilitan just-in-time:
 
 - Resend/dominio: necesario para smoke real W13; W2 usa fake en tests.
-- NASA key propia: necesaria para seed W5, no para W1.
+- NASA key propia: necesaria para el seed real autorizado en W13; W5 usa mocks/dry-run.
 - Neon: necesario para seed/deploy, no para Testcontainers W1.
 - Render/URL final: necesario solo en W13.
 
@@ -146,6 +167,6 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W5 desde `codex/p3-integration`. W5 reutiliza el adaptador y upsert W4 para
-la ingestion CLI local resumible; requiere una NASA key propia antes del backfill, pero
-Neon/Render/Resend siguen postergados hasta la wave que realmente los necesita.
+Ejecutar P3-W6 desde `codex/p3-integration`. W6 implementa search exclusivamente sobre
+PostgreSQL y usa `catalog-status` para fallar con `catalog_not_ready` hasta que W13
+complete el seed autorizado. Neon/Render/Resend y NASA real siguen postergados.

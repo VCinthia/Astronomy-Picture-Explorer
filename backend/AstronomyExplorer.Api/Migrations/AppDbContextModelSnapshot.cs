@@ -176,6 +176,10 @@ namespace AstronomyExplorer.Api.Migrations
                         .HasColumnType("text")
                         .HasColumnName("last_error");
 
+                    b.Property<DateTimeOffset?>("RetryNotBefore")
+                        .HasColumnType("timestamp with time zone")
+                        .HasColumnName("retry_not_before");
+
                     b.Property<string>("Status")
                         .IsRequired()
                         .ValueGeneratedOnAdd()
@@ -183,6 +187,12 @@ namespace AstronomyExplorer.Api.Migrations
                         .HasColumnType("character varying(16)")
                         .HasDefaultValue("Pending")
                         .HasColumnName("status");
+
+                    b.Property<int>("SyncedEntryCount")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer")
+                        .HasDefaultValue(0)
+                        .HasColumnName("synced_entry_count");
 
                     b.Property<DateOnly>("TargetFrom")
                         .HasColumnType("date")
@@ -210,6 +220,8 @@ namespace AstronomyExplorer.Api.Migrations
                             t.HasCheckConstraint("ck_catalog_sync_state_checkpoint", "last_completed_date IS NULL OR (last_completed_date >= target_from AND last_completed_date <= target_to)");
 
                             t.HasCheckConstraint("ck_catalog_sync_state_status", "status IN ('Pending', 'Running', 'Paused', 'Completed', 'Failed')");
+
+                            t.HasCheckConstraint("ck_catalog_sync_state_synced_entry_count", "synced_entry_count >= 0");
 
                             t.HasCheckConstraint("ck_catalog_sync_state_target_range", "target_from <= target_to");
 

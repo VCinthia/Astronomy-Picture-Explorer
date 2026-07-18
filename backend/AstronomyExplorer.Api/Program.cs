@@ -51,6 +51,10 @@ builder.Services.AddOptions<ApodCacheOptions>()
   .Bind(builder.Configuration.GetSection(ApodCacheOptions.SectionName))
   .ValidateOnStart();
 builder.Services.AddSingleton(TimeProvider.System);
+builder.Services.AddSingleton<IValidateOptions<CatalogOptions>, CatalogOptionsValidator>();
+builder.Services.AddOptions<CatalogOptions>()
+  .Bind(builder.Configuration.GetSection(CatalogOptions.SectionName))
+  .ValidateOnStart();
 
 var nasaApodOptions = builder.Configuration
   .GetSection(NasaApodOptions.SectionName)
@@ -160,6 +164,7 @@ app.MapHealthChecks("/health");
 app.MapAccountEndpoints();
 app.MapSessionEndpoints();
 app.MapApodEndpoints();
+app.MapCatalogStatusEndpoint();
 
 app.Run();
 

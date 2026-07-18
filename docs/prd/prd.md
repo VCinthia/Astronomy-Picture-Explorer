@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-17
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W4 DONE
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W5 DONE
 
 ## Vision
 
@@ -72,7 +72,14 @@ hdurl|null, thumbnail_url|null, copyright|null
 - `pg_trgm` puede agregarse como fallback solo con evidencia de utilidad.
 - Resultados paginados, maximo 30 por request y orden estable.
 - Catalogo historico se carga mediante CLI local resumible por rangos NASA.
-- Status publico informa cobertura/readiness; search no simula completitud.
+- Dry-run estima requests sin DB/key/red; live exige key propia y nunca corre en Render.
+- Batches atomicos y lock global con heartbeat evitan saltos, duplicados y rangos
+  solapados; 429 conserva una ventana de resume segura entre procesos.
+- APOD historico puede ser disperso: progreso distingue rango consultado de cantidad de
+  entries devueltas y puede reparar drift mediante resume completo.
+- Status publico informa cobertura/readiness del target canónico configurado para el
+  seed; ready exige estado completo, checkpoint final y conservar las filas
+  sincronizadas, por lo que un sync pequeño no simula completitud.
 - No existe backfill automatico en Render ni scheduler/keepalive.
 
 ### Authentication

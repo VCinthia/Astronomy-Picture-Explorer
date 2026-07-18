@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-16
-Status: P3 IN PROGRESS - W1-W3 implemented
+Status: P3 IN PROGRESS - W1-W5 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -173,9 +173,17 @@ flowchart LR
     OPTIONAL --> RESULTS["max 30, ranking + fecha"]
 ```
 
-La carga historica se hace una vez desde desarrollo contra Neon. Si se interrumpe, el
-checkpoint permite continuar. `today` agrega la entrada actual al catalogo de manera
-natural. No hay scheduler ni keepalive.
+La carga historica se hace una vez desde desarrollo contra Neon, autorizada en W13. W5
+permite dry-run sin dependencias y bloquea cualquier ejecucion en Render. Un lock
+advisory global impide corridas simultaneas incluso con rangos solapados; un heartbeat
+cancela fail-closed si se pierde esa sesion. Cada respuesta NASA puede ser vacia,
+dispersa o desordenada: se rechazan null, duplicados y fechas fuera del batch antes de
+que upserts, checkpoint y count retornado se confirmen juntos.
+
+Si se interrumpe, `--resume` comienza en `last_completed_date + 1`. 429 guarda
+`retry_not_before` (fallback seguro de una hora sin header) y rechaza resume temprano
+sin gastar cuota. `today` agrega la entrada actual al catalogo de manera natural. No hay
+scheduler ni keepalive.
 
 ## 7. Favoritos
 
@@ -247,8 +255,10 @@ erDiagram
         date target_from
         date target_to
         date last_completed_date
+        int synced_entry_count
         string status
         string last_error nullable
+        timestamp retry_not_before nullable
     }
 ```
 
@@ -292,6 +302,20 @@ La migracion inicial implementa el diagrama con estas precisiones:
   queda acotada y PostgreSQL resuelve reinicios antes de volver a NASA.
 - El upsert `ON CONFLICT` es seguro entre instancias. Fallos no se cachean y liberan el
   single-flight para que Retry pueda recuperar.
+
+### W5 catalog ingestion alignment
+
+- La consola tiene entry point namespaced y no comparte el `Program` global de la API.
+- `Catalog__RequiredFrom/To` define el target canónico que W13 fija al seed. Sin
+  configuracion o state se expone `not_started`; el target configurado sigue visible.
+  `ready` requiere Completed, checkpoint final y row count >= `synced_entry_count`.
+- Network/408/5xx/timeout dejan Paused; 4xx permanente o payload invalido dejan Failed.
+  `retry_not_before` persiste ventanas 429 entre procesos y se limpia al reanudar o completar.
+- El lock es global al catalogo. Una conexion dedicada mantiene la sesion del lock,
+  su heartbeat alimenta `LockLostToken`, y cada batch usa otra transaccion corta para
+  upsert + checkpoint + synced count atomicos.
+- APOD historico no es un calendario denso. Completed integro es idempotente; si el row
+  count cae debajo del count sincronizado, `--resume` reejecuta el rango completo.
 
 ## 9. Waves y dependencias
 

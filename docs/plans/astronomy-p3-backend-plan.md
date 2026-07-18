@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-17
-Status: IN PROGRESS - W1-W4 DONE
+Status: IN PROGRESS - W1-W5 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -79,7 +79,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.2** Registro, email y confirmacion segura (W2).
 - [x] **R3.3** Login, JWT y refresh sessions robustas (W3).
 - [x] **R3.4** NASA today/date + cache + DTO app-owned (W4).
-- [ ] **R3.5** Catalog CLI resumible y status observable (W5).
+- [x] **R3.5** Catalog CLI resumible y status observable (W5).
 - [ ] **R3.6** PostgreSQL FTS y endpoint search (W6).
 - [ ] **R3.7** Favorites API protegida e hidratada (W7).
 - [ ] **R3.8** Frontend account/auth flows (W8).
@@ -107,6 +107,13 @@ W4 se cerro el 2026-07-17 con 31/31 tests W4 y 78/78 backend PASS. Los endpoints
 publicos today/date exponen solo el DTO app-owned; cache acotada y single-flight leen
 memoria -> PostgreSQL -> NASA y persisten misses con upsert atomico. La key viaja en
 `X-Api-Key`, redirects/429 no se reintentan y ninguna prueba consume NASA real.
+
+W5 se cerro el 2026-07-17 con 55/55 Catalog y 132/132 backend PASS. El CLI local
+valida/dry-run antes de dependencias, bloquea Render y exige key personal. Un lock
+advisory global con heartbeat excluye rangos solapados. Cada batch acepta el archivo
+historico disperso y confirma upserts + checkpoint + synced count en una transaccion.
+429 persiste `retry_not_before`; el status usa el target canónico configurado y compara
+su cobertura real contra la cantidad sincronizada antes de declarar `ready`.
 
 ## 6. Exit criteria
 
