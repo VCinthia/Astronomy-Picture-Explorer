@@ -7,10 +7,12 @@ import {
   input,
   signal
 } from '@angular/core';
+import { Router } from '@angular/router';
 
 import { ColorPaletteComponent } from '../color-palette/color-palette.component';
 import type { ApodEntry } from '../../models/apod.model';
-import { AstronomyService } from '../../services/astronomy.service';
+import { AuthService } from '../../services/auth.service';
+import { FavoritesService } from '../../services/favorites.service';
 import { formatApodDate } from '../../utils/format-date';
 
 /**
@@ -27,12 +29,16 @@ import { formatApodDate } from '../../utils/format-date';
   styleUrl: './picture-card.component.css'
 })
 export class PictureCardComponent {
-  private readonly astronomy = inject(AstronomyService);
+  private readonly favorites = inject(FavoritesService);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   readonly entry = input.required<ApodEntry>();
 
   readonly isVideo = computed(() => this.entry().media_type === 'video');
-  readonly isFavorite = computed(() => this.astronomy.favorites().includes(this.entry().date));
+  readonly isFavorite = computed(() => this.favorites.isFavorite(this.entry().date));
+  readonly favoritePending = computed(() => this.favorites.isPending(this.entry().date));
+  readonly canSaveFavorites = this.auth.isAuthenticated;
   readonly formattedDate = computed(() => formatApodDate(this.entry().date));
 
   /** False while the current media is still loading (drives the spinner). */
@@ -53,6 +59,6 @@ export class PictureCardComponent {
   }
 
   toggleFavorite(): void {
-    this.astronomy.toggleFavorite(this.entry().date);
+    this.favorites.toggle(this.entry(), this.router.url);
   }
 }

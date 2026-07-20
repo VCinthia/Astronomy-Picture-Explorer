@@ -1,7 +1,9 @@
 import { ChangeDetectionStrategy, Component, inject, input } from '@angular/core';
+import { Router } from '@angular/router';
 
 import type { ApodEntry } from '../../models/apod.model';
-import { AstronomyService } from '../../services/astronomy.service';
+import { AuthService } from '../../services/auth.service';
+import { FavoritesService } from '../../services/favorites.service';
 import { formatApodDate } from '../../utils/format-date';
 
 /** Compact-card grid shared by search results and favorites, with persisted favorite controls. */
@@ -62,7 +64,9 @@ import { formatApodDate } from '../../utils/format-date';
             [class.text-accent]="isFavorite(entry.date)"
             [class.text-content-secondary]="!isFavorite(entry.date)"
             [attr.aria-pressed]="isFavorite(entry.date)"
+            [attr.aria-busy]="isPending(entry.date)"
             [attr.aria-label]="favoriteLabel(entry)"
+            [disabled]="isPending(entry.date)"
             (click)="toggleFavorite(entry.date)"
           >
             <svg
@@ -92,19 +96,32 @@ import { formatApodDate } from '../../utils/format-date';
   `
 })
 export class PictureGridComponent {
-  private readonly astronomy = inject(AstronomyService);
+  private readonly favorites = inject(FavoritesService);
+  private readonly router = inject(Router);
+  private readonly auth = inject(AuthService);
 
   readonly entries = input.required<readonly ApodEntry[]>();
 
   isFavorite(date: string): boolean {
-    return this.astronomy.isFavorite(date);
+    return this.favorites.isFavorite(date);
+  }
+
+  isPending(date: string): boolean {
+    return this.favorites.isPending(date);
   }
 
   toggleFavorite(date: string): void {
-    this.astronomy.toggleFavorite(date);
+    const entry = this.entries().find((candidate) => candidate.date === date);
+    if (entry !== undefined) {
+      this.favorites.toggle(entry, this.router.url);
+    }
   }
 
   favoriteLabel(entry: ApodEntry): string {
+    if (!this.auth.isAuthenticated()) {
+      return `Sign in to save ${entry.title} to favorites`;
+    }
+
     return this.isFavorite(entry.date)
       ? `Remove ${entry.title} from favorites`
       : `Add ${entry.title} to favorites`;

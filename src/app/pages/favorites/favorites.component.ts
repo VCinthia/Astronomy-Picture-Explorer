@@ -1,9 +1,8 @@
-import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/core';
+import { ChangeDetectionStrategy, Component, inject } from '@angular/core';
 import { RouterLink } from '@angular/router';
 
-import type { ApodEntry } from '../../models/apod.model';
 import { PictureGridComponent } from '../../components/picture-grid/picture-grid.component';
-import { AstronomyService } from '../../services/astronomy.service';
+import { FavoritesService } from '../../services/favorites.service';
 
 /** Displays the valid archive entries saved in the browser, newest first. */
 @Component({
@@ -19,7 +18,30 @@ import { AstronomyService } from '../../services/astronomy.service';
         </h1>
       </div>
 
-      @if (entries().length > 0) {
+      @if (loading()) {
+        <section
+          role="status"
+          aria-live="polite"
+          class="rounded-card border border-space-border bg-space-surface px-6 py-12 text-center"
+        >
+          <p class="text-body font-semibold text-content-primary">Loading your favorites...</p>
+        </section>
+      } @else if (error(); as requestError) {
+        <section
+          role="alert"
+          class="rounded-card border border-red-400/60 bg-red-400/10 px-6 py-12 text-center"
+        >
+          <p class="text-body font-semibold text-content-primary">Your favorites are unavailable.</p>
+          <p class="mt-2 text-meta text-content-secondary">{{ requestError.message }}</p>
+          <button
+            type="button"
+            (click)="retry()"
+            class="mt-6 rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Retry
+          </button>
+        </section>
+      } @else if (entries().length > 0) {
         <app-picture-grid [entries]="entries()" />
       } @else {
         <div
@@ -41,13 +63,13 @@ import { AstronomyService } from '../../services/astronomy.service';
   `
 })
 export class FavoritesComponent {
-  private readonly astronomy = inject(AstronomyService);
+  private readonly favorites = inject(FavoritesService);
 
-  readonly entries = computed<readonly ApodEntry[]>(() =>
-    this.astronomy
-      .favorites()
-      .map((date) => this.astronomy.getByDate(date))
-      .filter((entry): entry is ApodEntry => entry !== undefined)
-      .sort((left, right) => right.date.localeCompare(left.date))
-  );
+  readonly entries = this.favorites.entries;
+  readonly loading = this.favorites.loading;
+  readonly error = this.favorites.error;
+
+  retry(): void {
+    this.favorites.retry();
+  }
 }

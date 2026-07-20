@@ -1,10 +1,24 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import type { ApodEntry } from '../../models/apod.model';
-import { AstronomyService } from '../../services/astronomy.service';
+import { AuthSessionChange, AuthUser, AuthService } from '../../services/auth.service';
+import { FavoritesService } from '../../services/favorites.service';
 import { PictureGridComponent } from './picture-grid.component';
 
-const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
+class AuthSessionStub {
+  readonly currentUser = signal<AuthUser | null>(null);
+  readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly sessionChange = signal<AuthSessionChange>({ previousUserId: null, currentUser: null });
+
+  signIn(user: AuthUser): void {
+    this.currentUser.set(user);
+    this.sessionChange.set({ previousUserId: null, currentUser: user });
+  }
+}
 
 const entries: ApodEntry[] = [
   {
@@ -30,10 +44,24 @@ const entries: ApodEntry[] = [
 ];
 
 describe('PictureGridComponent', () => {
+  let http: HttpTestingController;
+  let auth: AuthSessionStub;
+
   beforeEach(async () => {
-    localStorage.removeItem(FAVORITES_STORAGE_KEY);
-    await TestBed.configureTestingModule({ imports: [PictureGridComponent] }).compileComponents();
+    auth = new AuthSessionStub();
+    await TestBed.configureTestingModule({
+      imports: [PictureGridComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: AuthService, useValue: auth }
+      ]
+    }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
   });
+
+  afterEach(() => http.verify({ ignoreCancelled: true }));
 
   function render(items: readonly ApodEntry[]): HTMLElement {
     const fixture = TestBed.createComponent(PictureGridComponent);
@@ -105,7 +133,10 @@ describe('PictureGridComponent', () => {
   });
 
   it('keeps the favorite controls outside media links and reflects their pressed state', () => {
-    const service = TestBed.inject(AstronomyService);
+    const service = TestBed.inject(FavoritesService);
+    auth.signIn({ id: 'alice', email: 'alice@example.test' });
+    TestBed.flushEffects();
+    http.expectOne('/api/favorites').flush([]);
     const fixture = TestBed.createComponent(PictureGridComponent);
     fixture.componentRef.setInput('entries', entries);
     fixture.detectChanges();
@@ -133,6 +164,12 @@ describe('PictureGridComponent', () => {
     button.click();
     fixture.detectChanges();
 
+    expect(button.disabled).toBeTrue();
+    const request = http.expectOne('/api/favorites');
+    expect(request.request.body).toEqual({ apod_date: entries[0].date });
+    request.flush(null, { status: 204, statusText: 'No Content' });
+    fixture.detectChanges();
+
     expect(service.isFavorite(entries[0].date)).toBeTrue();
     expect(button.getAttribute('aria-pressed')).toBe('true');
     expect(button.getAttribute('aria-label')).toContain('Remove');
@@ -140,5 +177,17 @@ describe('PictureGridComponent', () => {
     expect(button.classList).not.toContain('text-content-secondary');
     expect(icon.getAttribute('fill')).toBe('currentColor');
     expect(icon.getAttribute('stroke')).toBe('currentColor');
+  });
+
+  it('labels the anonymous heart as a sign-in CTA without issuing a favorite request', () => {
+    const fixture = TestBed.createComponent(PictureGridComponent);
+    fixture.componentRef.setInput('entries', entries);
+    fixture.detectChanges();
+
+    const button = fixture.nativeElement.querySelector('button') as HTMLButtonElement;
+    expect(button.getAttribute('aria-label')).toContain('Sign in');
+    button.click();
+
+    expect(http.match('/api/favorites').length).toBe(0);
   });
 });

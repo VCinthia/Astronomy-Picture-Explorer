@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-20
-Status: P3 IN PROGRESS - W1-W10 implemented
+Status: P3 IN PROGRESS - W1-W11 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -128,9 +128,22 @@ stepper suma/resta dias UTC.
 El servicio separa `requestedDate` (fecha valida pendiente) de `selectedDate` (fecha
 confirmada por la respuesta real) y usa `switchMap` para cancelar date/search obsoletos.
 Home y Explorer presentan estados loading, cold-start/upstream, empty y
-`catalog_not_ready` con Retry accesible. Esta migracion no mueve JWT ni altera W9. La
-fachada de favoritos P2 se mantiene solamente como puente interno de la rama acumulativa;
-W11 debe eliminarla mediante la API, sin transferir favoritos anonimos a una cuenta.
+`catalog_not_ready` con Retry accesible. Esta migracion no mueve JWT ni altera W9.
+
+### W11 frontend favorites alignment
+
+`FavoritesService` toma posesion exclusiva de la coleccion hidratada. Despues de la
+sesion W9 hace un unico `GET /api/favorites` por usuario/sesion, por lo que Favorites y
+las cards no hacen N+1. Las mutaciones exactas son `POST /api/favorites` con
+`{ "apod_date": date }` y `DELETE /api/favorites/{date}`; pending por fecha conserva
+`aria-pressed`, evita doble toggle y muestra error/retry recuperable. El cambio de
+sesion limpia/cancela estado antes de cargar la siguiente cuenta; lecturas y callbacks
+validan el usuario actual, por lo que una respuesta vieja no puede filtrarse ni durante
+el intervalo previo al effect Angular. La signal de identidad activa invalida valores
+publicos cacheados y deja que B exponga su coleccion al completarse la carga. El corazon
+anonimo es un CTA accesible a login con retorno interno
+normalizado. La fachada P2, `ape.favorites.v1` y cualquier migracion de favoritos
+anonimos dejan de existir.
 
 ## 4. Login, refresh single-flight y logout
 

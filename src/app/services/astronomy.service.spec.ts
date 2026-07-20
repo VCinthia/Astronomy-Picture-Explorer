@@ -5,7 +5,6 @@ import { TestBed } from '@angular/core/testing';
 import type { ApodEntry } from '../models/apod.model';
 import { AstronomyService, APOD_FIRST_DATE, isApodDate } from './astronomy.service';
 
-const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
 const imageEntry: ApodEntry = {
   date: '2026-05-22',
   title: 'The Nebulous Realm of WR 134',
@@ -32,7 +31,6 @@ describe('AstronomyService', () => {
   let http: HttpTestingController;
 
   beforeEach(() => {
-    localStorage.removeItem(FAVORITES_STORAGE_KEY);
     TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(AstronomyService);
     http = TestBed.inject(HttpTestingController);
@@ -138,11 +136,4 @@ describe('AstronomyService', () => {
     expect(service.searchError()).toBeNull();
   });
 
-  it('retains the P2 favorite-date facade only until W11 replaces it with the API', () => {
-    service.toggleFavorite(imageEntry.date);
-    TestBed.flushEffects();
-
-    expect(service.isFavorite(imageEntry.date)).toBeTrue();
-    expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) ?? '[]')).toEqual([imageEntry.date]);
-  });
 });

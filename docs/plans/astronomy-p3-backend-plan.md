@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: IN PROGRESS - W1-W10 DONE
+Status: IN PROGRESS - W1-W11 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -92,7 +92,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.8** Frontend account/auth flows (W8).
 - [x] **R3.9** Frontend session bootstrap/guard/interceptor (W9).
 - [x] **R3.10** Frontend APOD/date/search migration (W10).
-- [ ] **R3.11** Frontend favorites migration (W11).
+- [x] **R3.11** Frontend favorites migration (W11).
 - [ ] **R3.12** Contenedores y stack local (W12).
 - [ ] **R3.13** Seed, deploy $0 y smoke productivo (W13).
 
@@ -171,6 +171,20 @@ curso y `selectedDate` se confirma solo desde la respuesta APOD. Los estados acc
 cubren loading, upstream/cold-start, empty y `catalog_not_ready` con Retry. La fachada
 local P2 de favoritos es transitoria y W11 la elimina sin migracion silenciosa. `npm run
 build` y 100/100 pruebas ChromeHeadless PASS.
+
+W11 se cerro el 2026-07-20 con `FavoritesService` autenticado. Una coleccion hidratada
+se carga una vez por usuario/sesion mediante `GET /api/favorites`, sin N+1 ni limite
+silencioso. Add usa exactamente `POST /api/favorites` con `{ "apod_date": date }` y
+delete `DELETE /api/favorites/{date}`; ambos esperan 204, bloquean acciones duplicadas
+por fecha y manejan error/retry accesible. El servicio escucha `sessionChange` y
+`currentUser`, cancela/ignora respuestas viejas y borra toda memoria al logout o cambio
+de cuenta. La comparacion directa de usuario en lecturas/callbacks bloquea el intervalo
+antes de que se ejecute el effect Angular y la signal de identidad activa invalida cualquier
+valor publico cacheado. Los corazones anonimos ofrecen login con
+retorno interno normalizado. No queda
+lectura, escritura ni migracion de `ape.favorites.v1`. `npm ci`, `npm run build`,
+115/115 pruebas ChromeHeadless, `npm audit --omit=dev` (0 runtime) y `git diff --check`
+PASS.
 
 ## 6. Exit criteria
 

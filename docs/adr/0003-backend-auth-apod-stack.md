@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: Accepted; P3-W1-W10 implemented
+Status: Accepted; P3-W1-W11 implemented
 
 ## Context
 
@@ -347,6 +347,25 @@ ocasionales son suficientes y observables.
   Los estados loading, upstream/cold-start, empty y `catalog_not_ready` son recuperables
   mediante Retry. La deuda local de favoritos queda limitada a W11 y no puede promoverse
   como comportamiento de una cuenta.
+
+## Implementation clarification - P3-W11 (2026-07-20)
+
+- `FavoritesService` es el unico propietario frontend de `ApodEntry[]` favoritos. Al
+  autenticar carga una unica vez `GET /api/favorites`; cada card recibe esa proyeccion
+  hidratada y no emite lecturas APOD adicionales.
+- El add usa exactamente `POST /api/favorites` con JSON snake_case
+  `{ "apod_date": "YYYY-MM-DD" }`; el remove usa `DELETE /api/favorites/{date}`.
+  El control queda pending por fecha hasta el 204, con error/retry recuperable e
+  idempotencia en ambos sentidos.
+- La frontera de sesion W9 se consume mediante `sessionChange` y `currentUser`: logout o
+  cambio A->B borra lista, pending y error, cancela solicitudes observables e ignora
+  cualquier respuesta perteneciente a la sesion anterior. Lecturas y callbacks cotejan
+  tambien el usuario actual para negar ese resultado antes de que el effect programe la
+  limpieza del nuevo limite de sesion. La identidad activa tambien es un signal, de modo
+  que la transicion invalida las proyecciones publicas que ya se hubieran leido.
+- No existe fallback ni migracion de Web Storage. Un toggle anonimo se expresa como CTA
+  accesible a login con `returnUrl` interno normalizado; nunca asocia estado anonimo a
+  una cuenta autenticada.
 
 ## Consequences
 

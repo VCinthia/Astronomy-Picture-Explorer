@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-20
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W10 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W11 DONE
 
 ## Verdict
 
@@ -15,8 +15,9 @@ registro, email y confirmacion con key ring persistido y rate limits. P3-W3 impl
 sesiones seguras, P3-W4 cerro NASA today/date con cache, P3-W5 completo la ingestion
 local resumible, P3-W6 cerro FTS, P3-W7 completo Favorites API protegida y P3-W8
 materializo las pantallas Angular de cuenta. P3-W9 completo bootstrap/guard/interceptor
-y logout frontend. P3-W10 reemplazo el runtime mock por APOD/date/search HTTP; W11-W13
-conservan el contrato aceptado.
+y logout frontend. P3-W10 reemplazo el runtime mock por APOD/date/search HTTP; P3-W11
+reemplazo la fachada local de favoritos por la API autenticada. W12-W13 conservan el
+contrato aceptado.
 
 ## Closed gates
 
@@ -210,6 +211,24 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   --omit=dev` mantiene 0 vulnerabilidades runtime; los cinco advisories de dev siguen
   documentados y no se fuerza una actualizacion fuera de mantenimiento.
 
+## P3-W11 completion gate
+
+- `FavoritesService` carga una unica coleccion `ApodEntry[]` desde `GET /api/favorites`
+  por usuario/sesion y la entrega hidratada a `/favorites` y cards, sin N+1 ni limite
+  silencioso.
+- POST usa solo `{ "apod_date": "YYYY-MM-DD" }` en `/api/favorites`; DELETE usa
+  `/api/favorites/{date}`. Pending por fecha deshabilita el doble toggle y mantiene
+  `aria-pressed`; listados y mutaciones exponen error/retry accesible.
+- El servicio escucha `AuthService.sessionChange` y `currentUser`; logout o A->B limpia
+  lista/pending/error, cancela trabajo en vuelo y descarta cualquier respuesta anterior.
+  Lecturas/callbacks validan de inmediato `currentUser`, cerrando el intervalo anterior
+  a la ejecucion asincrona del effect Angular; la signal de identidad activa invalida
+  cualquier lectura publica cacheada durante la transicion.
+- Un visitante anonimo recibe una etiqueta CTA de login y retorna solo a un path interno
+  validado. No queda `ape.favorites.v1`, fallback ni migracion de favoritos anonimos.
+- `npm ci`, `npm run build`, 115/115 ChromeHeadless, `npm audit --omit=dev` con 0
+  vulnerabilidades runtime y `git diff --check` PASS.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -271,7 +290,7 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W11 desde `codex/p3-integration`. Debe sustituir la fachada temporal
-`ape.favorites.v1` por `/api/favorites`, limpiar estado ante `sessionChange` y presentar
-CTA login para toggles anonimos. Neon/Render/Resend, seed productivo y NASA real siguen
+Ejecutar P3-W12 desde `codex/p3-integration`. Debe empaquetar frontend, API y PostgreSQL
+sin tocar proveedores productivos, resolver migraciones locales sin carreras y verificar
+el stack con `docker compose`. Neon/Render/Resend, seed productivo y NASA real siguen
 postergados hasta W13.

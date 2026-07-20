@@ -1,10 +1,24 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { computed, signal } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
 
 import type { ApodEntry } from '../../models/apod.model';
-import { AstronomyService } from '../../services/astronomy.service';
+import { AuthSessionChange, AuthUser, AuthService } from '../../services/auth.service';
+import { FavoritesService } from '../../services/favorites.service';
 import { PictureCardComponent } from './picture-card.component';
 
-const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
+class AuthSessionStub {
+  readonly currentUser = signal<AuthUser | null>(null);
+  readonly isAuthenticated = computed(() => this.currentUser() !== null);
+  readonly sessionChange = signal<AuthSessionChange>({ previousUserId: null, currentUser: null });
+
+  signIn(user: AuthUser): void {
+    this.currentUser.set(user);
+    this.sessionChange.set({ previousUserId: null, currentUser: user });
+  }
+}
 
 const imageEntry: ApodEntry = {
   date: '2026-05-22',
@@ -36,10 +50,24 @@ function renderWith(entry: ApodEntry): HTMLElement {
 }
 
 describe('PictureCardComponent', () => {
+  let http: HttpTestingController;
+  let auth: AuthSessionStub;
+
   beforeEach(async () => {
-    localStorage.removeItem(FAVORITES_STORAGE_KEY);
-    await TestBed.configureTestingModule({ imports: [PictureCardComponent] }).compileComponents();
+    auth = new AuthSessionStub();
+    await TestBed.configureTestingModule({
+      imports: [PictureCardComponent],
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        { provide: AuthService, useValue: auth }
+      ]
+    }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
   });
+
+  afterEach(() => http.verify({ ignoreCancelled: true }));
 
   describe('image entry', () => {
     it('renders an img with the url and explanation as alt', () => {
@@ -69,8 +97,11 @@ describe('PictureCardComponent', () => {
       expect(renderWith(imageEntry).querySelector('iframe')).toBeNull();
     });
 
-    it('toggles and persists its favorite state with accessible semantics', () => {
-      const service = TestBed.inject(AstronomyService);
+    it('uses the authenticated favorite API with pending accessible semantics', () => {
+      const service = TestBed.inject(FavoritesService);
+      auth.signIn({ id: 'alice', email: 'alice@example.test' });
+      TestBed.flushEffects();
+      http.expectOne('/api/favorites').flush([]);
       const fixture = TestBed.createComponent(PictureCardComponent);
       fixture.componentRef.setInput('entry', imageEntry);
       fixture.detectChanges();
@@ -95,7 +126,13 @@ describe('PictureCardComponent', () => {
       expect(button.classList).not.toContain('text-accent');
 
       button.click();
-      TestBed.flushEffects();
+      fixture.detectChanges();
+
+      expect(button.disabled).toBeTrue();
+      expect(button.getAttribute('aria-busy')).toBe('true');
+      const request = http.expectOne('/api/favorites');
+      expect(request.request.body).toEqual({ apod_date: imageEntry.date });
+      request.flush(null, { status: 204, statusText: 'No Content' });
       fixture.detectChanges();
 
       expect(service.isFavorite(imageEntry.date)).toBeTrue();
@@ -105,12 +142,12 @@ describe('PictureCardComponent', () => {
       expect(button.classList).not.toContain('text-content-secondary');
       expect(icon.getAttribute('fill')).toBe('currentColor');
       expect(icon.getAttribute('stroke')).toBe('currentColor');
-      expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) ?? '[]')).toEqual([
-        imageEntry.date
-      ]);
-
       button.click();
-      TestBed.flushEffects();
+      fixture.detectChanges();
+
+      const deleteRequest = http.expectOne(`/api/favorites/${imageEntry.date}`);
+      expect(deleteRequest.request.method).toBe('DELETE');
+      deleteRequest.flush(null, { status: 204, statusText: 'No Content' });
       fixture.detectChanges();
 
       expect(service.isFavorite(imageEntry.date)).toBeFalse();
@@ -118,7 +155,6 @@ describe('PictureCardComponent', () => {
       expect(button.classList).toContain('text-content-secondary');
       expect(button.classList).not.toContain('text-accent');
       expect(icon.getAttribute('fill')).toBe('none');
-      expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) ?? '[]')).toEqual([]);
     });
   });
 

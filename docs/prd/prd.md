@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W10 DONE
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W11 DONE
 
 ## Vision
 
@@ -198,3 +198,9 @@ reemplazaran contratos temporales:
   confirmado por la respuesta APOD y una seleccion valida pendiente se representa por
   separado para no aceptar una respuesta obsoleta. Los favoritos locales restantes son
   una fachada transitoria que W11 elimina sin migrar datos anonimos.
+- W11 vuelve favoritos una capacidad autenticada: la coleccion `ApodEntry[]` se obtiene
+  una vez por sesion con `GET /api/favorites`; alta `{ "apod_date": date }` y delete por
+  fecha son idempotentes, tienen pending/error/retry accesibles y no generan consultas
+  por card. Logout o cambio de cuenta limpia el estado antes de exponer otra sesion. El
+  corazon anonimo lleva a login con retorno interno y no existe migracion desde
+  `ape.favorites.v1`.

@@ -1,5 +1,5 @@
 import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
-import { Injectable, effect, signal } from '@angular/core';
+import { Injectable, signal } from '@angular/core';
 import { EMPTY, Subject, catchError, map, of, switchMap } from 'rxjs';
 
 import type { ApodEntry } from '../models/apod.model';
@@ -7,7 +7,6 @@ import type { ApodEntry } from '../models/apod.model';
 export const APOD_FIRST_DATE = '1995-06-16';
 export const APOD_SEARCH_PAGE_SIZE = 12;
 
-const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 
 export interface ApodRequestError {
@@ -30,16 +29,13 @@ type SearchResult =
 /**
  * Browser state for the app-owned APOD HTTP endpoints.
  *
- * P3-W11 still replaces the temporary P2 favorite-date storage below. This
- * wave intentionally keeps that narrow compatibility seam while all APOD
- * content itself comes exclusively from the backend.
+ * APOD content comes exclusively from the backend. Authenticated favorites are
+ * owned separately by FavoritesService so catalog state never reaches storage.
  */
 @Injectable({ providedIn: 'root' })
 export class AstronomyService {
   private readonly pictureRequests = new Subject<PictureRequest>();
   private readonly searchRequests = new Subject<string>();
-  private readonly favoriteDates = signal<string[]>(this.readStoredFavorites());
-  private readonly rememberedEntries = new Map<string, ApodEntry>();
 
   /** Date confirmed by the latest APOD response; absent until the first response arrives. */
   readonly selectedDate = signal<string | null>(null);
@@ -54,9 +50,6 @@ export class AstronomyService {
   readonly searchLoading = signal(false);
   readonly searchError = signal<ApodRequestError | null>(null);
 
-  /** Temporary P2 compatibility state. P3-W11 moves this to `/api/favorites`. */
-  readonly favorites = this.favoriteDates.asReadonly();
-
   constructor(private readonly http: HttpClient) {
     this.pictureRequests
       .pipe(
@@ -70,7 +63,7 @@ export class AstronomyService {
           this.currentPicture.set(null);
 
           return this.http.get<ApodEntry>(request.endpoint).pipe(
-            map((entry): PictureResult => ({ entry: this.remember(entry) })),
+            map((entry): PictureResult => ({ entry })),
             catchError((error: unknown) => of({ error: toRequestError(error) } as PictureResult))
           );
         })
@@ -108,7 +101,7 @@ export class AstronomyService {
           return this.http.get<readonly ApodEntry[]>('/api/apod/search', { params }).pipe(
             map(
               (entries): SearchResult => ({
-                entries: entries.map((entry) => this.remember(entry))
+                entries
               })
             ),
             catchError((error: unknown) => of({ error: toRequestError(error) } as SearchResult))
@@ -125,7 +118,6 @@ export class AstronomyService {
         this.searchResults.set(result.entries);
       });
 
-    effect(() => this.persistFavorites(this.favoriteDates()));
   }
 
   /** Loads the backend's UTC picture of the day. */
@@ -165,58 +157,6 @@ export class AstronomyService {
     this.searchRequests.next(this.searchQuery().trim());
   }
 
-  /**
-   * Returns an entry remembered during this SPA lifetime. It is only retained
-   * for the legacy P2 favorite view until W11 hydrates favorites from its API.
-   */
-  getByDate(date: string): ApodEntry | undefined {
-    return this.rememberedEntries.get(date);
-  }
-
-  toggleFavorite(date: string): void {
-    this.favoriteDates.update((dates) =>
-      dates.includes(date) ? dates.filter((favorite) => favorite !== date) : [...dates, date]
-    );
-  }
-
-  isFavorite(date: string): boolean {
-    return this.favoriteDates().includes(date);
-  }
-
-  private remember(entry: ApodEntry): ApodEntry {
-    this.rememberedEntries.set(entry.date, entry);
-    return entry;
-  }
-
-  private readStoredFavorites(): string[] {
-    try {
-      if (typeof localStorage === 'undefined') {
-        return [];
-      }
-
-      const storedValue = localStorage.getItem(FAVORITES_STORAGE_KEY);
-      if (storedValue === null) {
-        return [];
-      }
-
-      const parsedValue: unknown = JSON.parse(storedValue);
-      return Array.isArray(parsedValue) && parsedValue.every((date) => typeof date === 'string')
-        ? [...new Set(parsedValue)]
-        : [];
-    } catch {
-      return [];
-    }
-  }
-
-  private persistFavorites(dates: readonly string[]): void {
-    try {
-      if (typeof localStorage !== 'undefined') {
-        localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(dates));
-      }
-    } catch {
-      // W11 makes this browser-only compatibility persistence obsolete.
-    }
-  }
 }
 
 export function utcToday(): string {

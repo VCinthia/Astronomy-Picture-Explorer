@@ -3,7 +3,10 @@ import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/cor
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
+import { normalizeReturnUrl } from '../return-url';
 import { AuthProblem, AuthService } from '../../services/auth.service';
+
+export { normalizeReturnUrl } from '../return-url';
 
 @Component({
   selector: 'app-login',
@@ -179,29 +182,4 @@ export class LoginComponent {
 function hasConfirmationSuccess(state: unknown): boolean {
   return typeof state === 'object' && state !== null &&
     (state as { confirmationSuccess?: unknown }).confirmationSuccess === true;
-}
-
-/** Allows only a path owned by this SPA; protocol, host and protocol-relative URLs fail closed. */
-export function normalizeReturnUrl(value: string | null): string | null {
-  if (
-    value === null ||
-    !value.startsWith('/') ||
-    value.startsWith('//') ||
-    value.includes('\\') ||
-    /^\/(?:%2f|%5c)/i.test(value)
-  ) {
-    return null;
-  }
-
-  try {
-    const internalOrigin = 'https://astronomy-explorer.invalid';
-    const parsed = new URL(value, internalOrigin);
-    if (parsed.origin !== internalOrigin || parsed.pathname.startsWith('/auth/')) {
-      return null;
-    }
-
-    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
-  } catch {
-    return null;
-  }
 }

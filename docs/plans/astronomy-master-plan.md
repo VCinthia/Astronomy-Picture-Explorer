@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W10 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W11 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -158,6 +158,20 @@ P3-W10 quedo DONE el 2026-07-20:
   confirma con la fecha real devuelta por API. El stepper opera dias UTC en el rango APOD.
 - W9 sigue intacta; la fachada temporal P2 de favoritos queda explicitamente destinada a
   su reemplazo sin migracion en W11. Build y 100/100 pruebas ChromeHeadless PASS.
+
+P3-W11 quedo DONE el 2026-07-20:
+
+- Favoritos Angular pasan a `FavoritesService` autenticado: un unico `GET /api/favorites`
+  entrega cards hidratadas por usuario/sesion, sin N+1 ni fuente local.
+- El alta envia `{ "apod_date": date }` a `POST /api/favorites`; delete usa la fecha en
+  ruta. Pending por fecha evita carreras de UI y el error/listado son reintentables.
+- Logout y cambio de cuenta consumen el contrato `sessionChange`, limpian memoria y
+  cancelan/descartan requests viejos; lecturas y callbacks validan tambien el usuario
+  actual para cerrar el intervalo previo al effect Angular, y la signal de identidad activa
+  invalida valores publicos cacheados. Un corazon anonimo es CTA accesible a login con
+  retorno interno validado; no se migra ningun favorito anonimo.
+- `ape.favorites.v1` y toda propiedad de favoritos salen de `AstronomyService`. Build,
+  115/115 ChromeHeadless, audit runtime cero y diff check PASS.
 
 ## 4. Execution contract
 

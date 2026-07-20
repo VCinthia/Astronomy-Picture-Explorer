@@ -10,11 +10,15 @@
       [class.text-accent]="isFavorite()"
       [class.text-content-secondary]="!isFavorite()"
       [attr.aria-pressed]="isFavorite()"
+      [attr.aria-busy]="favoritePending()"
       [attr.aria-label]="
-        isFavorite()
+        !canSaveFavorites()
+          ? 'Sign in to save ' + entry().title + ' to favorites'
+          : isFavorite()
           ? 'Remove ' + entry().title + ' from favorites'
           : 'Add ' + entry().title + ' to favorites'
       "
+      [disabled]="favoritePending()"
       (click)="toggleFavorite()"
     >
       <svg
