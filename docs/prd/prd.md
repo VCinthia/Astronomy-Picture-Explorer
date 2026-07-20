@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W6 DONE
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W7 DONE
 
 ## Vision
 
@@ -108,8 +108,13 @@ hdurl|null, thumbnail_url|null, copyright|null
 
 - `/favorites` requiere sesion.
 - Favorites se persisten por `user_id + apod_date` en PostgreSQL.
-- Usuario se obtiene del claim, nunca del request body.
-- GET devuelve `ApodEntry[]` hidratado sin N+1.
+- Usuario se obtiene exclusivamente del `sub` literal del JWT, nunca del request body.
+- POST acepta solo `{ "apod_date": "YYYY-MM-DD" }`, valida la fecha APOD antes de
+  cache/NASA y es idempotente (`204` para alta o repeticion).
+- DELETE filtra `sub + date`, valida el mismo rango y es idempotente (`204` para
+  existente o ausente).
+- GET devuelve `ApodEntry[]` hidratado sin N+1, ordenado por fecha descendente mediante
+  una unica proyeccion/join; no pagina ni limita silenciosamente la coleccion por sesion.
 - LocalStorage deja de ser fuente runtime y no se migra silenciosamente a una cuenta.
 
 ### Infrastructure/deploy

@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W6 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W7 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -103,6 +103,16 @@ P3-W6 quedo DONE el 2026-07-20:
   incompleto o con drift y ninguna llamada NASA durante search.
 - GIN verificado con `EXPLAIN`; stemming soportado y trigram descartado para
   parciales/typos. 18/18 tests focalizados y 150/150 backend PASS.
+
+P3-W7 quedo DONE el 2026-07-20:
+
+- `/api/favorites` requiere JWT y deriva el GUID solo del claim literal `sub`.
+- POST recibe `{ apod_date }`, valida antes de cache/NASA e inserta idempotentemente;
+  POST repetido y DELETE existente/ausente devuelven `204`.
+- GET proyecta `ApodEntryDto[]` hidratado, filtrado por usuario y ordenado por fecha
+  descendente en un unico join, sin limite silencioso para la coleccion de la sesion.
+- Build Release sin warnings/errors, 9/9 Favorites y 159/159 backend PASS; review
+  independiente, format verification y diff check aprobados.
 
 ## 4. Execution contract
 

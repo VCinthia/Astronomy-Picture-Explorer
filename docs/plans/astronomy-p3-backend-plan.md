@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: IN PROGRESS - W1-W6 DONE
+Status: IN PROGRESS - W1-W7 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -43,7 +43,12 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - NASA APOD `today`, `date`, cache en memoria + PostgreSQL.
 - Catalog CLI con rangos NASA, checkpoint, resume, retry/backoff y status.
 - Search FTS paginado; `pg_trgm` descartado por W6 salvo nueva evidencia futura.
-- Favorites protegidos e hidratados.
+- Favorites protegidos e hidratados mediante un unico join/proyeccion, ordenado por fecha
+  descendente y filtrado por el claim JWT `sub`; W11 carga la coleccion completa de la
+  sesion autenticada sin introducir un limite silencioso.
+- `POST /api/favorites` acepta solo `{ apod_date }`, valida la fecha antes de cache/NASA
+  y responde `204` tanto para alta como repeticion; `DELETE /api/favorites/{date}`
+  responde `204` tanto para existente como ausente. Ambos derivan el GUID solo de `sub`.
 - Frontend auth, bootstrap, guard, single-flight interceptor y estados accesibles.
 - Home/Explorer/Search por HTTP; `availableDates` y chips eliminados.
 - DatePicker real `<input type="date" min="1995-06-16" max="hoy">`.
@@ -82,7 +87,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.4** NASA today/date + cache + DTO app-owned (W4).
 - [x] **R3.5** Catalog CLI resumible y status observable (W5).
 - [x] **R3.6** PostgreSQL FTS y endpoint search (W6).
-- [ ] **R3.7** Favorites API protegida e hidratada (W7).
+- [x] **R3.7** Favorites API protegida e hidratada (W7).
 - [ ] **R3.8** Frontend account/auth flows (W8).
 - [ ] **R3.9** Frontend session bootstrap/guard/interceptor (W9).
 - [ ] **R3.10** Frontend APOD/date/search migration (W10).
@@ -123,6 +128,16 @@ Readiness queda
 centralizado entre status/search; target ausente, incompleto o con drift responde 503
 sin llamar NASA. Stemming cubre variantes inglesas y la evidencia parcial/typo no
 justifico `pg_trgm`.
+
+W7 se cerro el 2026-07-20 con 9/9 tests Favorites focalizados y 159/159 backend PASS
+sobre PostgreSQL 17 Testcontainers. El contrato protege
+`/api/favorites` con JWT, usa el `sub` literal (sin `NameIdentifier` porque
+`MapInboundClaims=false`), reutiliza `ApodCacheService` para misses y ejecuta el insert
+idempotente `ON CONFLICT DO NOTHING`. GET proyecta cards hidratadas en un unico join;
+los tests focalizados cubren 401, principal `sub` malformado, fecha invalida antes de
+NASA, fallo APOD sanitizado, concurrencia, aislamiento y una sola lectura SQL. Build
+Release, review independiente, `dotnet format --verify-no-changes` y `git diff --check`
+tambien PASS.
 
 ## 6. Exit criteria
 

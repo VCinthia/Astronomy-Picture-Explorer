@@ -5,6 +5,7 @@ using AstronomyExplorer.Api.Email;
 using AstronomyExplorer.Api.Security;
 using AstronomyExplorer.Api.Apod;
 using AstronomyExplorer.Api.Nasa;
+using AstronomyExplorer.Api.Favorites;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.DataProtection.EntityFrameworkCore;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
@@ -103,6 +104,7 @@ builder.Services.AddSingleton<ApodSingleFlight>();
 builder.Services.AddSingleton<ApodCacheService>();
 builder.Services.AddScoped<CatalogReadinessService>();
 builder.Services.AddScoped<ApodSearchService>();
+builder.Services.AddScoped<FavoriteService>();
 builder.Services.AddHttpClient<INasaApodClient, NasaApodClient>(client =>
 {
   client.BaseAddress = new Uri("https://api.nasa.gov/");
@@ -167,6 +169,7 @@ app.MapAccountEndpoints();
 app.MapSessionEndpoints();
 app.MapApodEndpoints();
 app.MapCatalogStatusEndpoint();
+app.MapFavoriteEndpoints();
 
 app.Run();
 

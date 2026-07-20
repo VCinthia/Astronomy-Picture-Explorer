@@ -6,7 +6,8 @@ resend, rate limiting and the Resend adapter. P3-W3 adds Identity login, short J
 rotating PostgreSQL refresh sessions and Origin-protected logout/refresh.
 P3-W4 adds the app-owned APOD contract, public today/date endpoints and layered cache.
 P3-W5 adds the local resumable catalog CLI and public catalog status. P3-W6 adds
-bounded PostgreSQL full-text search with shared catalog readiness.
+bounded PostgreSQL full-text search with shared catalog readiness. P3-W7 adds protected,
+per-user favorites with idempotent writes and hydrated cards.
 
 ## Prerequisites
 
@@ -157,6 +158,24 @@ Search uses parameterized `websearch_to_tsquery`, the stored title-A/explanation
 vector and its GIN index. It never contacts NASA. English stemming is supported;
 partial prefixes and typos are deliberately not expanded. W6 did not enable `pg_trgm`
 because its limited portfolio benefit did not justify another index and mixed ranking.
+
+Favorites endpoints require an access Bearer token:
+
+- `GET /api/favorites` returns a top-level `ApodEntryDto[]` in APOD-date descending
+  order from one `favorites -> apod_entries` projection/join. The collection is not
+  silently paginated or truncated because the frontend loads the complete collection
+  once per authenticated portfolio session.
+- `POST /api/favorites` accepts only `{ "apod_date": "YYYY-MM-DD" }`; it validates
+  the supported APOD range before cache/NASA, obtains the user only from the literal JWT
+  `sub` claim, ensures a cache entry and returns `204` for either creation or duplicate.
+- `DELETE /api/favorites/{date}` validates the same range, filters `sub + date` and
+  returns `204` whether or not that favorite existed.
+
+`MapInboundClaims=false` is intentional, so favorites reads `sub`, never
+`ClaimTypes.NameIdentifier`. An authenticated principal whose `sub` is not a GUID gets
+the app-owned `401 invalid_authenticated_user`; invalid dates get
+`400 invalid_favorite_apod_date`. Cache/provider failures reuse the sanitized APOD
+ProblemDetails contract.
 
 ## Local catalog synchronization
 

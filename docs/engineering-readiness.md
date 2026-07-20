@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-20
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W6 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W7 DONE
 
 ## Verdict
 
@@ -12,9 +12,9 @@ persistencia de favoritos entre rutas y breakpoints desktop/mobile.
 P3 fue corregida antes de iniciar codigo. P3-W1 implemento la foundation .NET 10,
 Identity user-only, schema PostgreSQL, FTS ponderado y health DB-aware. P3-W2 completo
 registro, email y confirmacion con key ring persistido y rate limits. P3-W3 implemento
-sesiones seguras, P3-W4 cerro NASA today/date con cache y P3-W5 completo la ingestion
-local resumible; las 8 waves restantes
-conservan el contrato aceptado.
+sesiones seguras, P3-W4 cerro NASA today/date con cache, P3-W5 completo la ingestion
+local resumible, P3-W6 cerro FTS y P3-W7 completo Favorites API protegida; las waves
+restantes conservan el contrato aceptado.
 
 ## Closed gates
 
@@ -119,6 +119,23 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - Stemming ingles funciona; prefijos y typos no. `pg_trgm` queda deshabilitado porque el
   beneficio no justifica extension, indice adicional ni ranking mixto en este portfolio.
 
+## P3-W7 completion gate
+
+- Los tres endpoints `/api/favorites` requieren Bearer y derivan el usuario exclusivamente
+  del claim JWT `sub`; la ausencia de Bearer devuelve 401 y un `sub` firmado no GUID
+  devuelve `401 invalid_authenticated_user` sin aceptar identificadores del cliente.
+- POST acepta solo `{ "apod_date": "YYYY-MM-DD" }`; POST/DELETE validan
+  `1995-06-16..UTC today` antes de acceder a cache/NASA y sus fechas invalidas devuelven
+  `400 invalid_favorite_apod_date`.
+- Un miss de POST usa `ApodCacheService`; errores NASA conservan ProblemDetails APOD
+  sanitizados. `ON CONFLICT DO NOTHING` deja una sola relacion bajo POST concurrente.
+- GET hace una unica proyeccion/join `favorites -> apod_entries`, filtrada por usuario,
+  ordenada por fecha APOD descendente y devuelve solo `ApodEntryDto[]`. No pagina ni
+  limita silenciosamente porque W11 carga la coleccion completa por sesion de portfolio.
+- Build Release quedo PASS sin warnings/errors; Favorites 9/9 y backend 159/159 PASS
+  sobre PostgreSQL 17 Testcontainers. Review independiente, `dotnet format
+  --verify-no-changes` y `git diff --check` tambien PASS.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -180,6 +197,6 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W7 desde `codex/p3-integration`. W7 implementa Favorites API protegida e
-hidratada sobre las bases de auth/APOD ya cerradas. Neon/Render/Resend, seed productivo
-y NASA real siguen postergados hasta W13.
+Ejecutar P3-W8 desde `codex/p3-integration`. W8 implementa las pantallas Angular de
+cuenta/auth sobre las bases de Identity y sesiones ya cerradas. Neon/Render/Resend, seed
+productivo y NASA real siguen postergados hasta W13.

@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-20
-Status: P3 IN PROGRESS - W1-W6 implemented
+Status: P3 IN PROGRESS - W1-W7 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -196,19 +196,23 @@ sequenceDiagram
     participant DB as PostgreSQL
 
     U->>FE: toggle fecha
-    FE->>API: POST /api/favorites {apodDate} + JWT
-    API->>API: user_id desde claim
+    FE->>API: POST /api/favorites {apod_date} + JWT
+    API->>API: user_id desde claim JWT sub
     API->>APOD: ensure entry cached
     APOD->>DB: upsert si faltaba
     API->>DB: insert idempotente user/date
-    API-->>FE: favorito confirmado
+    API-->>FE: 204 favorito confirmado/idempotente
     FE->>API: GET /api/favorites
     API->>DB: join favorites x apod_entries
     API-->>FE: ApodEntryDto[] hidratado
 ```
 
-DELETE filtra simultaneamente por `user_id` del claim y fecha. Tests con dos usuarios
-demuestran que no existe lectura ni borrado cruzado.
+POST/DELETE validan `1995-06-16..UTC today` antes de cache/NASA. POST usa
+`ON CONFLICT DO NOTHING` y DELETE filtra simultaneamente por `user_id` del claim literal
+`sub` y fecha; ambos devuelven `204` para sus dos resultados idempotentes. GET es una
+proyeccion/join unica, ordenada por fecha descendente, sin N+1 ni limite silencioso de la
+coleccion por sesion. Tests con dos usuarios demuestran que no existe lectura ni borrado
+cruzado.
 
 ## 8. Modelo de datos
 

@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: Accepted; P3-W1-W6 implemented
+Status: Accepted; P3-W1-W7 implemented
 
 ## Context
 
@@ -140,9 +140,20 @@ ocasionales son suficientes y observables.
 ### Favorites
 
 - `favorites` guarda `user_id + apod_date`, unico por usuario/fecha.
-- `user_id` siempre se deriva del claim del access JWT.
-- `GET /api/favorites` hace join con `apod_entries` y devuelve `ApodEntryDto[]` sin N+1.
-- Agregar una fecha no cacheada usa el servicio APOD controlado antes de crear la FK.
+- `user_id` siempre se deriva del claim `sub` literal del access JWT. `MapInboundClaims`
+  permanece `false`; no se usa `NameIdentifier` ni se acepta un user ID del cliente.
+- `GET /api/favorites` hace una unica proyeccion/join con `apod_entries`, filtrada por
+  ese usuario, ordenada por fecha APOD descendente y devuelve `ApodEntryDto[]` sin N+1.
+  No pagina ni introduce un limite silencioso: W11 carga una vez la coleccion completa de
+  la sesion autenticada y el portfolio no persigue escala comercial.
+- `POST /api/favorites` recibe solo `{ "apod_date": "YYYY-MM-DD" }`, valida el rango
+  APOD antes de cache/NASA y usa el servicio APOD controlado si falta la entry. Inserta
+  con `ON CONFLICT DO NOTHING`; alta y repeticion devuelven `204`.
+- `DELETE /api/favorites/{date}` valida el mismo rango, filtra por `user_id + date` y
+  devuelve `204` tanto si la relacion existia como si ya estaba ausente.
+- Fechas invalidas son `400 invalid_favorite_apod_date`; un JWT autenticado con `sub`
+  no GUID es `401 invalid_authenticated_user`. Los errores upstream reutilizan los
+  ProblemDetails APOD sanitizados.
 
 ### Restriccion de costo cero
 
@@ -264,6 +275,23 @@ ocasionales son suficientes y observables.
 - PostgreSQL real confirma ranking, stemming, web syntax, caracteres especiales,
   paginacion, seguridad ante payload SQL y uso del indice GIN. Prefijo `nebul` y typo
   `neubla` quedan deliberadamente sin fallback; `pg_trgm` no fue habilitado.
+
+## Implementation clarification - P3-W7 (2026-07-20)
+
+- `/api/favorites` exige JWT y lee exclusivamente el `sub` literal; un principal
+  autenticado con un valor no GUID falla con el ProblemDetails app-owned 401, sin
+  reinterpretar claims inbound ni aceptar un identificador suministrado por el cliente.
+- POST valida la fecha antes de activar cache/NASA. Un miss usa `ApodCacheService` y
+  conserva sus errores upstream sanitizados; el insert PostgreSQL `ON CONFLICT DO
+  NOTHING` hace que altas repetidas o concurrentes converjan en una sola relacion.
+- DELETE ejecuta un delete set-based filtrado por `user_id + apod_date`; POST y DELETE
+  responden 204 en ambos resultados idempotentes.
+- GET proyecta `favorites -> apod_entries` en una unica consulta EF/Npgsql, ordenada por
+  fecha descendente. La prueba de integracion cuenta una sola lectura SQL, confirma la
+  forma exacta de `ApodEntryDto` y demuestra aislamiento entre dos usuarios.
+- W7 cerro con build Release limpio, 9/9 tests focalizados y 159/159 backend PASS sobre
+  PostgreSQL 17 Testcontainers; review independiente, format verification y diff check
+  tambien aprobados.
 
 ## Consequences
 
