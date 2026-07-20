@@ -105,3 +105,7 @@ Esta wave conserva como evidencia historica el scaffold Angular 19.2 y su commit
 rama dedicada `maintenance/angular-22-security-update` actualizo despues el baseline a
 Angular 22.0.7 para resolver vulnerabilidades runtime antes de W8. Sus migraciones
 obligatorias no alteran el alcance ni los resultados registrados de P1-W1.
+
+P3-W10 completo despues la migracion de datos prevista: retiro el asset mock y reemplazo
+el lookup O(1) por endpoints HTTP cancelables. La diferencia pertenece a la arquitectura
+P3 y no altera este registro de implementacion P1-W1.

@@ -246,4 +246,5 @@ P2 conserva su diseño y evidencia historica. P3 sustituye fuentes temporales:
 - Favorites localStorage pasa a API autenticada y no se importa silenciosamente.
 - Chips/`availableDates` pasan a input de fecha real; el toolbar responsive no cambia.
 - La ruta `/favorites` recibe AuthGuard cuando existe bootstrap de sesion.
-- Los cambios viven en P3-W9..W11 y no modifican lo que P2 entrego.
+- W9 y W10 ya materializaron guard/session y APOD/search HTTP; W11 completa favoritos.
+  Ninguno modifica lo que P2 entrego ni su smoke productivo historico.

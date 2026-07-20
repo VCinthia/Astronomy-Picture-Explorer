@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-20
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W9 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W10 DONE
 
 ## Verdict
 
@@ -15,7 +15,8 @@ registro, email y confirmacion con key ring persistido y rate limits. P3-W3 impl
 sesiones seguras, P3-W4 cerro NASA today/date con cache, P3-W5 completo la ingestion
 local resumible, P3-W6 cerro FTS, P3-W7 completo Favorites API protegida y P3-W8
 materializo las pantallas Angular de cuenta. P3-W9 completo bootstrap/guard/interceptor
-y logout frontend; las waves restantes conservan el contrato aceptado.
+y logout frontend. P3-W10 reemplazo el runtime mock por APOD/date/search HTTP; W11-W13
+conservan el contrato aceptado.
 
 ## Closed gates
 
@@ -192,6 +193,23 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - `npm ci`, `npm run build`, 110/110 ChromeHeadless y `git diff --check` PASS. Audit
   runtime queda en 0; los 5 advisories transitivos development permanecen documentados.
 
+## P3-W10 completion gate
+
+- `ApodEntry` coincide con `ApodEntryDto`: JSON snake_case de ocho campos, sin
+  `service_version` y con `hdurl`, `thumbnail_url` y `copyright` como `string | null`.
+- `/` redirige a `/home`; Home hace `GET /api/apod/today`, Explorer fecha valida usa
+  `GET /api/apod/date/{date}` y search paginado llama `/api/apod/search` con `page=1` y
+  `pageSize=12`. No queda import o asset runtime del mock ni `availableDates`.
+- `switchMap` cancela solicitudes APOD/search obsoletas. `requestedDate` mantiene el
+  input valido en curso y `selectedDate` se actualiza exclusivamente con la respuesta;
+  una fecha invalida cancela el request previo antes de exponer su error.
+- El control de fecha nativo limita UTC `1995-06-16..hoy` y el stepper opera dias UTC.
+  Home/Explorer presentan loading, upstream/cold-start, empty y `catalog_not_ready` con
+  Retry y aria-live. Auth, logout y control de cuenta W9 permanecen same-origin.
+- `npm ci`, `npm run build`, 100/100 ChromeHeadless y `git diff --check` PASS. `npm audit
+  --omit=dev` mantiene 0 vulnerabilidades runtime; los cinco advisories de dev siguen
+  documentados y no se fuerza una actualizacion fuera de mantenimiento.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -253,7 +271,7 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W10 desde `codex/p3-integration`. W10 reemplaza mock/`availableDates` por
-APOD/date/search HTTP, conserva el bootstrap, interceptor y control de cuenta W9, y no
-mueve el JWT a Web Storage. Neon/Render/Resend, seed productivo y NASA real siguen
+Ejecutar P3-W11 desde `codex/p3-integration`. Debe sustituir la fachada temporal
+`ape.favorites.v1` por `/api/favorites`, limpiar estado ante `sessionChange` y presentar
+CTA login para toggles anonimos. Neon/Render/Resend, seed productivo y NASA real siguen
 postergados hasta W13.

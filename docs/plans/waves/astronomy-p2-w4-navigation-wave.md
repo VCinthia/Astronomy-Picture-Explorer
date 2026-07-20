@@ -87,3 +87,6 @@ rg -n "bg-\[#|text-\[#|p-\[" src/app
 
 P3 cambia Home de `/` a `/home` con redirect y añade AuthGuard en Favorites; P3-W10/W11
 actualizan links/active state conservando el breakpoint y patron bottom-nav entregado.
+
+P3-W10 ya hizo el redirect `/` -> `/home` y actualizo ambos navs. El guard de Favorites
+es el contrato W9; W11 sustituye la fuente de datos sin modificar esta evidencia visual.

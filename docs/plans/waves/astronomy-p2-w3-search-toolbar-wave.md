@@ -94,3 +94,6 @@ rg -n "bg-\[#|text-\[#|p-\[" src/app
 
 P3-W10 conserva debounce y toolbar, reemplaza `availableDates`/mock por fecha real y
 PostgreSQL FTS sobre title+explanation, sin metadata externa de keywords.
+
+P3-W10 completo esa migracion con cancelacion de requests, paginacion inicial `12` y
+estados `catalog_not_ready`/Retry. La evidencia de debounce y layout P2 se conserva.

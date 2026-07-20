@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W9 DONE
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W10 DONE
 
 ## Vision
 
@@ -193,3 +193,8 @@ reemplazaran contratos temporales:
   se limpian sincronicamente en logout; `sessionChange` permite que W11 aisle favoritos
   por usuario. Desarrollo proxifica `/api` y `/auth` al backend local y login solo sigue
   un `returnUrl` interno seguro.
+- W10 reemplaza efectivamente el mock en la rama de integracion: `/` redirige a `/home`,
+  APOD/date/search usan HTTP same-origin y el calendario es real. `selectedDate` queda
+  confirmado por la respuesta APOD y una seleccion valida pendiente se representa por
+  separado para no aceptar una respuesta obsoleta. Los favoritos locales restantes son
+  una fachada transitoria que W11 elimina sin migrar datos anonimos.

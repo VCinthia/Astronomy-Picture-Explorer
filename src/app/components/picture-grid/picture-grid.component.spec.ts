@@ -12,18 +12,20 @@ const entries: ApodEntry[] = [
     title: 'The Nebulous Realm of WR 134',
     explanation: 'A ring-like nebula shaped by a Wolf-Rayet star.',
     media_type: 'image',
-    service_version: 'v1',
     url: 'https://example.test/wr134.jpg',
-    hdurl: 'https://example.test/wr134-hd.jpg'
+    hdurl: 'https://example.test/wr134-hd.jpg',
+    thumbnail_url: null,
+    copyright: null
   },
   {
     date: '2026-05-24',
     title: 'A Martian Eclipse',
     explanation: 'Phobos transits the Sun as seen from Mars.',
     media_type: 'video',
-    service_version: 'v1',
     url: 'https://example.test/phobos.mp4',
-    thumbnail_url: 'https://example.test/phobos.jpg'
+    hdurl: null,
+    thumbnail_url: 'https://example.test/phobos.jpg',
+    copyright: null
   }
 ];
 
@@ -84,6 +86,18 @@ describe('PictureGridComponent', () => {
       expect(image.getAttribute('loading')).toBe('lazy');
       expect(image.getAttribute('decoding')).toBe('async');
     }
+  });
+
+  it('uses an accessible visual placeholder instead of a video URL when no thumbnail exists', () => {
+    const unthumbnailedVideo: ApodEntry = { ...entries[1], thumbnail_url: null };
+    const element = render([unthumbnailedVideo]);
+    const link = element.querySelector('a') as HTMLAnchorElement;
+
+    expect(element.querySelector('img')).toBeNull();
+    expect(link.getAttribute('href')).toBe(unthumbnailedVideo.url);
+    expect(link.getAttribute('aria-label')).toBe(`Watch video: ${unthumbnailedVideo.title}`);
+    expect(element.querySelector('div[aria-hidden="true"] svg')).not.toBeNull();
+    expect(element.textContent).toContain('Video');
   });
 
   it('renders an empty grid when there are no entries', () => {

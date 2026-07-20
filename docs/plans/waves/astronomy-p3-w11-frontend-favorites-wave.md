@@ -11,6 +11,14 @@ Suggested Branch: `wave/p3-w11-frontend-favorites`
 Reemplazar favoritos localStorage por la API autenticada manteniendo UX, accesibilidad
 y navegacion desktop/mobile de P2.
 
+## W10 handoff
+
+W10 ya no tiene mock ni un catalogo local con el que hidratar fechas persistidas. Hasta
+esta wave, `AstronomyService` conserva una fachada P2 minima solo para no mezclar la
+reescritura de favoritos con la migracion APOD. W11 debe reemplazarla en el mismo cambio:
+no puede leer, escribir ni migrar `ape.favorites.v1`, ni asumir que una fecha guardada
+anonimamente corresponde al usuario que acaba de autenticarse.
+
 ## File scope
 
 - `src/app/services/favorites.service.ts` + tests

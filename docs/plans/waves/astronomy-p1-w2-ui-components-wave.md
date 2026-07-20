@@ -95,3 +95,7 @@ Tokens reconciliados 1:1 con Figma (`#08080f`/`#11111c`/`#191927`/`#1e1e30`, tex
 El date picker/listbox y stepper indexado se diseñaron para un archivo mock acotado.
 P3-W10 conserva layout/accesibilidad, reemplaza chips por `input[type=date]` y hace
 prev/next por dia calendario contra backend.
+
+P3-W10 se implemento con limites UTC `1995-06-16..hoy`, stepper de dias UTC y estados
+accesibles de loading/error/retry. El patron listbox original queda como evidencia P1,
+no como contrato activo de la rama P3.

@@ -14,7 +14,7 @@ import { AuthService } from './services/auth.service';
 class TestPageComponent {}
 
 const TEST_ROUTES = [
-  { path: '', component: TestPageComponent },
+  { path: 'home', component: TestPageComponent },
   { path: 'explorer', component: TestPageComponent },
   { path: 'favorites', component: TestPageComponent },
   { path: 'favorites/detail', component: TestPageComponent }
@@ -59,7 +59,7 @@ describe('AppComponent', () => {
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    // Default date resolves to an entry in the mock and renders as "Mon DD, YYYY".
+    // The date stepper displays the currently requested calendar date.
     expect(compiled.textContent).toMatch(/[A-Z][a-z]{2} \d{2}, \d{4}/);
     expect(compiled.querySelector('button[aria-label="Previous date"]')).not.toBeNull();
     expect(compiled.querySelector('button[aria-label="Next date"]')).not.toBeNull();
@@ -94,7 +94,7 @@ describe('AppComponent', () => {
       'Favorites'
     ]);
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/',
+      '/home',
       '/explorer',
       '/favorites'
     ]);
@@ -140,7 +140,7 @@ describe('AppComponent', () => {
     fixture.detectChanges();
 
     const brand = (fixture.nativeElement as HTMLElement).querySelector(
-      'header a[href="/"]'
+      'header a[href="/home"]'
     ) as HTMLAnchorElement;
     expect(brand.getAttribute('aria-label')).toBe('Astronomy Explorer');
     expect(brand.querySelector('span.hidden.sm\\:inline')).not.toBeNull();
@@ -163,7 +163,7 @@ describe('AppComponent', () => {
     expect(favorites.classList.contains('text-content-secondary')).toBeFalse();
 
     const inactiveLinks = element.querySelectorAll(
-      'nav a[href="/"], nav a[href="/explorer"]'
+      'nav a[href="/home"], nav a[href="/explorer"]'
     );
     inactiveLinks.forEach((link) => {
       expect(link.getAttribute('aria-current')).toBeNull();
@@ -177,7 +177,7 @@ describe('AppComponent', () => {
     fixture.detectChanges();
     const router = TestBed.inject(Router);
     const element = fixture.nativeElement as HTMLElement;
-    const destinations = ['/', '/explorer', '/favorites'];
+    const destinations = ['/home', '/explorer', '/favorites'];
 
     for (const destination of destinations) {
       await router.navigateByUrl(destination);

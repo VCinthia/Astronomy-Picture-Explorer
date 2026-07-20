@@ -11,7 +11,7 @@ import { BottomNavComponent } from './bottom-nav.component';
 class TestPageComponent {}
 
 const TEST_ROUTES = [
-  { path: '', component: TestPageComponent },
+  { path: 'home', component: TestPageComponent },
   { path: 'explorer', component: TestPageComponent },
   { path: 'favorites', component: TestPageComponent },
   { path: 'favorites/detail', component: TestPageComponent }
@@ -46,7 +46,7 @@ describe('BottomNavComponent', () => {
       'Favorites'
     ]);
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
-      '/',
+      '/home',
       '/explorer',
       '/favorites'
     ]);
@@ -60,7 +60,7 @@ describe('BottomNavComponent', () => {
     fixture.detectChanges();
     const router = TestBed.inject(Router);
     const element = fixture.nativeElement as HTMLElement;
-    const destinations = ['/', '/explorer', '/favorites'];
+    const destinations = ['/home', '/explorer', '/favorites'];
 
     for (const destination of destinations) {
       const link = element.querySelector(`a[href="${destination}"]`) as HTMLAnchorElement;

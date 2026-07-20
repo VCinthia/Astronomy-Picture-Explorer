@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W9 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W10 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -146,6 +146,18 @@ P3-W9 quedo DONE el 2026-07-20:
 - Desarrollo usa `proxy.conf.json` para `/api` y `/auth` hacia `localhost:5179`, sin CORS
   ni URL externa de backend. Login normaliza `returnUrl` y rechaza destinos externos.
 - Build y 110/110 pruebas ChromeHeadless PASS.
+
+P3-W10 quedo DONE el 2026-07-20:
+
+- Angular consume solo el DTO APOD app-owned, con opcionales `null` y sin
+  `service_version`; el asset mock y `availableDates` salieron del runtime.
+- `/` redirige al Home lazy canonico `/home`. Home usa `today`, Explorer fecha/calendario
+  real y FTS paginado; `switchMap` cancela solicitudes obsoletas y Retry comunica
+  cold-start/upstream, empty y `catalog_not_ready` de manera accesible.
+- `requestedDate` separa la seleccion valida pendiente de `selectedDate`, que solo se
+  confirma con la fecha real devuelta por API. El stepper opera dias UTC en el rango APOD.
+- W9 sigue intacta; la fachada temporal P2 de favoritos queda explicitamente destinada a
+  su reemplazo sin migracion en W11. Build y 100/100 pruebas ChromeHeadless PASS.
 
 ## 4. Execution contract
 

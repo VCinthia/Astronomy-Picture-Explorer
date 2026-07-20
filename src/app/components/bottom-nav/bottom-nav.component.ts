@@ -13,7 +13,7 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
     >
       <div class="mx-auto flex h-full max-w-content">
         <a
-          routerLink="/"
+          routerLink="/home"
           #homeActive="routerLinkActive"
           routerLinkActive=""
           ariaCurrentWhenActive="page"

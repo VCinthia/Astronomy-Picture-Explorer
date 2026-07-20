@@ -22,13 +22,25 @@ import { formatApodDate } from '../../utils/format-date';
             [attr.aria-label]="mediaLabel(entry)"
           >
             <div class="relative h-grid-media overflow-hidden bg-space-surface-hi">
-              <img
-                class="size-full object-cover transition group-hover:scale-105"
-                [src]="previewUrl(entry)"
-                [alt]="entry.explanation"
-                loading="lazy"
-                decoding="async"
-              />
+              @if (entry.media_type === 'video' && !entry.thumbnail_url) {
+                <div
+                  class="flex size-full items-center justify-center bg-space-video text-content-secondary"
+                  aria-hidden="true"
+                >
+                  <svg class="size-10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                    <circle cx="12" cy="12" r="9" />
+                    <path d="m10 8 5 4-5 4V8Z" fill="currentColor" stroke="none" />
+                  </svg>
+                </div>
+              } @else {
+                <img
+                  class="size-full object-cover transition group-hover:scale-105"
+                  [src]="previewUrl(entry)"
+                  [alt]="entry.explanation"
+                  loading="lazy"
+                  decoding="async"
+                />
+              }
               @if (entry.media_type === 'video') {
                 <span
                   class="absolute left-3 top-3 rounded-chip bg-accent/20 px-2.5 py-1 text-badge font-semibold uppercase tracking-widest text-accent"

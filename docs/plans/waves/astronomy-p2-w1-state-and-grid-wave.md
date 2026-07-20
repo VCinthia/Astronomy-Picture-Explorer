@@ -86,3 +86,6 @@ rg -n "bg-\[#|text-\[#|p-\[" src/app
 
 Signals localStorage/computed fueron el alcance P2. P3-W10/W11 reemplazan search por FTS
 y favorites por estado HTTP autenticado; no se migran datos locales automaticamente.
+
+P3-W10 ya reemplazo el computed de search por HTTP/FTS y retiro el catalogo mock. La
+fachada local de favoritos queda solo hasta W11; no representa persistencia valida de P3.

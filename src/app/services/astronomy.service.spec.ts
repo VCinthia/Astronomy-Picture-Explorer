@@ -1,215 +1,148 @@
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { TestBed } from '@angular/core/testing';
 
-import { AstronomyService } from './astronomy.service';
+import type { ApodEntry } from '../models/apod.model';
+import { AstronomyService, APOD_FIRST_DATE, isApodDate } from './astronomy.service';
 
 const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
+const imageEntry: ApodEntry = {
+  date: '2026-05-22',
+  title: 'The Nebulous Realm of WR 134',
+  explanation: 'A ring-like nebula shaped by a Wolf-Rayet star.',
+  media_type: 'image',
+  url: 'https://example.test/wr134.jpg',
+  hdurl: 'https://example.test/wr134-hd.jpg',
+  thumbnail_url: null,
+  copyright: null
+};
+const videoEntry: ApodEntry = {
+  date: '2026-05-24',
+  title: 'A Martian Eclipse',
+  explanation: 'Phobos transits the Sun as seen from Mars.',
+  media_type: 'video',
+  url: 'https://example.test/phobos.mp4',
+  hdurl: null,
+  thumbnail_url: 'https://example.test/phobos.jpg',
+  copyright: 'NASA'
+};
 
 describe('AstronomyService', () => {
   let service: AstronomyService;
+  let http: HttpTestingController;
 
   beforeEach(() => {
     localStorage.removeItem(FAVORITES_STORAGE_KEY);
-    TestBed.configureTestingModule({});
+    TestBed.configureTestingModule({ providers: [provideHttpClient(), provideHttpClientTesting()] });
     service = TestBed.inject(AstronomyService);
+    http = TestBed.inject(HttpTestingController);
   });
 
-  describe('getByDate', () => {
-    it('returns the entry for an existing image date', () => {
-      const entry = service.getByDate('2026-05-22');
+  afterEach(() => http.verify({ ignoreCancelled: true }));
 
-      expect(entry).toBeDefined();
-      expect(entry?.title).toBe('The Nebulous Realm of WR 134');
-      expect(entry?.media_type).toBe('image');
-      expect(entry?.hdurl).toContain('WR134morrone2048.jpg');
-    });
+  it('uses the exact today endpoint and adopts the returned real APOD date', () => {
+    service.loadToday();
 
-    it('returns undefined for a date with no entry', () => {
-      expect(service.getByDate('1999-12-31')).toBeUndefined();
-    });
+    http.expectOne('/api/apod/today').flush(imageEntry);
 
-    it('does not treat inherited object properties as archive entries', () => {
-      expect(service.hasDate('__proto__')).toBeFalse();
-      expect(service.hasDate('toString')).toBeFalse();
-      expect(service.getByDate('__proto__')).toBeUndefined();
-    });
-
-    it('returns a video entry with a thumbnail_url', () => {
-      const entry = service.getByDate('2026-05-24');
-
-      expect(entry?.media_type).toBe('video');
-      expect(entry?.thumbnail_url).toBeTruthy();
-      expect(entry?.url).toMatch(/\.mp4$/);
-    });
+    expect(service.currentPicture()).toEqual(imageEntry);
+    expect(service.selectedDate()).toBe(imageEntry.date);
+    expect(service.loading()).toBeFalse();
+    expect(service.error()).toBeNull();
   });
 
-  describe('archive shape', () => {
-    it('contains at least 8 entries', () => {
-      expect(service.availableDates.length).toBeGreaterThanOrEqual(8);
-    });
+  it('uses the exact date endpoint and preserves nullable backend fields', () => {
+    service.selectDate(videoEntry.date);
 
-    it('includes the WR 134 entry and at least one video', () => {
-      expect(service.hasDate('2026-05-22')).toBeTrue();
+    http.expectOne(`/api/apod/date/${videoEntry.date}`).flush(videoEntry);
 
-      const videos = service.availableDates
-        .map((date) => service.getByDate(date))
-        .filter((entry) => entry?.media_type === 'video');
-      expect(videos.length).toBeGreaterThanOrEqual(1);
-    });
+    expect(service.currentPicture()?.media_type).toBe('video');
+    expect(service.currentPicture()?.hdurl).toBeNull();
+    expect(service.currentPicture()?.thumbnail_url).toBe(videoEntry.thumbnail_url);
+  });
 
-    it('every entry has the required contract fields', () => {
-      for (const date of service.availableDates) {
-        const entry = service.getByDate(date);
+  it('cancels a stale date request before accepting the newest response', () => {
+    service.selectDate('2026-05-22');
+    const stale = http.expectOne('/api/apod/date/2026-05-22');
 
-        expect(entry).toBeDefined();
-        if (!entry) {
-          continue;
-        }
-        expect(entry.date).toBe(date);
-        expect(entry.title).toBeTruthy();
-        expect(entry.explanation).toBeTruthy();
-        expect(entry.url).toBeTruthy();
-        expect(['image', 'video']).toContain(entry.media_type);
-        if (entry.media_type === 'video') {
-          expect(entry.thumbnail_url).toBeTruthy();
-        }
-      }
+    service.selectDate('2026-05-24');
+    const current = http.expectOne('/api/apod/date/2026-05-24');
+
+    expect(stale.cancelled).toBeTrue();
+    current.flush(videoEntry);
+    expect(service.currentPicture()).toEqual(videoEntry);
+  });
+
+  it('rejects malformed, impossible, future, and pre-APOD dates without HTTP', () => {
+    for (const invalid of ['1995-06-15', 'not-a-date', '2026-02-31', '9999-12-31']) {
+      service.selectDate(invalid);
+    }
+
+    expect(http.match(() => true)).toEqual([]);
+    expect(service.error()?.code).toBe('invalid_apod_date');
+    expect(isApodDate(APOD_FIRST_DATE)).toBeTrue();
+  });
+
+  it('maps date ProblemDetails into a retryable UI error', () => {
+    service.selectDate('2026-05-22');
+    http.expectOne('/api/apod/date/2026-05-22').flush(
+      { code: 'apod_upstream_timeout', detail: 'The astronomy service did not respond in time.' },
+      { status: 504, statusText: 'Gateway Timeout' }
+    );
+
+    expect(service.currentPicture()).toBeNull();
+    expect(service.error()).toEqual({
+      code: 'apod_upstream_timeout',
+      message: 'The astronomy service did not respond in time.'
     });
   });
 
-  describe('selection signals', () => {
-    it('defaults the selected date to an entry present in the archive', () => {
-      expect(service.hasDate(service.selectedDate())).toBeTrue();
-    });
+  it('queries the paged backend search endpoint rather than filtering a bundled archive', () => {
+    service.setSearchQuery('  nebula  ');
 
-    it('drives currentPicture from selectedDate', () => {
-      service.selectDate('2026-06-09');
-      expect(service.currentPicture()?.title).toBe("Thor's Helmet");
+    const request = http.expectOne((candidate) => candidate.url === '/api/apod/search');
+    expect(request.request.params.get('q')).toBe('nebula');
+    expect(request.request.params.get('page')).toBe('1');
+    expect(request.request.params.get('pageSize')).toBe('12');
+    request.flush([imageEntry]);
 
-      service.selectDate('1999-12-31');
-      expect(service.currentPicture()).toBeUndefined();
-    });
-
-    it('starts settled with no error', () => {
-      expect(service.loading()).toBeFalse();
-      expect(service.error()).toBeNull();
-    });
+    expect(service.searchResults()).toEqual([imageEntry]);
+    expect(service.searchLoading()).toBeFalse();
   });
 
-  describe('favorite signals', () => {
-    it('toggles valid dates without duplicates', () => {
-      service.toggleFavorite('2026-05-22');
-      service.toggleFavorite('2026-06-09');
+  it('cancels stale searches and exposes catalog_not_ready as a recoverable error', () => {
+    service.setSearchQuery('nebula');
+    const stale = http.expectOne((candidate) => candidate.url === '/api/apod/search');
+    service.setSearchQuery('galaxy');
+    const current = http.expectOne((candidate) => candidate.url === '/api/apod/search');
 
-      expect(service.favorites()).toEqual(['2026-05-22', '2026-06-09']);
-      expect(service.isFavorite('2026-05-22')).toBeTrue();
+    expect(stale.cancelled).toBeTrue();
+    expect(current.request.params.get('q')).toBe('galaxy');
+    current.flush(
+      { code: 'catalog_not_ready', detail: 'The historical catalog is still being prepared.' },
+      { status: 503, statusText: 'Service Unavailable' }
+    );
 
-      service.toggleFavorite('2026-05-22');
-
-      expect(service.favorites()).toEqual(['2026-06-09']);
-      expect(service.isFavorite('2026-05-22')).toBeFalse();
-    });
-
-    it('ignores dates that do not exist in the archive', () => {
-      service.toggleFavorite('1999-12-31');
-      service.toggleFavorite('__proto__');
-
-      expect(service.favorites()).toEqual([]);
-    });
-
-    it('persists favorites and restores them in a new service instance', () => {
-      service.toggleFavorite('2026-05-22');
-      TestBed.flushEffects();
-
-      expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) ?? '[]')).toEqual([
-        '2026-05-22'
-      ]);
-
-      TestBed.resetTestingModule();
-      TestBed.configureTestingModule({});
-      service = TestBed.inject(AstronomyService);
-
-      expect(service.favorites()).toEqual(['2026-05-22']);
-    });
-
-    it('deduplicates stored dates and discards absent or inherited property names', () => {
-      TestBed.resetTestingModule();
-      localStorage.setItem(
-        FAVORITES_STORAGE_KEY,
-        JSON.stringify([
-          '2026-05-22',
-          '2026-05-22',
-          '1999-12-31',
-          'toString',
-          '2026-06-09'
-        ])
-      );
-      TestBed.configureTestingModule({});
-
-      service = TestBed.inject(AstronomyService);
-
-      expect(service.favorites()).toEqual(['2026-05-22', '2026-06-09']);
-      expect(service.isFavorite('toString')).toBeFalse();
-    });
-
-    it('falls back to an empty list for corrupt JSON or an invalid shape', () => {
-      TestBed.resetTestingModule();
-      localStorage.setItem(FAVORITES_STORAGE_KEY, '{not-json');
-      TestBed.configureTestingModule({});
-
-      expect(TestBed.inject(AstronomyService).favorites()).toEqual([]);
-
-      TestBed.resetTestingModule();
-      localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(['2026-05-22', 7]));
-      TestBed.configureTestingModule({});
-
-      expect(TestBed.inject(AstronomyService).favorites()).toEqual([]);
-    });
-
-    it('continues to work in memory when storage writes fail', () => {
-      const setItem = spyOn(localStorage, 'setItem').and.throwError('storage denied');
-
-      expect(() => {
-        service.toggleFavorite('2026-05-22');
-        TestBed.flushEffects();
-      }).not.toThrow();
-      expect(setItem).toHaveBeenCalled();
-      expect(service.favorites()).toEqual(['2026-05-22']);
-    });
-
-    it('initializes with an empty list when storage reads fail', () => {
-      TestBed.resetTestingModule();
-      spyOn(localStorage, 'getItem').and.throwError('storage denied');
-      TestBed.configureTestingModule({});
-
-      expect(() => (service = TestBed.inject(AstronomyService))).not.toThrow();
-      expect(service.favorites()).toEqual([]);
-    });
+    expect(service.searchResults()).toEqual([]);
+    expect(service.searchError()?.code).toBe('catalog_not_ready');
   });
 
-  describe('search signals', () => {
-    it('returns an empty result for an empty or whitespace-only query', () => {
-      expect(service.searchResults()).toEqual([]);
+  it('clears results and cancels an in-flight search when the query is emptied', () => {
+    service.setSearchQuery('nebula');
+    const request = http.expectOne((candidate) => candidate.url === '/api/apod/search');
 
-      service.searchQuery.set('   ');
+    service.setSearchQuery('   ');
 
-      expect(service.searchResults()).toEqual([]);
-    });
+    expect(request.cancelled).toBeTrue();
+    expect(service.searchResults()).toEqual([]);
+    expect(service.searchError()).toBeNull();
+  });
 
-    it('matches keywords in titles and explanations', () => {
-      service.searchQuery.set('Helmet');
-      expect(service.searchResults().map((entry) => entry.date)).toEqual(['2026-06-09']);
+  it('retains the P2 favorite-date facade only until W11 replaces it with the API', () => {
+    service.toggleFavorite(imageEntry.date);
+    TestBed.flushEffects();
 
-      service.searchQuery.set('neutron star');
-      expect(service.searchResults().map((entry) => entry.date)).toEqual(['2026-06-02']);
-    });
-
-    it('trims the query and matches case-insensitively', () => {
-      service.searchQuery.set('  wOlF-rAyEt  ');
-
-      expect(service.searchResults().map((entry) => entry.date)).toEqual([
-        '2026-05-22',
-        '2026-06-09'
-      ]);
-    });
+    expect(service.isFavorite(imageEntry.date)).toBeTrue();
+    expect(JSON.parse(localStorage.getItem(FAVORITES_STORAGE_KEY) ?? '[]')).toEqual([imageEntry.date]);
   });
 });

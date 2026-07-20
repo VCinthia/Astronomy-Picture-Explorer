@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: Accepted; P3-W1-W9 implemented
+Status: Accepted; P3-W1-W10 implemented
 
 ## Context
 
@@ -15,9 +15,10 @@ que NASA no ofrece.
 La revision del 2026-07-16 confirma:
 
 - ASP.NET Core Identity debe ser propietario de passwords, stamps y tokens de email.
-- La API APOD operativa devuelve `date`, `title`, `explanation`, `media_type`, `url`,
-  `hdurl?`, `thumbnail_url?`, `copyright?` y `service_version`, pero no ofrece metadata
-  de keywords utilizable; P3 deriva search exclusivamente de titulo y explicacion.
+- La API APOD operativa devuelve exactamente `date`, `title`, `explanation`, `media_type`,
+  `url`, `hdurl|null`, `thumbnail_url|null` y `copyright|null`. No expone
+  `service_version` ni metadata de keywords; P3 deriva search exclusivamente de titulo y
+  explicacion.
 - NASA permite consultas por `date` y por rango `start_date`/`end_date`, pero no una
   busqueda remota por keyword.
 - Una cookie de refresh entre dominios `netlify.app` y `onrender.com` seria third-party
@@ -329,6 +330,23 @@ ocasionales son suficientes y observables.
   expone usuario previo/actual para que W11 limpie datos por logout o switch de cuenta.
 - Desarrollo usa el proxy Angular `/api|/auth -> http://localhost:5179`; no se habilita
   CORS ni `withCredentials` cross-site. Login acepta solo `returnUrl` interno normalizado.
+
+## Implementation clarification - P3-W10 (2026-07-20)
+
+- Angular adopta el DTO app-owned exacto: los tres campos opcionales siempre aceptan
+  `null` y `service_version` deja de existir en tipo, fixtures y runtime. La validacion
+  NASA de esa metadata queda estrictamente dentro de W4/W5.
+- La ruta canonica publica es `/home`; `/` solo redirige. Home llama `GET /api/apod/today`,
+  Explorer llama `GET /api/apod/date/{date}` y search llama el endpoint paginado con
+  `page=1&pageSize=12`, todas rutas relativas same-origin cubiertas por W9.
+- El estado conserva por separado `requestedDate` (input valido pendiente) y
+  `selectedDate` (fecha confirmada por la respuesta APOD). `switchMap` cancela consultas
+  de fecha/search obsoletas e incluso una validacion cliente fallida cancela la consulta
+  anterior para que no reemplace su error.
+- El input nativo de fecha usa UTC `1995-06-16..hoy`; el stepper suma/resta dias UTC.
+  Los estados loading, upstream/cold-start, empty y `catalog_not_ready` son recuperables
+  mediante Retry. La deuda local de favoritos queda limitada a W11 y no puede promoverse
+  como comportamiento de una cuenta.
 
 ## Consequences
 

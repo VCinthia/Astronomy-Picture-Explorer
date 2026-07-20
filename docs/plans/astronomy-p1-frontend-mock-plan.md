@@ -167,7 +167,8 @@ P1 permanece DONE y no se altera retrospectivamente. Para P3 se aclara:
   DTO app-owned que lo elimina y normaliza `hdurl`, `thumbnail_url` y `copyright` a null.
 - `availableDates`, listbox/chips y stepper por indice fueron correctos para el mock
   acotado. P3 los elimina y consulta una fecha calendario real.
-- `apod.json` puede conservarse como fixture/historia, pero deja de importarse en runtime.
+- `apod.json` fue retirado al cerrar P3-W10; su evidencia historica permanece en esta
+  documentacion y en los commits P1, pero no como fixture/runtime vigente.
 - Estas sustituciones pertenecen a P3-W10 y no invalidan acceptance/evidence de P1.
 
 ## 8. Design-change clarification (2026-07-20)
@@ -176,3 +177,8 @@ El scaffold y la evidencia P1 se conservan como registro historico de Angular 19
 rama de mantenimiento posterior actualizo el baseline a Angular 22.0.7, de forma
 secuencial y sin `npm audit fix --force`, para cerrar vulnerabilidades runtime antes de
 W8. No altera los entregables, tests ni commits evidenciados para P1.
+
+P3-W10 ya materializo la sustitucion prevista: el asset `apod.json` fue retirado del
+runtime, `ApodMock`/`service_version` desaparecieron del frontend y el listbox de fechas
+paso a calendario HTTP real. Esta aclaracion no reescribe la evidencia P1; documenta la
+evolucion posterior sobre la rama acumulativa P3.

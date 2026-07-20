@@ -11,9 +11,9 @@ const imageEntry: ApodEntry = {
   title: 'The Nebulous Realm of WR 134',
   explanation: 'A ring-like nebula shaped by a Wolf-Rayet star.',
   media_type: 'image',
-  service_version: 'v1',
   url: 'https://example.test/wr134.jpg',
   hdurl: 'https://example.test/wr134-hd.jpg',
+  thumbnail_url: null,
   copyright: 'Luigi Morrone'
 };
 
@@ -22,9 +22,10 @@ const videoEntry: ApodEntry = {
   title: 'A Martian Eclipse: Phobos Crosses the Sun',
   explanation: 'Phobos transits the Sun as seen from Mars.',
   media_type: 'video',
-  service_version: 'v1',
   url: 'https://example.test/phobos.mp4',
-  thumbnail_url: 'https://example.test/phobos.jpg'
+  hdurl: null,
+  thumbnail_url: 'https://example.test/phobos.jpg',
+  copyright: null
 };
 
 function renderWith(entry: ApodEntry): HTMLElement {
@@ -147,6 +148,14 @@ describe('PictureCardComponent', () => {
 
       expect(el.querySelector('app-color-palette')).toBeNull();
       expect(el.textContent).toContain('Not available for video content');
+    });
+
+    it('keeps an unthumbnailed video actionable instead of covering it with a spinner', () => {
+      const el = renderWith({ ...videoEntry, thumbnail_url: null });
+
+      expect(el.querySelector('img')).toBeNull();
+      expect(el.querySelector('a[href="https://example.test/phobos.mp4"]')).not.toBeNull();
+      expect(el.querySelector('.animate-spin')).toBeNull();
     });
   });
 });

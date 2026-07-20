@@ -3,8 +3,9 @@ import { Routes } from '@angular/router';
 import { authGuard } from './auth/auth.guard';
 
 export const routes: Routes = [
+  { path: '', pathMatch: 'full', redirectTo: 'home' },
   {
-    path: '',
+    path: 'home',
     title: 'Astronomy Picture Explorer',
     loadComponent: () => import('./pages/home/home.component').then((m) => m.HomeComponent)
   },
@@ -38,5 +39,5 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./auth/confirm-email/confirm-email.component').then((m) => m.ConfirmEmailComponent)
   },
-  { path: '**', redirectTo: '' }
+  { path: '**', redirectTo: 'home' }
 ];

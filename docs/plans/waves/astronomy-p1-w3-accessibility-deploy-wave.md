@@ -81,3 +81,6 @@ Branch `wave/p1-w3-accessibility-deploy` (en `origin`), commit `feat: CORS palet
 
 El deploy P1/P2 sigue siendo la base Netlify. P3-W13 agregara rewrites same-origin para
 `/api/*` y `/auth/*` antes del fallback SPA, sin alterar la evidencia a11y/deploy P1.
+
+P3-W10 mantiene los estados aria-live y foco visible al reemplazar el mock por HTTP.
+La publicacion P2 permanece sin cambios hasta la promocion autorizada por W13.

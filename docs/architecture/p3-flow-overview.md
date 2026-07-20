@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-20
-Status: P3 IN PROGRESS - W1-W9 implemented
+Status: P3 IN PROGRESS - W1-W10 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -116,6 +116,21 @@ estable; por eso un link emitido antes de un restart/cold start sigue validando 
 nueva instancia. Register/resend se limitan separadamente por IP de transporte y por
 hash de email normalizado. W13 debe resolver la IP original solo mediante forwarders
 verificados de la cadena Netlify -> Render.
+
+### W10 frontend APOD/search alignment
+
+W10 deja `/home` como ruta canonica y hace que `/` solo redirija. Home consulta
+`GET /api/apod/today`; Explorer consulta `GET /api/apod/date/{date}` y search usa
+`GET /api/apod/search?q=&page=1&pageSize=12`. El navegador no conserva un archivo
+APOD, `availableDates` ni chips. El input nativo acepta `1995-06-16..UTC hoy` y el
+stepper suma/resta dias UTC.
+
+El servicio separa `requestedDate` (fecha valida pendiente) de `selectedDate` (fecha
+confirmada por la respuesta real) y usa `switchMap` para cancelar date/search obsoletos.
+Home y Explorer presentan estados loading, cold-start/upstream, empty y
+`catalog_not_ready` con Retry accesible. Esta migracion no mueve JWT ni altera W9. La
+fachada de favoritos P2 se mantiene solamente como puente interno de la rama acumulativa;
+W11 debe eliminarla mediante la API, sin transferir favoritos anonimos a una cuenta.
 
 ## 4. Login, refresh single-flight y logout
 

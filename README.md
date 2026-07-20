@@ -13,20 +13,23 @@ browser.
 
 ---
 
-## What it does (Stages 1–2)
+## What it does
 
 - **Picture of the day** — a hero view with the image, title, date and the full
   description, plus image credit.
-- **Explore by date** — a keyboard-friendly date picker and a header stepper to
-  move through the archive; the view updates instantly.
+- **Explore by date** — a native calendar input and UTC header stepper query the selected
+  APOD date through the app API.
 - **Image *and* video entries** — when an entry is a video, the card shows a
   thumbnail and a link to watch it (no embedded players).
 - **Live color palette** — the dominant colors of each image are computed in the
   browser from the picture's pixels and shown as swatches with their hex codes.
 - **Accessible & responsive** — descriptive alt text, keyboard navigation, focus
   styles, WCAG AA color contrast, and a layout tuned from mobile to desktop.
-- **Favorites + keyword search** — local favorites, a dedicated favorites route,
-  debounced title/description search, and desktop/mobile navigation.
+- **Keyword search** — debounced title/description search uses the prepared PostgreSQL
+  catalog, with explicit empty, cold-start and catalog-not-ready states.
+- **Account-ready shell** — sign-in, refresh and protected-route behavior use same-origin
+  `/auth/*` and `/api/*` calls. Favorites move from their temporary P2 storage to the
+  protected API in the next P3 wave.
 
 ## Why it exists
 
@@ -42,14 +45,17 @@ treated as a first-class concern rather than an afterthought.
 - **Canvas API** — dominant-color extraction performed entirely client-side, with
   no third-party color libraries.
 - **TypeScript**, unit tests with **Karma + Jasmine**.
-- **Netlify** — static hosting and continuous deploys.
+- **ASP.NET Core + PostgreSQL** — app-owned APOD contract, catalog search and account API.
+- **Netlify** — P2 production hosting; P3 is accumulated on its integration branch until
+  the zero-cost deployment/smoke gate is complete.
 
 ## How it works
 
-The current app reads a local JSON dataset based on NASA APOD. Stage 3 will replace
-that temporary source with an app-owned HTTP contract and PostgreSQL-backed catalog.
-A small service exposes the selected date and the current entry as signals, and the
-views react to those. For the palette, each image is drawn to an off-screen canvas
+The P3 integration app reads the app-owned APOD HTTP contract: `/home` requests today's
+entry, Explorer requests exact dates and search uses the PostgreSQL-backed catalog. The
+browser bundles no APOD JSON or date list. A small service exposes a requested date and
+the response-confirmed entry as signals, so stale HTTP results are cancelled rather than
+replacing the current view. For the palette, each image is drawn to an off-screen canvas
 and its pixels are sampled and grouped into the most dominant colors; if the pixels
 can't be read it falls back to a fixed brand palette.
 
@@ -58,8 +64,9 @@ can't be read it falls back to a fixed brand palette.
 - **Stage 1:** picture of the day, explore by date, palette, video. ✅
 - **Stage 2 — current production:** favorites (saved locally), keyword search,
   responsive toolbar and mobile bottom navigation. ✅
-- **Stage 3 — planned:** .NET 10 + Identity + PostgreSQL FTS + per-user favorites,
-  deployed on a strictly zero-cost stack through small implementation waves.
+- **Stage 3 — in integration:** .NET 10 + Identity + PostgreSQL FTS + APOD HTTP frontend.
+  Per-user favorites, local containers and the strictly zero-cost production promotion
+  remain in the following waves.
 
 ## Run it locally
 
@@ -69,6 +76,10 @@ npm start        # dev server at http://localhost:4200
 npm run build    # production build
 npm test         # unit tests
 ```
+
+`npm start` proxies `/api` and `/auth` to the local API at `http://localhost:5179`; run
+the backend separately until the local container stack is added in P3-W12. The public
+Netlify demo remains the P2 release until P3-W13 promotion.
 
 ## Credits
 

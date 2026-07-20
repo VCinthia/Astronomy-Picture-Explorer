@@ -1,108 +1,191 @@
-import { Injectable, computed, effect, signal } from '@angular/core';
+import { HttpClient, HttpErrorResponse, HttpParams } from '@angular/common/http';
+import { Injectable, effect, signal } from '@angular/core';
+import { EMPTY, Subject, catchError, map, of, switchMap } from 'rxjs';
 
-import apodData from '../../assets/mock/apod.json';
-import type { ApodEntry, ApodMock } from '../models/apod.model';
+import type { ApodEntry } from '../models/apod.model';
+
+export const APOD_FIRST_DATE = '1995-06-16';
+export const APOD_SEARCH_PAGE_SIZE = 12;
+
+const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
+const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+export interface ApodRequestError {
+  readonly code: string | null;
+  readonly message: string;
+}
+
+interface PictureRequest {
+  readonly endpoint: string;
+}
+
+type PictureResult =
+  | { readonly entry: ApodEntry }
+  | { readonly error: ApodRequestError };
+
+type SearchResult =
+  | { readonly entries: readonly ApodEntry[] }
+  | { readonly error: ApodRequestError };
 
 /**
- * The mock archive is imported (bundled) so lookups are synchronous and O(1).
- * In P3 this single source is swapped for an HTTP-backed implementation without
- * changing the `ApodEntry` contract consumed by the components.
+ * Browser state for the app-owned APOD HTTP endpoints.
+ *
+ * P3-W11 still replaces the temporary P2 favorite-date storage below. This
+ * wave intentionally keeps that narrow compatibility seam while all APOD
+ * content itself comes exclusively from the backend.
  */
-const APOD_DATA = apodData as unknown as ApodMock;
-const FAVORITES_STORAGE_KEY = 'ape.favorites.v1';
-
 @Injectable({ providedIn: 'root' })
 export class AstronomyService {
-  private readonly data: ApodMock = APOD_DATA;
-
+  private readonly pictureRequests = new Subject<PictureRequest>();
+  private readonly searchRequests = new Subject<string>();
   private readonly favoriteDates = signal<string[]>(this.readStoredFavorites());
+  private readonly rememberedEntries = new Map<string, ApodEntry>();
 
-  /** Favorite archive dates, persisted locally for the current browser. */
+  /** Date confirmed by the latest APOD response; absent until the first response arrives. */
+  readonly selectedDate = signal<string | null>(null);
+  /** Valid date currently requested by the user while its response is pending. */
+  readonly requestedDate = signal(utcToday());
+  readonly currentPicture = signal<ApodEntry | null>(null);
+  readonly loading = signal(false);
+  readonly error = signal<ApodRequestError | null>(null);
+
+  readonly searchQuery = signal('');
+  readonly searchResults = signal<readonly ApodEntry[]>([]);
+  readonly searchLoading = signal(false);
+  readonly searchError = signal<ApodRequestError | null>(null);
+
+  /** Temporary P2 compatibility state. P3-W11 moves this to `/api/favorites`. */
   readonly favorites = this.favoriteDates.asReadonly();
 
-  /** Current keyword used to filter the bundled archive. */
-  readonly searchQuery = signal('');
+  constructor(private readonly http: HttpClient) {
+    this.pictureRequests
+      .pipe(
+        switchMap((request) => {
+          if (!request.endpoint) {
+            return EMPTY;
+          }
 
-  /** Entries whose title or explanation contain the normalized search query. */
-  readonly searchResults = computed<ApodEntry[]>(() => {
-    const query = this.searchQuery().trim().toLocaleLowerCase();
-    if (!query) {
-      return [];
-    }
+          this.loading.set(true);
+          this.error.set(null);
+          this.currentPicture.set(null);
 
-    return this.availableDates
-      .map((date) => this.data[date])
-      .filter(({ title, explanation }) => {
-        return (
-          title.toLocaleLowerCase().includes(query) ||
-          explanation.toLocaleLowerCase().includes(query)
-        );
+          return this.http.get<ApodEntry>(request.endpoint).pipe(
+            map((entry): PictureResult => ({ entry: this.remember(entry) })),
+            catchError((error: unknown) => of({ error: toRequestError(error) } as PictureResult))
+          );
+        })
+      )
+      .subscribe((result) => {
+        this.loading.set(false);
+        if ('error' in result) {
+          this.error.set(result.error);
+          return;
+        }
+
+        this.selectedDate.set(result.entry.date);
+        this.requestedDate.set(result.entry.date);
+        this.currentPicture.set(result.entry);
       });
-  });
 
-  /** Dates present in the archive, sorted oldest to newest (`YYYY-MM-DD`). */
-  readonly availableDates: readonly string[] = Object.keys(this.data).sort();
+    this.searchRequests
+      .pipe(
+        switchMap((query) => {
+          if (!query) {
+            this.searchLoading.set(false);
+            this.searchError.set(null);
+            this.searchResults.set([]);
+            return EMPTY;
+          }
 
-  /** Most recent date in the archive; used as the default when today is absent. */
-  readonly latestDate = this.availableDates[this.availableDates.length - 1];
+          this.searchLoading.set(true);
+          this.searchError.set(null);
+          this.searchResults.set([]);
+          const params = new HttpParams()
+            .set('q', query)
+            .set('page', '1')
+            .set('pageSize', String(APOD_SEARCH_PAGE_SIZE));
 
-  /** The "home" date: today's entry if present, otherwise the latest. */
-  readonly defaultDate = this.resolveInitialDate();
+          return this.http.get<readonly ApodEntry[]>('/api/apod/search', { params }).pipe(
+            map(
+              (entries): SearchResult => ({
+                entries: entries.map((entry) => this.remember(entry))
+              })
+            ),
+            catchError((error: unknown) => of({ error: toRequestError(error) } as SearchResult))
+          );
+        })
+      )
+      .subscribe((result) => {
+        this.searchLoading.set(false);
+        if ('error' in result) {
+          this.searchError.set(result.error);
+          return;
+        }
 
-  /** Currently selected archive date. Defaults to today, or the latest entry. */
-  readonly selectedDate = signal<string>(this.defaultDate);
+        this.searchResults.set(result.entries);
+      });
 
-  /** Entry for the selected date, or `undefined` when the date has no entry. */
-  readonly currentPicture = computed<ApodEntry | undefined>(() =>
-    this.getByDate(this.selectedDate())
-  );
-
-  /** Reserved for the async P3 backend; always settled (`false`) for the mock. */
-  readonly loading = signal(false);
-
-  /** Reserved for the async P3 backend; `null` while the mock has no errors. */
-  readonly error = signal<string | null>(null);
-
-  constructor() {
-    effect(() => {
-      this.persistFavorites(this.favoriteDates());
-    });
+    effect(() => this.persistFavorites(this.favoriteDates()));
   }
 
-  /** Direct O(1) lookup against the archive object. */
-  getByDate(date: string): ApodEntry | undefined {
-    return this.hasDate(date) ? this.data[date] : undefined;
+  /** Loads the backend's UTC picture of the day. */
+  loadToday(): void {
+    this.pictureRequests.next({ endpoint: '/api/apod/today' });
   }
 
-  /** True when the archive contains an entry for the given date. */
-  hasDate(date: string): boolean {
-    return Object.prototype.hasOwnProperty.call(this.data, date);
-  }
-
-  /** Update the selected date that drives `currentPicture`. */
+  /** Loads one valid calendar date and cancels an earlier in-flight date request. */
   selectDate(date: string): void {
-    this.selectedDate.set(date);
-  }
-
-  /** Add or remove a valid archive date from the persisted favorites. */
-  toggleFavorite(date: string): void {
-    if (!this.hasDate(date)) {
+    if (!isApodDate(date)) {
+      // Send an empty request through switchMap solely to cancel any earlier
+      // in-flight date/today request before publishing the validation state.
+      this.pictureRequests.next({ endpoint: '' });
+      this.loading.set(false);
+      this.error.set({
+        code: 'invalid_apod_date',
+        message: `Choose a date from ${APOD_FIRST_DATE} through today.`
+      });
       return;
     }
 
+    this.requestedDate.set(date);
+    this.pictureRequests.next({ endpoint: `/api/apod/date/${date}` });
+  }
+
+  retrySelectedDate(): void {
+    this.selectDate(this.requestedDate());
+  }
+
+  /** Commits a debounced query from SearchBar and cancels any stale HTTP search. */
+  setSearchQuery(query: string): void {
+    this.searchQuery.set(query);
+    this.searchRequests.next(query.trim());
+  }
+
+  retrySearch(): void {
+    this.searchRequests.next(this.searchQuery().trim());
+  }
+
+  /**
+   * Returns an entry remembered during this SPA lifetime. It is only retained
+   * for the legacy P2 favorite view until W11 hydrates favorites from its API.
+   */
+  getByDate(date: string): ApodEntry | undefined {
+    return this.rememberedEntries.get(date);
+  }
+
+  toggleFavorite(date: string): void {
     this.favoriteDates.update((dates) =>
       dates.includes(date) ? dates.filter((favorite) => favorite !== date) : [...dates, date]
     );
   }
 
-  /** True when the provided archive date is currently a favorite. */
   isFavorite(date: string): boolean {
     return this.favoriteDates().includes(date);
   }
 
-  private resolveInitialDate(): string {
-    const today = new Date().toISOString().slice(0, 10);
-    return this.hasDate(today) ? today : this.latestDate;
+  private remember(entry: ApodEntry): ApodEntry {
+    this.rememberedEntries.set(entry.date, entry);
+    return entry;
   }
 
   private readStoredFavorites(): string[] {
@@ -117,11 +200,9 @@ export class AstronomyService {
       }
 
       const parsedValue: unknown = JSON.parse(storedValue);
-      if (!Array.isArray(parsedValue) || !parsedValue.every((date) => typeof date === 'string')) {
-        return [];
-      }
-
-      return [...new Set(parsedValue)].filter((date) => this.hasDate(date));
+      return Array.isArray(parsedValue) && parsedValue.every((date) => typeof date === 'string')
+        ? [...new Set(parsedValue)]
+        : [];
     } catch {
       return [];
     }
@@ -133,8 +214,35 @@ export class AstronomyService {
         localStorage.setItem(FAVORITES_STORAGE_KEY, JSON.stringify(dates));
       }
     } catch {
-      // Storage can be unavailable (privacy mode, quota, or a denied origin).
-      // Favorites remain usable in memory for the lifetime of the service.
+      // W11 makes this browser-only compatibility persistence obsolete.
     }
   }
+}
+
+export function utcToday(): string {
+  return new Date().toISOString().slice(0, 10);
+}
+
+export function isApodDate(value: string): boolean {
+  if (!DATE_PATTERN.test(value) || value < APOD_FIRST_DATE || value > utcToday()) {
+    return false;
+  }
+
+  return new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) === value;
+}
+
+function toRequestError(error: unknown): ApodRequestError {
+  if (error instanceof HttpErrorResponse) {
+    const body = error.error as { code?: unknown; detail?: unknown; title?: unknown } | null;
+    const code = typeof body?.code === 'string' ? body.code : null;
+    const message =
+      typeof body?.detail === 'string'
+        ? body.detail
+        : typeof body?.title === 'string'
+          ? body.title
+          : 'The astronomy service is unavailable. Try again.';
+    return { code, message };
+  }
+
+  return { code: null, message: 'The astronomy service is unavailable. Try again.' };
 }

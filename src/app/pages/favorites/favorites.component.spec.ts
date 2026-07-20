@@ -1,5 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { routes } from '../../app.routes';
 import { AstronomyService } from '../../services/astronomy.service';
@@ -12,7 +14,7 @@ describe('FavoritesComponent', () => {
     localStorage.removeItem(FAVORITES_STORAGE_KEY);
     await TestBed.configureTestingModule({
       imports: [FavoritesComponent],
-      providers: [provideRouter([])]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
     }).compileComponents();
   });
 
@@ -37,7 +39,7 @@ describe('FavoritesComponent', () => {
     expect(cta.getAttribute('href')).toBe('/explorer');
   });
 
-  it('lists saved entries in descending date order and updates after removal', () => {
+  it('keeps P2 favorite dates as a narrow temporary facade until W11 hydrates them by API', () => {
     const service = TestBed.inject(AstronomyService);
     service.toggleFavorite('2026-05-22');
     service.toggleFavorite('2026-06-09');
@@ -46,17 +48,8 @@ describe('FavoritesComponent', () => {
     fixture.detectChanges();
 
     const element = fixture.nativeElement as HTMLElement;
-    const cards = element.querySelectorAll('article');
-
-    expect(cards.length).toBe(2);
-    expect(cards[0].textContent).toContain("Thor's Helmet");
-    expect(cards[1].textContent).toContain('The Nebulous Realm of WR 134');
-
-    (cards[0].querySelector('button') as HTMLButtonElement).click();
-    fixture.detectChanges();
-
-    const remainingCards = element.querySelectorAll('article');
-    expect(remainingCards.length).toBe(1);
-    expect(remainingCards[0].textContent).toContain('The Nebulous Realm of WR 134');
+    expect(service.favorites()).toEqual(['2026-05-22', '2026-06-09']);
+    expect(element.querySelectorAll('article').length).toBe(0);
+    expect(element.textContent).toContain('No favorites saved yet.');
   });
 });

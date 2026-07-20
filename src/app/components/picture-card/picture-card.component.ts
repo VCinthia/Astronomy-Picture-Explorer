@@ -41,8 +41,10 @@ export class PictureCardComponent {
   constructor() {
     // Reset the loading state whenever the displayed entry changes.
     effect(() => {
-      this.entry();
-      this.mediaLoaded.set(false);
+      const entry = this.entry();
+      // A video without a provider thumbnail has no media load event to settle the
+      // spinner. It is immediately actionable through its external video link.
+      this.mediaLoaded.set(entry.media_type === 'video' && entry.thumbnail_url === null);
     });
   }
 

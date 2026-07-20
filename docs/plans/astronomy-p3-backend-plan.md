@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: IN PROGRESS - W1-W9 DONE
+Status: IN PROGRESS - W1-W10 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -91,7 +91,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.7** Favorites API protegida e hidratada (W7).
 - [x] **R3.8** Frontend account/auth flows (W8).
 - [x] **R3.9** Frontend session bootstrap/guard/interceptor (W9).
-- [ ] **R3.10** Frontend APOD/date/search migration (W10).
+- [x] **R3.10** Frontend APOD/date/search migration (W10).
 - [ ] **R3.11** Frontend favorites migration (W11).
 - [ ] **R3.12** Contenedores y stack local (W12).
 - [ ] **R3.13** Seed, deploy $0 y smoke productivo (W13).
@@ -161,6 +161,16 @@ para que W11 limpie favoritos al logout/cambio de usuario. Login solo acepta un
 `returnUrl` interno normalizado. La generacion de sesion asociada al Bearer evita que un
 refresh viejo reintente, borre o redirija una cuenta creada despues de logout. `npm run
 build` y 110/110 pruebas ChromeHeadless PASS.
+
+W10 se cerro el 2026-07-20 con la migracion completa de APOD frontend. El DTO Angular
+es el contrato app-owned de ocho campos snake_case, sin `service_version` y con nulos
+normalizados. `/` redirige a `/home`; Home consume `today`, Explorer consume fecha real
+y search paginado, y no queda import/runtime asset de `apod.json` ni `availableDates`.
+`switchMap` cancela date/search obsoletos; `requestedDate` es la seleccion valida en
+curso y `selectedDate` se confirma solo desde la respuesta APOD. Los estados accesibles
+cubren loading, upstream/cold-start, empty y `catalog_not_ready` con Retry. La fachada
+local P2 de favoritos es transitoria y W11 la elimina sin migracion silenciosa. `npm run
+build` y 100/100 pruebas ChromeHeadless PASS.
 
 ## 6. Exit criteria
 
