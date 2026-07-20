@@ -1,6 +1,6 @@
 import { HttpClient, HttpErrorResponse } from '@angular/common/http';
 import { Injectable, computed, inject, signal } from '@angular/core';
-import { Observable, catchError, defer, finalize, tap, throwError } from 'rxjs';
+import { Observable, catchError, defer, finalize, map, of, shareReplay, tap, throwError } from 'rxjs';
 
 /** The authenticated user shape returned by the application-owned session API. */
 export interface AuthUser {
@@ -38,6 +38,18 @@ export interface SessionResponse {
   user: AuthUser;
 }
 
+/** The settled result of the one-time refresh attempted while the SPA starts. */
+export type AuthSessionState = 'checking' | 'auth' | 'anon';
+
+/**
+ * A small, signal-friendly session event for consumers that own user-scoped data.
+ * W11 uses this boundary to clear cached favorites when the user changes or logs out.
+ */
+export interface AuthSessionChange {
+  previousUserId: string | null;
+  currentUser: AuthUser | null;
+}
+
 /** Safe, typed representation of RFC 7807 responses returned by this API. */
 export interface AuthProblem {
   status: number;
@@ -50,7 +62,8 @@ export interface AuthProblem {
 
 /**
  * Owns the browser's transient account state. The access JWT intentionally remains
- * in a signal only; W9 adds refresh, interception and session bootstrap.
+ * in a signal only; refresh is shared so one cookie rotation serves every concurrent
+ * request that observed the same expired access token.
  */
 @Injectable({ providedIn: 'root' })
 export class AuthService {
@@ -59,6 +72,15 @@ export class AuthService {
   private readonly accessTokenState = signal<string | null>(null);
   private readonly pendingOperations = signal(0);
   private readonly errorState = signal<AuthProblem | null>(null);
+  private readonly sessionStateValue = signal<AuthSessionState>('checking');
+  private readonly sessionChangeValue = signal<AuthSessionChange>({
+    previousUserId: null,
+    currentUser: null
+  });
+  private bootstrapRequest: Observable<void> | null = null;
+  private refreshRequest: Observable<SessionResponse> | null = null;
+  private refreshFailureRedirected = false;
+  private sessionEpoch = 0;
 
   readonly currentUser = this.currentUserState.asReadonly();
   readonly accessToken = this.accessTokenState.asReadonly();
@@ -67,6 +89,8 @@ export class AuthService {
   );
   readonly loading = computed(() => this.pendingOperations() > 0);
   readonly error = this.errorState.asReadonly();
+  readonly sessionState = this.sessionStateValue.asReadonly();
+  readonly sessionChange = this.sessionChangeValue.asReadonly();
 
   register(request: RegisterRequest): Observable<AccountRequestAcceptedResponse> {
     return this.track(
@@ -87,20 +111,107 @@ export class AuthService {
   }
 
   login(request: LoginRequest): Observable<SessionResponse> {
+    const loginEpoch = ++this.sessionEpoch;
     return this.track(
       this.http.post<SessionResponse>('/auth/login', request).pipe(
         tap((response) => {
-          this.accessTokenState.set(response.accessToken);
-          this.currentUserState.set(response.user);
+          if (loginEpoch === this.sessionEpoch) {
+            this.applySession(response);
+          }
         })
       )
     );
   }
 
-  /** Reserved for W9's refresh failure and logout paths. */
+  /**
+   * Starts the startup refresh at most once for this service lifetime. Its expected
+   * anonymous result is deliberately settled locally instead of redirecting public
+   * routes to login.
+   */
+  bootstrap(): Observable<void> {
+    if (this.bootstrapRequest === null) {
+      this.bootstrapRequest = this.refreshSession().pipe(
+        map(() => undefined),
+        catchError(() => {
+          this.clearSession();
+          return of(undefined);
+        }),
+        finalize(() => {
+          this.sessionStateValue.set(this.isAuthenticated() ? 'auth' : 'anon');
+        }),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+
+    return this.bootstrapRequest;
+  }
+
+  /**
+   * Reuses a single in-flight same-origin refresh. The functional interceptor owns
+   * retrying original API requests; this method only obtains the new session.
+   */
+  refreshSession(): Observable<SessionResponse> {
+    if (this.refreshRequest === null) {
+      const refreshEpoch = this.sessionEpoch;
+      this.refreshRequest = this.http.post<SessionResponse>('/auth/refresh', {}).pipe(
+        tap((response) => {
+          if (refreshEpoch === this.sessionEpoch) {
+            this.applySession(response);
+          }
+        }),
+        finalize(() => {
+          this.refreshRequest = null;
+        }),
+        shareReplay({ bufferSize: 1, refCount: false })
+      );
+    }
+
+    return this.refreshRequest;
+  }
+
+  /**
+   * Logout is best-effort because the local access JWT must be discarded before a
+   * cold start or a hanging network request can delay the server-side revocation.
+   */
+  logout(): Observable<void> {
+    this.sessionEpoch += 1;
+    this.clearSession();
+    return this.http.post<void>('/auth/logout', {}).pipe(catchError(() => of(undefined)));
+  }
+
+  /** Clears the memory-only access state without touching browser storage. */
   clearSession(): void {
+    const previousUser = this.currentUserState();
     this.accessTokenState.set(null);
     this.currentUserState.set(null);
+    this.sessionStateValue.set('anon');
+    if (previousUser !== null) {
+      this.sessionChangeValue.set({ previousUserId: previousUser.id, currentUser: null });
+    }
+  }
+
+  /**
+   * Returns true only for the first failed auto-refresh after an authenticated request.
+   * The interceptor uses it to make exactly one login navigation for a failed queue.
+   */
+  handleAutoRefreshFailure(): boolean {
+    this.clearSession();
+    if (this.refreshFailureRedirected) {
+      return false;
+    }
+
+    this.refreshFailureRedirected = true;
+    return true;
+  }
+
+  /** Captures the current in-memory session generation for an in-flight API request. */
+  getSessionEpoch(): number {
+    return this.sessionEpoch;
+  }
+
+  /** True only while no logout or newer login has superseded the captured session. */
+  isSessionCurrent(epoch: number): boolean {
+    return epoch === this.sessionEpoch;
   }
 
   clearError(): void {
@@ -121,6 +232,21 @@ export class AuthService {
         finalize(() => this.pendingOperations.update((count) => Math.max(0, count - 1)))
       );
     });
+  }
+
+  private applySession(response: SessionResponse): void {
+    const previousUser = this.currentUserState();
+    this.accessTokenState.set(response.accessToken);
+    this.currentUserState.set(response.user);
+    this.sessionStateValue.set('auth');
+    this.refreshFailureRedirected = false;
+
+    if (previousUser?.id !== response.user.id) {
+      this.sessionChangeValue.set({
+        previousUserId: previousUser?.id ?? null,
+        currentUser: response.user
+      });
+    }
   }
 }
 

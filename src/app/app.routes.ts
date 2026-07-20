@@ -1,5 +1,7 @@
 import { Routes } from '@angular/router';
 
+import { authGuard } from './auth/auth.guard';
+
 export const routes: Routes = [
   {
     path: '',
@@ -15,6 +17,7 @@ export const routes: Routes = [
   {
     path: 'favorites',
     title: 'Favorites · Astronomy Picture Explorer',
+    canActivate: [authGuard],
     loadComponent: () =>
       import('./pages/favorites/favorites.component').then((m) => m.FavoritesComponent)
   },

@@ -67,7 +67,8 @@
               "buildTarget": "astronomy-picture-explorer:build:production"
             },
             "development": {
-              "buildTarget": "astronomy-picture-explorer:build:development"
+              "buildTarget": "astronomy-picture-explorer:build:development",
+              "proxyConfig": "proxy.conf.json"
             }
           },
           "defaultConfiguration": "development"

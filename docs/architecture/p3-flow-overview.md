@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-20
-Status: P3 IN PROGRESS - W1-W8 implemented
+Status: P3 IN PROGRESS - W1-W9 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -95,8 +95,21 @@ de 401 y expone reenvio solo para `403 email_unconfirmed`. Antes del POST de
 confirmacion, Angular exige un GUID y un Base64URL y limpia el codigo de la historia;
 esto tambien ocurre ante un error. Luego lleva a login sin crear una sesion automatica.
 
-W9 conserva la propiedad de bootstrap, guard, interceptor, refresh y logout. W10 puede
-migrar el shell y la navegacion APOD, pero debe mantener una entrada de cuenta accesible.
+### W9 frontend session alignment
+
+W9 registra un bootstrap que comparte exactamente un refresh same-origin y resuelve
+`checking/auth/anon`; una cookie ausente termina anonima sin login redirect. `/favorites`
+espera ese resultado y solo redirige a `/login?returnUrl=/favorites`. El interceptor usa
+Bearer solo para `/api/*` relativo con token en memoria; los 401 concurrentes comparten
+una rotacion y cada original se reintenta una vez mediante un marker `HttpContext` que no
+viaja como header. `/auth/*`, URLs externas y retries no entran al ciclo. Fallar refresh
+limpia y redirige una sola vez; logout limpia sincronicamente y es best-effort en red.
+La generacion capturada con cada Bearer impide que una request/refresh anterior use o
+limpie una sesion creada despues del logout. `sessionChange` entrega el usuario
+anterior/actual a W11 para evitar favoritos cruzados.
+El proxy development lleva `/api` y `/auth` a `localhost:5179`. Login solo consume un
+`returnUrl` interno normalizado. W10 puede migrar shell/navegacion APOD, pero debe
+mantener un control de cuenta accesible.
 
 El key ring que firma los tokens Identity vive en PostgreSQL con application name
 estable; por eso un link emitido antes de un restart/cold start sigue validando en una

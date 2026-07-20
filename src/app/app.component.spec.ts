@@ -1,8 +1,11 @@
 import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
+import { provideHttpClient } from '@angular/common/http';
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 
 import { AppComponent } from './app.component';
+import { AuthService } from './services/auth.service';
 
 @Component({
   changeDetection: ChangeDetectionStrategy.Eager,
@@ -21,7 +24,7 @@ describe('AppComponent', () => {
   beforeEach(async () => {
     await TestBed.configureTestingModule({
       imports: [AppComponent],
-      providers: [provideRouter(TEST_ROUTES)]
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter(TEST_ROUTES)]
     }).compileComponents();
   });
 
@@ -108,6 +111,28 @@ describe('AppComponent', () => {
     expect(signIn.textContent?.trim()).toBe('Sign in');
     expect(signIn.classList.contains('hidden')).toBeFalse();
     expect(signIn.classList.contains('focus-visible:outline-accent')).toBeTrue();
+  });
+
+  it('replaces Sign in with a visible logout action and clears memory before its request settles', () => {
+    const auth = TestBed.inject(AuthService);
+    const http = TestBed.inject(HttpTestingController);
+    auth.login({ email: 'astro@example.test', password: 'Valid1!Password' }).subscribe();
+    http.expectOne('/auth/login').flush({
+      accessToken: 'access-token',
+      expiresAt: '2026-07-20T20:00:00Z',
+      user: { id: '5c409cbf-b9cc-4afe-a55b-a8b7c4f1aac4', email: 'astro@example.test' }
+    });
+
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const signOut = (fixture.nativeElement as HTMLElement).querySelector(
+      'header button[type="button"]'
+    ) as HTMLButtonElement;
+    expect(signOut.textContent?.trim()).toBe('Sign out');
+    signOut.click();
+
+    expect(auth.isAuthenticated()).toBeFalse();
+    http.expectOne('/auth/logout').flush(null, { status: 204, statusText: 'No Content' });
   });
 
   it('keeps the compact mobile brand accessible when account entry shares the header', () => {

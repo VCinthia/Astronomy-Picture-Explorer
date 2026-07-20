@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: Accepted; P3-W1-W8 implemented
+Status: Accepted; P3-W1-W9 implemented
 
 ## Context
 
@@ -308,6 +308,27 @@ ocasionales son suficientes y observables.
 - El header aporta una entrada `Sign in` en todos los breakpoints. W9 es la unica wave
   autorizada a anexar bootstrap, refresh, logout, guard e interceptor; W10 puede
   reorganizar el shell pero debe preservar una entrada de cuenta accesible.
+
+## Implementation clarification - P3-W9 (2026-07-20)
+
+- El bootstrap Angular se registra como inicializador y comparte un unico
+  `POST /auth/refresh` por vida de la SPA. Expone `checking/auth/anon`; una cookie
+  ausente o refresh invalido deja estado anonimo sin redirigir una ruta publica.
+- `/favorites` espera ese bootstrap. El interceptor solo adjunta `Authorization: Bearer`
+  a requests relativos `/api/*` cuando existe access token en memoria. Los endpoints
+  `/auth/*`, URL externas y retries quedan fuera; el marker de retry usa `HttpContext`,
+  por lo que no viaja al API.
+- Los 401 con Bearer comparten refresh. Tras exito cada request original se reintenta una
+  vez; tras error se limpia memoria, se rechaza toda la cola y se navega una sola vez a
+  login. El bootstrap anonimo no toma ese camino de redirect.
+- Cada 401 captura la generacion de su sesion en memoria. Si logout o un login posterior
+  la reemplaza antes de resolver refresh, la request vieja solo propaga error: no puede
+  reintentar con el token nuevo, limpiar la sesion nueva ni redirigirla.
+- Logout del header borra usuario/JWT sincronicamente y luego intenta `POST /auth/logout`
+  best-effort, evitando que una red colgada retenga credenciales locales. `sessionChange`
+  expone usuario previo/actual para que W11 limpie datos por logout o switch de cuenta.
+- Desarrollo usa el proxy Angular `/api|/auth -> http://localhost:5179`; no se habilita
+  CORS ni `withCredentials` cross-site. Login acepta solo `returnUrl` interno normalizado.
 
 ## Consequences
 

@@ -60,12 +60,22 @@
           </a>
         </nav>
 
-        <a
-          routerLink="/login"
-          class="rounded-button px-3 py-1.5 text-meta font-medium text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-        >
-          Sign in
-        </a>
+        @if (auth.isAuthenticated()) {
+          <button
+            type="button"
+            (click)="logout()"
+            class="rounded-button px-3 py-1.5 text-meta font-medium text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Sign out
+          </button>
+        } @else {
+          <a
+            routerLink="/login"
+            class="rounded-button px-3 py-1.5 text-meta font-medium text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          >
+            Sign in
+          </a>
+        }
 
         <div class="flex items-center gap-2" role="group" aria-label="Step through dates">
           <button

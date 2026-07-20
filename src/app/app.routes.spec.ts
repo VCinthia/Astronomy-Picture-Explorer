@@ -8,6 +8,14 @@ describe('account routes', () => {
       expect(route).toBeDefined();
       expect(route?.component).toBeUndefined();
       expect(route?.loadComponent).toBeDefined();
+      expect(route?.canActivate).toBeUndefined();
     }
+  });
+
+  it('protects the existing lazy favorites route with the session guard', () => {
+    const favorites = routes.find((candidate) => candidate.path === 'favorites');
+
+    expect(favorites?.loadComponent).toBeDefined();
+    expect(favorites?.canActivate?.length).toBe(1);
   });
 });

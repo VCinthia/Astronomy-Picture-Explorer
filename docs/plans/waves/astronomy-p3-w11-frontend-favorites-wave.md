@@ -27,6 +27,8 @@ y navegacion desktop/mobile de P2.
 - [ ] W11.3 `/favorites` protegido consume listado hidratado, nunca N+1.
 - [ ] W11.4 Toggle anonimo ofrece CTA login con returnUrl y semantica accesible.
 - [ ] W11.5 Logout limpia favoritos de memoria; cambio de usuario nunca filtra estado.
+  Debe reaccionar a `AuthService.sessionChange` (`previousUserId`, `currentUser`),
+  contrato entregado por W9, no a localStorage ni a un identificador de request.
 - [ ] W11.6 Eliminar `ape.favorites.v1` como fuente runtime. No migrar favoritos anonimos
   para evitar asociarlos silenciosamente a otra cuenta.
 

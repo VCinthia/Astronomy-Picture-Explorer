@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-20
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W8 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W9 DONE
 
 ## Verdict
 
@@ -14,8 +14,8 @@ Identity user-only, schema PostgreSQL, FTS ponderado y health DB-aware. P3-W2 co
 registro, email y confirmacion con key ring persistido y rate limits. P3-W3 implemento
 sesiones seguras, P3-W4 cerro NASA today/date con cache, P3-W5 completo la ingestion
 local resumible, P3-W6 cerro FTS, P3-W7 completo Favorites API protegida y P3-W8
-materializo las pantallas Angular de cuenta; las waves restantes conservan el contrato
-aceptado.
+materializo las pantallas Angular de cuenta. P3-W9 completo bootstrap/guard/interceptor
+y logout frontend; las waves restantes conservan el contrato aceptado.
 
 ## Closed gates
 
@@ -153,7 +153,7 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   22.0.7; no se incluyen en runtime. Revalidar al proximo review mensual o con un patch
   Angular 22.0.x compatible, lo que ocurra primero.
 - `docker compose config` no es ejecutable aun: no hay archivo Compose antes de W12.
-  W12 debe crear ese artefacto y ejecutar su validacion; esto no bloquea W8.
+  W12 debe crear ese artefacto y ejecutar su validacion; esto no bloquea W10.
 
 ## P3-W8 completion gate
 
@@ -172,6 +172,25 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - `npm ci`, `npm run build`, 94/94 pruebas ChromeHeadless y `git diff --check` PASS.
   Los 5 advisories audit son solo dev transitivos
   previamente aceptados; W8 no cambia dependencias ni fuerza un fix.
+
+## P3-W9 completion gate
+
+- `provideAppInitializer` ejecuta un solo refresh same-origin por vida de la SPA y el
+  servicio expone `checking/auth/anon`. Falta de cookie/fallo bootstrap queda anonimo y
+  no inicia redireccion de login.
+- `/favorites` conserva lazy loading y usa guard que espera bootstrap; el anonimo recibe
+  solamente `/login?returnUrl=/favorites`. Login acepta solo retornos internos
+  normalizados y descarta URLs protocol-relative, hosts, esquemas y `/auth/*`.
+- El interceptor funcional agrega Bearer solo a `/api/*` relativo con token en memoria.
+  `/auth/*`, URL externa, retry marcado internamente y API sin token no disparan refresh.
+  401 concurrentes comparten una rotacion y cada request se reintenta una sola vez.
+- Fallo del refresh automatico limpia usuario/JWT y redirige una vez; logout visible en
+  header borra memoria sincronicamente antes de su POST best-effort. `sessionChange`
+  entrega `previousUserId/currentUser` para el aislamiento de favoritos W11.
+- `proxy.conf.json` y `angular.json` configuran development `/api` y `/auth` hacia
+  `http://localhost:5179`, sin `withCredentials`, CORS abierto ni URL Render en browser.
+- `npm ci`, `npm run build`, 110/110 ChromeHeadless y `git diff --check` PASS. Audit
+  runtime queda en 0; los 5 advisories transitivos development permanecen documentados.
 
 Antes de cada wave restante:
 
@@ -234,7 +253,7 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W9 desde `codex/p3-integration`. W9 extiende el servicio ya entregado con
-bootstrap, refresh, logout, guard e interceptor single-flight; no debe reimplementar
-formularios ni mover el JWT a Web Storage. Neon/Render/Resend, seed productivo y NASA
-real siguen postergados hasta W13.
+Ejecutar P3-W10 desde `codex/p3-integration`. W10 reemplaza mock/`availableDates` por
+APOD/date/search HTTP, conserva el bootstrap, interceptor y control de cuenta W9, y no
+mueve el JWT a Web Storage. Neon/Render/Resend, seed productivo y NASA real siguen
+postergados hasta W13.

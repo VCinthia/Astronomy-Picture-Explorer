@@ -1,7 +1,7 @@
 import { Location } from '@angular/common';
 import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
-import { RouterLink } from '@angular/router';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
 import { AuthProblem, AuthService } from '../../services/auth.service';
 
@@ -108,6 +108,8 @@ export class LoginComponent {
   readonly auth = inject(AuthService);
   private readonly formBuilder = inject(NonNullableFormBuilder);
   private readonly location = inject(Location);
+  private readonly route = inject(ActivatedRoute);
+  private readonly router = inject(Router);
 
   readonly confirmationSuccess = signal(hasConfirmationSuccess(this.location.getState()));
   readonly submitted = signal(false);
@@ -140,7 +142,15 @@ export class LoginComponent {
     }
 
     this.auth.login(this.form.getRawValue()).subscribe({
-      next: () => this.signedIn.set(true),
+      next: () => {
+        const returnUrl = normalizeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
+        if (returnUrl !== null) {
+          void this.router.navigateByUrl(returnUrl);
+          return;
+        }
+
+        this.signedIn.set(true);
+      },
       error: (problem: AuthProblem) => {
         this.loginError.set(
           problem.status === 403 && problem.code === 'email_unconfirmed'
@@ -169,4 +179,29 @@ export class LoginComponent {
 function hasConfirmationSuccess(state: unknown): boolean {
   return typeof state === 'object' && state !== null &&
     (state as { confirmationSuccess?: unknown }).confirmationSuccess === true;
+}
+
+/** Allows only a path owned by this SPA; protocol, host and protocol-relative URLs fail closed. */
+export function normalizeReturnUrl(value: string | null): string | null {
+  if (
+    value === null ||
+    !value.startsWith('/') ||
+    value.startsWith('//') ||
+    value.includes('\\') ||
+    /^\/(?:%2f|%5c)/i.test(value)
+  ) {
+    return null;
+  }
+
+  try {
+    const internalOrigin = 'https://astronomy-explorer.invalid';
+    const parsed = new URL(value, internalOrigin);
+    if (parsed.origin !== internalOrigin || parsed.pathname.startsWith('/auth/')) {
+      return null;
+    }
+
+    return `${parsed.pathname}${parsed.search}${parsed.hash}`;
+  } catch {
+    return null;
+  }
 }

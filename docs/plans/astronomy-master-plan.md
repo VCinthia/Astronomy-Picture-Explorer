@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W8 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W9 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -132,6 +132,20 @@ P3-W8 quedo DONE el 2026-07-20:
   mobile sin alterar el bottom nav P2. W9 conserva bootstrap/guard/interceptor/refresh;
   W10 debe mantener una entrada de cuenta al migrar el shell.
 - Build y 94/94 pruebas ChromeHeadless PASS.
+
+P3-W9 quedo DONE el 2026-07-20:
+
+- Bootstrap Angular ejecuta como maximo un `POST /auth/refresh` same-origin y resuelve
+  `checking/auth/anon`; una cookie ausente deja anonimo sin redireccionar rutas publicas.
+- `/favorites` espera bootstrap y lleva anonimo a login con retorno interno. El
+  interceptor agrega Bearer solo a `/api/*` relativo, coordina 401 con una sola rotacion
+  y reintenta cada request una vez sin headers/markers internos expuestos.
+- Refresh fallido limpia memoria y navega a login una vez; logout del header limpia JWT y
+  usuario sincronicamente antes del POST best-effort. `sessionChange` es el handoff
+  estable para que W11 aisle los favoritos de logout/cambio de cuenta.
+- Desarrollo usa `proxy.conf.json` para `/api` y `/auth` hacia `localhost:5179`, sin CORS
+  ni URL externa de backend. Login normaliza `returnUrl` y rechaza destinos externos.
+- Build y 110/110 pruebas ChromeHeadless PASS.
 
 ## 4. Execution contract
 

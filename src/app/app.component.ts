@@ -2,6 +2,7 @@ import { ChangeDetectionStrategy, Component, computed, inject } from '@angular/c
 import { RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
 
 import { AstronomyService } from './services/astronomy.service';
+import { AuthService } from './services/auth.service';
 import { AUTHOR_NAME, AUTHOR_SITE_URL, SITE_CREATED } from './config/site.config';
 import { BottomNavComponent } from './components/bottom-nav/bottom-nav.component';
 import { formatApodDate } from './utils/format-date';
@@ -15,6 +16,7 @@ import { formatApodDate } from './utils/format-date';
 })
 export class AppComponent {
   private readonly astronomy = inject(AstronomyService);
+  readonly auth = inject(AuthService);
 
   readonly authorName = AUTHOR_NAME;
   readonly authorSiteUrl = AUTHOR_SITE_URL;
@@ -41,5 +43,9 @@ export class AppComponent {
     if (this.canNext()) {
       this.astronomy.selectDate(this.astronomy.availableDates[this.index() + 1]);
     }
+  }
+
+  logout(): void {
+    this.auth.logout().subscribe();
   }
 }

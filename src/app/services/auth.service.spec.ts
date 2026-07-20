@@ -117,4 +117,90 @@ describe('AuthService', () => {
     expect(service.error()).toEqual(problem);
     expect(service.isAuthenticated()).toBeFalse();
   });
+
+  it('bootstraps with exactly one refresh for the application lifetime and restores memory state', () => {
+    let firstComplete = false;
+    let secondComplete = false;
+
+    service.bootstrap().subscribe(() => firstComplete = true);
+    service.bootstrap().subscribe(() => secondComplete = true);
+
+    const refreshes = http.match('/auth/refresh');
+    expect(refreshes.length).toBe(1);
+    expect(service.sessionState()).toBe('checking');
+    refreshes[0].flush(sessionResponse('boot-token', 'first-user'));
+
+    expect(firstComplete).toBeTrue();
+    expect(secondComplete).toBeTrue();
+    expect(service.sessionState()).toBe('auth');
+    expect(service.accessToken()).toBe('boot-token');
+    expect(service.currentUser()?.id).toBe('first-user');
+
+    service.bootstrap().subscribe();
+    expect(http.match('/auth/refresh').length).toBe(0);
+  });
+
+  it('settles an anonymous bootstrap locally without storing a token or surfacing a redirect concern', () => {
+    service.bootstrap().subscribe();
+
+    const refresh = http.expectOne('/auth/refresh');
+    refresh.flush({ code: 'invalid_refresh_token' }, { status: 401, statusText: 'Unauthorized' });
+
+    expect(service.sessionState()).toBe('anon');
+    expect(service.isAuthenticated()).toBeFalse();
+    expect(service.accessToken()).toBeNull();
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
+  });
+
+  it('shares one refresh operation and exposes a session-change signal for a user switch and logout', () => {
+    const changes: string[] = [];
+    service.login({ email: 'first@example.test', password: 'Valid1!Password' }).subscribe();
+    http.expectOne('/auth/login').flush(sessionResponse('first-token', 'first-user'));
+    changes.push(`${service.sessionChange().previousUserId}:${service.sessionChange().currentUser?.id}`);
+
+    service.refreshSession().subscribe();
+    service.refreshSession().subscribe();
+    const refreshes = http.match('/auth/refresh');
+    expect(refreshes.length).toBe(1);
+    refreshes[0].flush(sessionResponse('second-token', 'second-user'));
+    changes.push(`${service.sessionChange().previousUserId}:${service.sessionChange().currentUser?.id}`);
+
+    service.logout().subscribe();
+    const logout = http.expectOne('/auth/logout');
+    expect(service.isAuthenticated()).toBeFalse();
+    logout.error(new ProgressEvent('network error'));
+    changes.push(`${service.sessionChange().previousUserId}:${service.sessionChange().currentUser?.id}`);
+
+    expect(service.isAuthenticated()).toBeFalse();
+    expect(changes).toEqual([
+      'null:first-user',
+      'first-user:second-user',
+      'second-user:undefined'
+    ]);
+  });
+
+  it('does not let a refresh that started before logout restore the cleared session', () => {
+    service.login({ email: 'astro@example.test', password: 'Valid1!Password' }).subscribe();
+    http.expectOne('/auth/login').flush(sessionResponse('access-token', 'first-user'));
+
+    service.refreshSession().subscribe();
+    const refresh = http.expectOne('/auth/refresh');
+    service.logout().subscribe();
+    const logout = http.expectOne('/auth/logout');
+    expect(service.isAuthenticated()).toBeFalse();
+
+    refresh.flush(sessionResponse('stale-token', 'first-user'));
+    expect(service.isAuthenticated()).toBeFalse();
+    expect(service.accessToken()).toBeNull();
+    logout.flush(null, { status: 204, statusText: 'No Content' });
+  });
+
+  function sessionResponse(accessToken: string, userId: string) {
+    return {
+      accessToken,
+      expiresAt: '2026-07-20T20:00:00Z',
+      user: { id: userId, email: `${userId}@example.test` }
+    };
+  }
 });

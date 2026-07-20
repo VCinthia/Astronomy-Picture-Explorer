@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W8 DONE
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W9 DONE
 
 ## Vision
 
@@ -188,3 +188,8 @@ reemplazaran contratos temporales:
   acceso es estado transitorio en memoria, confirmacion usa POST y limpia su codigo de
   la URL; bootstrap/refresh/guard/interceptor quedan para W9. El header muestra Sign in
   en todos los breakpoints sin reescribir la navegacion P2 historica.
+- W9 completa la restauracion de sesion: bootstrap hace un refresh una vez, `/favorites`
+  espera guard y el interceptor coordina 401 con una sola rotacion/retry. JWT y usuario
+  se limpian sincronicamente en logout; `sessionChange` permite que W11 aisle favoritos
+  por usuario. Desarrollo proxifica `/api` y `/auth` al backend local y login solo sigue
+  un `returnUrl` interno seguro.

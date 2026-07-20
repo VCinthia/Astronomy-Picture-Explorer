@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: IN PROGRESS - W1-W8 DONE
+Status: IN PROGRESS - W1-W9 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -90,7 +90,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.6** PostgreSQL FTS y endpoint search (W6).
 - [x] **R3.7** Favorites API protegida e hidratada (W7).
 - [x] **R3.8** Frontend account/auth flows (W8).
-- [ ] **R3.9** Frontend session bootstrap/guard/interceptor (W9).
+- [x] **R3.9** Frontend session bootstrap/guard/interceptor (W9).
 - [ ] **R3.10** Frontend APOD/date/search migration (W10).
 - [ ] **R3.11** Frontend favorites migration (W11).
 - [ ] **R3.12** Contenedores y stack local (W12).
@@ -149,6 +149,18 @@ el codigo de la historia y ejecutar solo `POST`, incluso ante fallo, y redirige 
 sin auto-login. W8 no
 introduce environment de URL backend, guard, interceptor, refresh ni logout: W9 extiende
 el servicio para esos limites. `npm run build` y 94/94 pruebas ChromeHeadless PASS.
+
+W9 se cerro el 2026-07-20 con bootstrap de refresh una vez por vida de la SPA y estados
+`checking/auth/anon`, guard de `/favorites`, interceptor Bearer limitado a rutas relativas
+`/api/*`, refresh single-flight y un unico retry interno. Los endpoints `/auth/*` y URLs
+externas no reciben Bearer ni auto-refresh. Un refresh fallido limpia el estado y redirige
+una vez, mientras que el bootstrap anonimo no redirige; logout limpia memoria antes del
+POST best-effort. El proxy Angular dirige `/api` y `/auth` a `http://localhost:5179` sin
+CORS ni URL Render en browser. `AuthService.sessionChange` deja un contrato explicito
+para que W11 limpie favoritos al logout/cambio de usuario. Login solo acepta un
+`returnUrl` interno normalizado. La generacion de sesion asociada al Bearer evita que un
+refresh viejo reintente, borre o redirija una cuenta creada despues de logout. `npm run
+build` y 110/110 pruebas ChromeHeadless PASS.
 
 ## 6. Exit criteria
 

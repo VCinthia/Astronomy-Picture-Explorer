@@ -1,17 +1,33 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
 import { TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 
-import { LoginComponent } from './login.component';
+import { LoginComponent, normalizeReturnUrl } from './login.component';
 
 describe('LoginComponent', () => {
   let http: HttpTestingController;
+  let returnUrl: string | null;
 
   beforeEach(async () => {
+    returnUrl = null;
     await TestBed.configureTestingModule({
       imports: [LoginComponent],
-      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+      providers: [
+        provideHttpClient(),
+        provideHttpClientTesting(),
+        provideRouter([]),
+        {
+          provide: ActivatedRoute,
+          useFactory: () => ({
+            snapshot: {
+              queryParamMap: {
+                get: (key: string) => key === 'returnUrl' ? returnUrl : null
+              }
+            }
+          })
+        }
+      ]
     }).compileComponents();
     http = TestBed.inject(HttpTestingController);
   });
@@ -81,6 +97,25 @@ describe('LoginComponent', () => {
       .toContain('Signed in successfully');
     expect(localStorage.getItem('accessToken')).toBeNull();
     expect(sessionStorage.getItem('accessToken')).toBeNull();
+  });
+
+  it('returns to an internal path after login and rejects protocol-relative or hosted values', () => {
+    returnUrl = '/favorites?view=cards';
+    const router = TestBed.inject(Router);
+    const navigate = spyOn(router, 'navigateByUrl').and.returnValue(Promise.resolve(true));
+    const fixture = createValidLoginFixture();
+    fixture.componentInstance.submit();
+    http.expectOne('/auth/login').flush({
+      accessToken: 'header.payload.signature',
+      expiresAt: '2026-07-20T20:00:00Z',
+      user: { id: '5c409cbf-b9cc-4afe-a55b-a8b7c4f1aac4', email: 'astro@example.test' }
+    });
+
+    expect(navigate).toHaveBeenCalledWith('/favorites?view=cards');
+    expect(normalizeReturnUrl('//evil.example')).toBeNull();
+    expect(normalizeReturnUrl('https://evil.example')).toBeNull();
+    expect(normalizeReturnUrl('/%2f%2fevil.example')).toBeNull();
+    expect(normalizeReturnUrl('/auth/refresh')).toBeNull();
   });
 
   function createValidLoginFixture() {
