@@ -6,6 +6,10 @@ namespace AstronomyExplorer.Api.Apod;
 public static class ApodEndpoints
 {
   public static readonly DateOnly FirstApodDate = new(1995, 6, 16);
+  public const int DefaultSearchPageSize = 12;
+  public const int MaxSearchPage = 1_000;
+  public const int MaxSearchPageSize = 30;
+  public const int MaxSearchQueryLength = 200;
 
   public static IEndpointRouteBuilder MapApodEndpoints(this IEndpointRouteBuilder endpoints)
   {
@@ -16,8 +20,43 @@ public static class ApodEndpoints
       .WithName("GetTodayApod");
     group.MapGet("/date/{date}", GetByDateAsync)
       .WithName("GetApodByDate");
+    group.MapGet("/search", SearchAsync)
+      .WithName("SearchApod");
 
     return endpoints;
+  }
+
+  private static async Task<IResult> SearchAsync(
+    string? q,
+    ApodSearchService searchService,
+    CatalogReadinessService readinessService,
+    CancellationToken cancellationToken,
+    int page = 1,
+    int pageSize = DefaultSearchPageSize)
+  {
+    var query = q?.Trim();
+    if (string.IsNullOrWhiteSpace(query) || query.Length > MaxSearchQueryLength)
+    {
+      return ApodProblems.InvalidSearchQuery();
+    }
+
+    if (page is < 1 or > MaxSearchPage || pageSize is < 1 or > MaxSearchPageSize)
+    {
+      return ApodProblems.InvalidSearchPagination();
+    }
+
+    var readiness = await readinessService.GetAsync(cancellationToken);
+    if (!readiness.Ready)
+    {
+      return ApodProblems.CatalogNotReady();
+    }
+
+    var results = await searchService.SearchAsync(
+      query,
+      page,
+      pageSize,
+      cancellationToken);
+    return Results.Ok(results);
   }
 
   private static Task<IResult> GetTodayAsync(
@@ -78,6 +117,25 @@ public static class ApodProblems
     "Invalid APOD date.",
     "The date must use YYYY-MM-DD and be within the supported APOD range.",
     "invalid_apod_date");
+
+  public static IResult InvalidSearchQuery() => Create(
+    StatusCodes.Status400BadRequest,
+    "Invalid APOD search query.",
+    $"The search query must contain between 1 and {ApodEndpoints.MaxSearchQueryLength} characters.",
+    "invalid_search_query");
+
+  public static IResult InvalidSearchPagination() => Create(
+    StatusCodes.Status400BadRequest,
+    "Invalid APOD search pagination.",
+    $"Page must be between 1 and {ApodEndpoints.MaxSearchPage}, and pageSize must be " +
+    $"between 1 and {ApodEndpoints.MaxSearchPageSize}.",
+    "invalid_search_pagination");
+
+  public static IResult CatalogNotReady() => Create(
+    StatusCodes.Status503ServiceUnavailable,
+    "APOD catalog is not ready.",
+    "The historical astronomy catalog is still being prepared. Try again later.",
+    "catalog_not_ready");
 
   public static IResult Upstream(NasaApodFailure failure) => failure switch
   {

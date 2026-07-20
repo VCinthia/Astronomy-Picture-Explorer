@@ -1,8 +1,8 @@
 # ADR-0003 - Backend, autenticacion, catalogo APOD y despliegue P3
 
 Date: 2026-07-08
-Last revised: 2026-07-17
-Status: Accepted; P3-W1-W5 implemented
+Last revised: 2026-07-20
+Status: Accepted; P3-W1-W6 implemented
 
 ## Context
 
@@ -66,12 +66,15 @@ nulabilidad anterior es parte del contrato y se cubre con tests de imagen y vide
 - Se guarda metadata, nunca blobs de imagen/video.
 - `GET /api/apod/today` y `GET /api/apod/date/{date}` consultan memoria, PostgreSQL y
   NASA en ese orden, y hacen upsert de la respuesta.
-- `GET /api/apod/search?q=` busca solo en PostgreSQL.
+- `GET /api/apod/search?q=&page=&pageSize=` busca solo en PostgreSQL y devuelve un
+  `ApodEntryDto[]` top-level.
 - PostgreSQL Full Text Search usa un `tsvector` ingles ponderado: titulo peso A y
   explicacion peso B, con indice GIN.
-- `pg_trgm` es opcional. Solo se habilita como fallback para coincidencia parcial o
-  tolerancia a errores si benchmarks y tests demuestran valor; nunca reemplaza FTS.
-- Search valida `q`, limita `pageSize` a 30 y ordena por ranking estable + fecha.
+- W6 no habilita `pg_trgm`: FTS resuelve stemming y la mejora limitada en prefijos/typos
+  no justifica extension, indice ni mezcla de rankings para este portfolio. Reabrir la
+  decision requiere nueva evidencia reproducible; trigram nunca reemplazaria FTS.
+- Search recorta y limita `q` a 200 caracteres, usa pagina default 1/maximo 1000,
+  `pageSize` default 12/maximo 30 y ordena por ranking estable + fecha descendente.
 
 ### Ingestion de catalogo sin costo
 
@@ -84,6 +87,8 @@ nulabilidad anterior es parte del contrato y se cubre con tests de imagen y vide
 - `catalog_sync_state` registra rango objetivo, ultima fecha confirmada, estado y error.
 - `GET /api/apod/catalog-status` expone conteo/cobertura sin datos sensibles.
 - Search devuelve `503 catalog_not_ready` hasta completar la carga inicial acordada.
+- Status y search consumen una politica de readiness interna compartida; search no
+  depende de una llamada HTTP a `catalog-status`.
 - Despues del seed, `/today` y `/date` incorporan entradas solicitadas. La actualizacion
   incremental completa es un comando manual y no requiere scheduler/keepalive.
 
@@ -243,6 +248,22 @@ ocasionales son suficientes y observables.
   seed. `GET /api/apod/catalog-status` ignora estados ad-hoc para readiness y serializa
   estados lowercase. Ready exige Completed, checkpoint final y row count al menos igual
   al synced count. Completed con drift solo se repara reejecutando el rango con resume.
+
+## Implementation clarification - P3-W6 (2026-07-20)
+
+- `websearch_to_tsquery('english', q)` queda parametrizado mediante Npgsql/EF Core y se
+  compara contra el `search_vector` stored de W1. No existe concatenacion SQL.
+- `ts_rank` respeta pesos A/B; los empates se ordenan por fecha descendente. Projection,
+  `LIMIT` y `OFFSET` ocurren en PostgreSQL y solo exponen el DTO app-owned.
+- Input invalido responde 400 estable; catalogo no ready responde 503; cero matches
+  responde un array JSON vacio con 200. Ninguna ruta de search inyecta el cliente NASA.
+- `page` fuera de 1..1000 y `pageSize` fuera de 1..30 se rechazan antes de evaluar
+  readiness o ejecutar SQL, acotando tanto respuesta como profundidad de offset.
+- La misma `CatalogReadinessService` evalua target configurado, estado Completed,
+  checkpoint final y cantidad sincronizada para status y search, evitando divergencias.
+- PostgreSQL real confirma ranking, stemming, web syntax, caracteres especiales,
+  paginacion, seguridad ante payload SQL y uso del indice GIN. Prefijo `nebul` y typo
+  `neubla` quedan deliberadamente sin fallback; `pg_trgm` no fue habilitado.
 
 ## Consequences
 

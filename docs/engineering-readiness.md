@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
-Date: 2026-07-17
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W5 DONE
+Date: 2026-07-20
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W6 DONE
 
 ## Verdict
 
@@ -106,6 +106,19 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - Heartbeat sobre la conexion dedicada detecta perdida del advisory lock, cancela el
   trabajo linked y deja Paused sin adelantar checkpoint.
 
+## P3-W6 completion gate
+
+- Build Release PASS con 0 warnings/errors; 18/18 tests W6 y 150/150 backend PASS sobre
+  PostgreSQL 17 Testcontainers.
+- `GET /api/apod/search` devuelve `ApodEntryDto[]`, recorta `q`, limita query a 200,
+  `page` a 1..1000 y `pageSize` a 1..30 con default 12, antes de readiness/DB.
+- Query parametrizada usa `websearch_to_tsquery('english', q)`, vector A/B, `ts_rank`,
+  fecha descendente, projection y limites en PostgreSQL. `EXPLAIN` confirma el GIN.
+- Readiness es una politica interna compartida por status/search. Target ausente,
+  incompleto o con drift produce `503 catalog_not_ready`; search nunca llama NASA.
+- Stemming ingles funciona; prefijos y typos no. `pg_trgm` queda deshabilitado porque el
+  beneficio no justifica extension, indice adicional ni ranking mixto en este portfolio.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -151,7 +164,7 @@ docker compose down
 | Risk | Required mitigation |
 |---|---|
 | NASA no ofrece keyword search remoto | PostgreSQL FTS sobre title+explanation |
-| Catalogo incompleto | CLI resumible + checkpoint + public catalog-status; search 503 until ready |
+| Catalogo incompleto | CLI resumible + checkpoint + politica shared readiness/status; search 503 until ready |
 | Backfill suspende Render/consume recursos | Ejecutar desde desarrollo contra Neon; nunca en API startup |
 | Cookie third-party bloqueada | Browser usa Netlify same-origin proxy; cookie host-only SameSite=Lax |
 | CSRF sobre refresh/logout | SameSite=Lax + Origin exacto; CORS no se usa como defensa |
@@ -160,13 +173,13 @@ docker compose down
 | Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; revisar cifrado en reposo en W13 |
 | IP real oculta por Netlify/Render | Fail-closed sobre peer; W13 configura solo proxies verificados y prueba particiones |
 | Render cold start confunde primera visita | Estado connecting + timeout + Retry accesible |
-| Search costoso | tsvector ponderado + GIN + pageSize max 30; trigram solo con evidencia |
+| Search costoso | tsvector + GIN; q max 200, page max 1000, pageSize max 30; sin trigram |
 | Cuota/cargo inesperado | Free-only, no keepalive/cron/overages; fail closed y revalidar en W13 |
 | DTO diverge de NASA/frontend | DTO app-owned congelado + contract tests image/video/nulls |
 | Angular 19 tiene 6 high + 1 moderate en `npm audit --omit=dev` | Decidir upgrade mayor en rama dedicada antes de W8-W11/W13; nunca aplicar `--force` dentro de una wave backend |
 
 ## Recommended next step
 
-Ejecutar P3-W6 desde `codex/p3-integration`. W6 implementa search exclusivamente sobre
-PostgreSQL y usa `catalog-status` para fallar con `catalog_not_ready` hasta que W13
-complete el seed autorizado. Neon/Render/Resend y NASA real siguen postergados.
+Ejecutar P3-W7 desde `codex/p3-integration`. W7 implementa Favorites API protegida e
+hidratada sobre las bases de auth/APOD ya cerradas. Neon/Render/Resend, seed productivo
+y NASA real siguen postergados hasta W13.

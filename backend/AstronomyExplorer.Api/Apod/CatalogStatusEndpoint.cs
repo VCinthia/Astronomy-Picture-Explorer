@@ -1,8 +1,6 @@
 using System.Text.Json.Serialization;
 using AstronomyExplorer.Api.Data;
-using AstronomyExplorer.Api.Domain;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Options;
 
 namespace AstronomyExplorer.Api.Apod;
 
@@ -29,7 +27,7 @@ public static class CatalogStatusEndpoint
 
   private static async Task<IResult> GetAsync(
     AppDbContext dbContext,
-    IOptions<CatalogOptions> catalogOptions,
+    CatalogReadinessService readinessService,
     CancellationToken cancellationToken)
   {
     var count = await dbContext.ApodEntries
@@ -41,33 +39,16 @@ public static class CatalogStatusEndpoint
     var coverageTo = count == 0
       ? null
       : await dbContext.ApodEntries.MaxAsync(entry => (DateOnly?)entry.Date, cancellationToken);
-    var requiredFrom = catalogOptions.Value.RequiredFrom;
-    var requiredTo = catalogOptions.Value.RequiredTo;
-    var state = requiredFrom is null || requiredTo is null
-      ? null
-      : await dbContext.CatalogSyncStates
-        .AsNoTracking()
-        .SingleOrDefaultAsync(
-          item => item.TargetFrom == requiredFrom && item.TargetTo == requiredTo,
-          cancellationToken);
-    var targetCount = state is null
-      ? 0
-      : await dbContext.ApodEntries.LongCountAsync(
-        entry => entry.Date >= state.TargetFrom && entry.Date <= state.TargetTo,
-        cancellationToken);
-    var ready = state is not null &&
-      state.Status == CatalogSyncStatus.Completed &&
-      state.LastCompletedDate == state.TargetTo &&
-      targetCount >= state.SyncedEntryCount;
+    var readiness = await readinessService.GetAsync(cancellationToken);
 
     return Results.Ok(new CatalogStatusDto(
       count,
       coverageFrom,
       coverageTo,
-      state?.TargetFrom ?? requiredFrom,
-      state?.TargetTo ?? requiredTo,
-      state?.LastCompletedDate,
-      state?.Status.ToString().ToLowerInvariant() ?? "not_started",
-      ready));
+      readiness.TargetFrom,
+      readiness.TargetTo,
+      readiness.LastCompletedDate,
+      readiness.Status,
+      readiness.Ready));
   }
 }

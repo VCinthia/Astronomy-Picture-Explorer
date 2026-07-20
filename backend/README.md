@@ -5,7 +5,8 @@ PostgreSQL schema and Identity persistence. P3-W2 adds registration, confirmatio
 resend, rate limiting and the Resend adapter. P3-W3 adds Identity login, short JWTs,
 rotating PostgreSQL refresh sessions and Origin-protected logout/refresh.
 P3-W4 adds the app-owned APOD contract, public today/date endpoints and layered cache.
-P3-W5 adds the local resumable catalog CLI and public catalog status.
+P3-W5 adds the local resumable catalog CLI and public catalog status. P3-W6 adds
+bounded PostgreSQL full-text search with shared catalog readiness.
 
 ## Prerequisites
 
@@ -136,6 +137,7 @@ Public APOD endpoints are:
 - `GET /api/apod/today`
 - `GET /api/apod/date/{date}`
 - `GET /api/apod/catalog-status`
+- `GET /api/apod/search?q=<text>&page=1&pageSize=12`
 
 `catalog-status` reports total cached rows and global coverage. Readiness is anchored to
 the exact optional `Catalog__RequiredFrom`/`Catalog__RequiredTo` range; W13 sets both to
@@ -143,6 +145,18 @@ the approved seed target. Without that configuration it reports `not_started`. W
 target, `ready` requires `Completed`, checkpoint equal to `target_to`, and at least the
 persisted `synced_entry_count` rows inside the target. A newer ad-hoc small sync cannot
 replace the canonical target.
+
+Search and catalog status consume the same internal readiness policy. Until the
+configured canonical target is ready, search returns `503` with code
+`catalog_not_ready`; it does not call catalog status over HTTP. Search trims `q`, accepts
+1..200 characters, limits page to 1..1000 and pageSize to 1..30 (default 12). Results
+are a top-level `ApodEntryDto[]`, ranked by weighted English FTS relevance and then APOD
+date descending. No result is `200 []`.
+
+Search uses parameterized `websearch_to_tsquery`, the stored title-A/explanation-B
+vector and its GIN index. It never contacts NASA. English stemming is supported;
+partial prefixes and typos are deliberately not expanded. W6 did not enable `pg_trgm`
+because its limited portfolio benefit did not justify another index and mixed ranking.
 
 ## Local catalog synchronization
 
@@ -196,7 +210,9 @@ The tests start a temporary PostgreSQL 17 container, apply the real EF Core migr
 and validate relational constraints, FTS/GIN, health, account anti-enumeration, token
 expiry/reuse, rate limits, the Resend HTTP contract, cross-instance key persistence,
 JWT claims/configuration, refresh concurrency/replay, Origin-protected logout, catalog
-range validation, resumable checkpoints, advisory locking and status readiness.
+range validation, resumable checkpoints, advisory locking, shared status readiness,
+weighted search ranking, stemming, web-search syntax, injection-safe parameters,
+bounded stable pagination and GIN query plans.
 
 ```powershell
 dotnet test backend/AstronomyExplorer.sln

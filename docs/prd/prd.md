@@ -1,8 +1,8 @@
 # PRD - Astronomy Picture Explorer
 
 Date: 2026-07-08
-Last revised: 2026-07-17
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W5 DONE
+Last revised: 2026-07-20
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W6 DONE
 
 ## Vision
 
@@ -69,8 +69,11 @@ hdurl|null, thumbnail_url|null, copyright|null
 ### Search/catalog
 
 - PostgreSQL FTS ingles pondera title sobre explanation e indexa con GIN.
-- `pg_trgm` puede agregarse como fallback solo con evidencia de utilidad.
-- Resultados paginados, maximo 30 por request y orden estable.
+- W6 no habilita `pg_trgm`: stemming FTS aporta valor suficiente y los casos de
+  prefijo/typo no justifican extension, indice y ranking secundarios. Reabrirlo exige
+  nueva evidencia reproducible.
+- Search acepta `q` recortado de 1..200, page 1..1000 y maximo 30 resultados por
+  request, con orden estable por relevancia + fecha descendente.
 - Catalogo historico se carga mediante CLI local resumible por rangos NASA.
 - Dry-run estima requests sin DB/key/red; live exige key propia y nunca corre en Render.
 - Batches atomicos y lock global con heartbeat evitan saltos, duplicados y rangos
@@ -80,6 +83,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 - Status publico informa cobertura/readiness del target canónico configurado para el
   seed; ready exige estado completo, checkpoint final y conservar las filas
   sincronizadas, por lo que un sync pequeño no simula completitud.
+- Status y search comparten la misma politica interna de readiness. Target ausente,
+  incompleto o con drift impide search con `503 catalog_not_ready` y no llama NASA.
 - No existe backfill automatico en Render ni scheduler/keepalive.
 
 ### Authentication
@@ -143,7 +148,7 @@ hdurl|null, thumbnail_url|null, copyright|null
 
 - Security: Identity, no raw tokens, secrets por env, Origin validation, rate limits.
 - Reliability: cache controlada, retries acotados, ingestion resumible, errores tipados.
-- Performance: FTS indexado, paginacion max 30, no N+1, lazy routes.
+- Performance: FTS indexado, page max 1000, pageSize max 30, no N+1, lazy routes.
 - Accessibility: WCAG AA, teclado, foco, aria-live para estados async.
 - Maintainability: DTO app-owned, ADR vigente y wave verification ejecutable.
 - Cost: costo obligatorio $0; no fallback automatico a pago.

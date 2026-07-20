@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
-Date: 2026-07-16
-Status: P3 IN PROGRESS - W1-W5 implemented
+Date: 2026-07-20
+Status: P3 IN PROGRESS - W1-W6 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -165,12 +165,12 @@ flowchart LR
     RANGE --> UPSERT["upsert idempotente"]
     UPSERT --> CHECK["catalog_sync_state checkpoint"]
     CHECK -->|"siguiente lote"| RANGE
-    CHECK --> READY["catalog-status ready"]
-    Q["search?q"] --> GUARD{"catalog ready"}
+    CHECK --> READY["shared readiness policy"]
+    READY --> STATUS["catalog-status"]
+    Q["search?q"] --> GUARD{"shared policy ready"}
     GUARD -->|no| E503["503 catalog_not_ready"]
     GUARD -->|si| FTS["websearch_to_tsquery + tsvector GIN"]
-    FTS --> OPTIONAL["pg_trgm opcional si no hay FTS"]
-    OPTIONAL --> RESULTS["max 30, ranking + fecha"]
+    FTS --> RESULTS["DTO array, max 30, rank + fecha"]
 ```
 
 La carga historica se hace una vez desde desarrollo contra Neon, autorizada en W13. W5
@@ -316,6 +316,18 @@ La migracion inicial implementa el diagrama con estas precisiones:
   upsert + checkpoint + synced count atomicos.
 - APOD historico no es un calendario denso. Completed integro es idempotente; si el row
   count cae debajo del count sincronizado, `--resume` reejecuta el rango completo.
+
+### W6 PostgreSQL search alignment
+
+- Search es una query local parametrizada: `websearch_to_tsquery('english', q)` contra
+  el vector generated stored A/B y GIN de W1. No hay camino a NASA.
+- `CatalogReadinessService` concentra target, checkpoint, estado y synced count para
+  search/status; el diagrama representa una politica interna, no self-HTTP.
+- Respuesta es `ApodEntryDto[]`; `q` 1..200 tras trim, page default 1/maximo 1000 y
+  pageSize default 12/maximo 30. Los limites corren antes de readiness/DB; ranking
+  descendente desempata por fecha descendente.
+- FTS cubre stemming. Los probes de prefijo/typo no justificaron complejidad de un
+  indice/ranking secundario, por lo que W6 no instala `pg_trgm`.
 
 ## 9. Waves y dependencias
 

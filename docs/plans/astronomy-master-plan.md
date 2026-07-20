@@ -1,8 +1,8 @@
 # Master Plan - Astronomy Picture Explorer
 
 Date: 2026-06-25
-Last revised: 2026-07-17
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W5 DONE
+Last revised: 2026-07-20
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W6 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -52,7 +52,7 @@ La revision del 2026-07-16 establecio 13 waves ejecutables:
 - Identity y sesiones rotadas.
 - Confirmacion POST con `userId + code` Base64URL.
 - DTO APOD app-owned sin metadata de keywords ni `service_version`.
-- PostgreSQL FTS title+explanation; `pg_trgm` opcional con evidencia.
+- PostgreSQL FTS title+explanation; W6 descarto `pg_trgm` con evidencia reproducible.
 - Ingestion CLI local resumible; nunca backfill en Render.
 - Proxy same-origin Netlify -> Render y cookie SameSite=Lax.
 - Costo obligatorio $0 y experiencia explicita de cold start.
@@ -94,6 +94,15 @@ P3-W5 quedo DONE el 2026-07-17:
 - Archivo historico disperso conserva checkpoint de rango y count de entries; status
   valida el target canónico configurado antes de ready. 55/55 Catalog y 132/132 backend
   PASS; tests no llaman NASA real.
+
+P3-W6 quedo DONE el 2026-07-20:
+
+- Endpoint publico FTS parametrizado con DTO array, `q` max 200, page 1..1000,
+  pageSize 1..30 y orden estable por relevancia + fecha.
+- Politica de readiness compartida con catalog status; 503 ante target ausente,
+  incompleto o con drift y ninguna llamada NASA durante search.
+- GIN verificado con `EXPLAIN`; stemming soportado y trigram descartado para
+  parciales/typos. 18/18 tests focalizados y 150/150 backend PASS.
 
 ## 4. Execution contract
 

@@ -1,8 +1,8 @@
 # Phase Plan P3 - Backend real, autenticacion y persistencia
 
 Date: 2026-07-08
-Last revised: 2026-07-17
-Status: IN PROGRESS - W1-W5 DONE
+Last revised: 2026-07-20
+Status: IN PROGRESS - W1-W6 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -18,7 +18,8 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 
 1. Identity gestiona passwords, email confirmation y usuarios.
 2. Search deriva exclusivamente de `title + explanation`; no usa metadata de keywords.
-3. Search usa PostgreSQL FTS sobre `title + explanation`; `pg_trgm` es fallback opcional.
+3. Search usa PostgreSQL FTS sobre `title + explanation`; W6 no habilita `pg_trgm`
+   porque las pruebas parciales/typos no justifican una segunda politica de ranking.
 4. El DTO app-owned omite `service_version`, normaliza opcionales a `null` y conserva
    nombres JSON snake_case.
 5. Confirmacion: link Angular con `userId + code`; mutacion por
@@ -41,7 +42,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - Rate limiting de auth/email.
 - NASA APOD `today`, `date`, cache en memoria + PostgreSQL.
 - Catalog CLI con rangos NASA, checkpoint, resume, retry/backoff y status.
-- Search FTS paginado; trigram opcional sujeto a evidencia.
+- Search FTS paginado; `pg_trgm` descartado por W6 salvo nueva evidencia futura.
 - Favorites protegidos e hidratados.
 - Frontend auth, bootstrap, guard, single-flight interceptor y estados accesibles.
 - Home/Explorer/Search por HTTP; `availableDates` y chips eliminados.
@@ -80,7 +81,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.3** Login, JWT y refresh sessions robustas (W3).
 - [x] **R3.4** NASA today/date + cache + DTO app-owned (W4).
 - [x] **R3.5** Catalog CLI resumible y status observable (W5).
-- [ ] **R3.6** PostgreSQL FTS y endpoint search (W6).
+- [x] **R3.6** PostgreSQL FTS y endpoint search (W6).
 - [ ] **R3.7** Favorites API protegida e hidratada (W7).
 - [ ] **R3.8** Frontend account/auth flows (W8).
 - [ ] **R3.9** Frontend session bootstrap/guard/interceptor (W9).
@@ -114,6 +115,14 @@ advisory global con heartbeat excluye rangos solapados. Cada batch acepta el arc
 historico disperso y confirma upserts + checkpoint + synced count en una transaccion.
 429 persiste `retry_not_before`; el status usa el target canónico configurado y compara
 su cobertura real contra la cantidad sincronizada antes de declarar `ready`.
+
+W6 se cerro el 2026-07-20 con 18/18 tests focalizados y 150/150 backend PASS sobre
+PostgreSQL 17. Search usa `websearch_to_tsquery` parametrizado, vector ponderado/GIN,
+ranking por relevancia y fecha, DTO array, `q` max 200, page 1..1000 y pageSize 1..30.
+Readiness queda
+centralizado entre status/search; target ausente, incompleto o con drift responde 503
+sin llamar NASA. Stemming cubre variantes inglesas y la evidencia parcial/typo no
+justifico `pg_trgm`.
 
 ## 6. Exit criteria
 

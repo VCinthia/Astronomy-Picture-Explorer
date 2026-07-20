@@ -101,6 +101,8 @@ builder.Services.AddScoped<RefreshCookieService>();
 builder.Services.AddScoped<LoginPasswordVerifier>();
 builder.Services.AddSingleton<ApodSingleFlight>();
 builder.Services.AddSingleton<ApodCacheService>();
+builder.Services.AddScoped<CatalogReadinessService>();
+builder.Services.AddScoped<ApodSearchService>();
 builder.Services.AddHttpClient<INasaApodClient, NasaApodClient>(client =>
 {
   client.BaseAddress = new Uri("https://api.nasa.gov/");
