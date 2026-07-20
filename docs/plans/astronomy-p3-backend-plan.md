@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: IN PROGRESS - W1-W7 DONE
+Status: IN PROGRESS - W1-W8 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -89,7 +89,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.5** Catalog CLI resumible y status observable (W5).
 - [x] **R3.6** PostgreSQL FTS y endpoint search (W6).
 - [x] **R3.7** Favorites API protegida e hidratada (W7).
-- [ ] **R3.8** Frontend account/auth flows (W8).
+- [x] **R3.8** Frontend account/auth flows (W8).
 - [ ] **R3.9** Frontend session bootstrap/guard/interceptor (W9).
 - [ ] **R3.10** Frontend APOD/date/search migration (W10).
 - [ ] **R3.11** Frontend favorites migration (W11).
@@ -139,6 +139,16 @@ los tests focalizados cubren 401, principal `sub` malformado, fecha invalida ant
 NASA, fallo APOD sanitizado, concurrencia, aislamiento y una sola lectura SQL. Build
 Release, review independiente, `dotnet format --verify-no-changes` y `git diff --check`
 tambien PASS.
+
+W8 se cerro el 2026-07-20 con `AuthService` tipado en signals, formularios standalone
+lazy de registro/login/confirmacion y `provideHttpClient()`. Todo request de cuenta usa
+solo `/auth/*` same-origin; el JWT de login queda exclusivamente en memoria, mientras
+ProblemDetails conserva contrato tipado y la UI muestra 401 generico o CTA unicamente
+para `403 email_unconfirmed`. La confirmacion valida GUID + Base64URL antes de limpiar
+el codigo de la historia y ejecutar solo `POST`, incluso ante fallo, y redirige a login
+sin auto-login. W8 no
+introduce environment de URL backend, guard, interceptor, refresh ni logout: W9 extiende
+el servicio para esos limites. `npm run build` y 94/94 pruebas ChromeHeadless PASS.
 
 ## 6. Exit criteria
 

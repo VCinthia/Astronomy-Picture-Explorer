@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-20
-Status: P3 IN PROGRESS - W1-W7 implemented
+Status: P3 IN PROGRESS - W1-W8 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -85,6 +85,18 @@ sequenceDiagram
 
 Registro/reenvio tienen rate limit y respuestas anti-enumeracion. El link contiene lo
 necesario para identificar al usuario, pero la mutacion no se ejecuta con GET.
+
+### W8 frontend account alignment
+
+W8 aporta rutas standalone lazy de registro, login y confirmacion, y un `Sign in` en el
+header persistente para que la cuenta se descubra tambien en mobile. `AuthService` mapea
+ProblemDetails tipados y conserva el access JWT solo en signals. Login oculta el detalle
+de 401 y expone reenvio solo para `403 email_unconfirmed`. Antes del POST de
+confirmacion, Angular exige un GUID y un Base64URL y limpia el codigo de la historia;
+esto tambien ocurre ante un error. Luego lleva a login sin crear una sesion automatica.
+
+W9 conserva la propiedad de bootstrap, guard, interceptor, refresh y logout. W10 puede
+migrar el shell y la navegacion APOD, pero debe mantener una entrada de cuenta accesible.
 
 El key ring que firma los tokens Identity vive en PostgreSQL con application name
 estable; por eso un link emitido antes de un restart/cold start sigue validando en una

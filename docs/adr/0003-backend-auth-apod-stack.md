@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: Accepted; P3-W1-W7 implemented
+Status: Accepted; P3-W1-W8 implemented
 
 ## Context
 
@@ -292,6 +292,22 @@ ocasionales son suficientes y observables.
 - W7 cerro con build Release limpio, 9/9 tests focalizados y 159/159 backend PASS sobre
   PostgreSQL 17 Testcontainers; review independiente, format verification y diff check
   tambien aprobados.
+
+## Implementation clarification - P3-W8 (2026-07-20)
+
+- Angular registra `provideHttpClient()` y `AuthService` conserva usuario, access JWT,
+  autenticacion, estado pending y ProblemDetails exclusivamente en signals. No se crea
+  environment para URL de backend: la SPA llama rutas relativas same-origin `/auth/*`.
+- Register/resend consumen el contrato 202 generico. Login almacena solo la respuesta
+  exitosa en memoria; 401 siempre se representa generico y el CTA de reenvio se habilita
+  exclusivamente ante ProblemDetails 403 con `code=email_unconfirmed`.
+- `/confirm-email` valida un GUID y Base64URL localmente, por lo que un link ausente o
+  malformado no toca el backend. Un link valido reemplaza la URL sin `code` antes de
+  ejecutar solamente POST, inclusive ante error de red/400/5xx, y redirige a `/login`
+  sin realizar auto-login ni registrar el codigo.
+- El header aporta una entrada `Sign in` en todos los breakpoints. W9 es la unica wave
+  autorizada a anexar bootstrap, refresh, logout, guard e interceptor; W10 puede
+  reorganizar el shell pero debe preservar una entrada de cuenta accesible.
 
 ## Consequences
 

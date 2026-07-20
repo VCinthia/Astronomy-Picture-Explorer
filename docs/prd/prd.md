@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W7 DONE
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W8 DONE
 
 ## Vision
 
@@ -184,3 +184,7 @@ reemplazaran contratos temporales:
 - El scaffold historico P1 uso Angular 19.2. El 2026-07-20 una rama de mantenimiento
   dedicada lo actualizo secuencialmente a Angular 22.0.7 para cerrar vulnerabilidades
   runtime antes de W8; no modifica la evidencia historica de P1/P2.
+- W8 incorpora las pantallas publicas de cuenta sobre `/auth/*` same-origin. El JWT de
+  acceso es estado transitorio en memoria, confirmacion usa POST y limpia su codigo de
+  la URL; bootstrap/refresh/guard/interceptor quedan para W9. El header muestra Sign in
+  en todos los breakpoints sin reescribir la navegacion P2 historica.

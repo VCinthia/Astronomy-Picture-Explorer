@@ -98,6 +98,29 @@ describe('AppComponent', () => {
     expect(links.every((link) => link.classList.contains('focus-visible:outline-accent'))).toBeTrue();
   });
 
+  it('keeps a visible Sign in entry in the header at every breakpoint', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+
+    const signIn = (fixture.nativeElement as HTMLElement).querySelector(
+      'header a[href="/login"]'
+    ) as HTMLAnchorElement;
+    expect(signIn.textContent?.trim()).toBe('Sign in');
+    expect(signIn.classList.contains('hidden')).toBeFalse();
+    expect(signIn.classList.contains('focus-visible:outline-accent')).toBeTrue();
+  });
+
+  it('keeps the compact mobile brand accessible when account entry shares the header', () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+
+    const brand = (fixture.nativeElement as HTMLElement).querySelector(
+      'header a[href="/"]'
+    ) as HTMLAnchorElement;
+    expect(brand.getAttribute('aria-label')).toBe('Astronomy Explorer');
+    expect(brand.querySelector('span.hidden.sm\\:inline')).not.toBeNull();
+  });
+
   it('navigates to Favorites and exposes only its active state', async () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();

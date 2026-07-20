@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-20
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W7 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W8 DONE
 
 ## Verdict
 
@@ -13,8 +13,9 @@ P3 fue corregida antes de iniciar codigo. P3-W1 implemento la foundation .NET 10
 Identity user-only, schema PostgreSQL, FTS ponderado y health DB-aware. P3-W2 completo
 registro, email y confirmacion con key ring persistido y rate limits. P3-W3 implemento
 sesiones seguras, P3-W4 cerro NASA today/date con cache, P3-W5 completo la ingestion
-local resumible, P3-W6 cerro FTS y P3-W7 completo Favorites API protegida; las waves
-restantes conservan el contrato aceptado.
+local resumible, P3-W6 cerro FTS, P3-W7 completo Favorites API protegida y P3-W8
+materializo las pantallas Angular de cuenta; las waves restantes conservan el contrato
+aceptado.
 
 ## Closed gates
 
@@ -154,6 +155,24 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - `docker compose config` no es ejecutable aun: no hay archivo Compose antes de W12.
   W12 debe crear ese artefacto y ejecutar su validacion; esto no bloquea W8.
 
+## P3-W8 completion gate
+
+- Angular 22.0.7 registra `provideHttpClient()` y `AuthService` usa solamente signals
+  para `currentUser`, `accessToken`, `isAuthenticated`, `loading` y ProblemDetails.
+  El access JWT no se persiste ni toca localStorage/sessionStorage.
+- Register/resend manejan la respuesta 202 anti-enumeracion; login guarda respuesta 200
+  en memoria, representa 401 con texto generico y ofrece reenvio solo para el `code`
+  `email_unconfirmed` de un 403. Otros detalles backend no se muestran al visitante.
+- `/confirm-email` valida `userId` GUID y `code` Base64URL antes de solicitar red. El
+  caso invalido hace cero requests; el valido limpia la URL antes de ejecutar solo POST,
+  incluyendo fallo de red/400/5xx, y va a `/login` sin auto-login al confirmar.
+- Las tres rutas publicas son lazy; formularios Reactive Forms incluyen labels,
+  autocomplete, validacion cliente/servidor y estados aria-live/alert. `Sign in` se
+  descubre desde el header tanto en desktop como mobile; no se anade un item bottom-nav.
+- `npm ci`, `npm run build`, 94/94 pruebas ChromeHeadless y `git diff --check` PASS.
+  Los 5 advisories audit son solo dev transitivos
+  previamente aceptados; W8 no cambia dependencias ni fuerza un fix.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -215,6 +234,7 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W8 desde `codex/p3-integration`. W8 implementa las pantallas Angular de
-cuenta/auth sobre las bases de Identity y sesiones ya cerradas. Neon/Render/Resend, seed
-productivo y NASA real siguen postergados hasta W13.
+Ejecutar P3-W9 desde `codex/p3-integration`. W9 extiende el servicio ya entregado con
+bootstrap, refresh, logout, guard e interceptor single-flight; no debe reimplementar
+formularios ni mover el JWT a Web Storage. Neon/Render/Resend, seed productivo y NASA
+real siguen postergados hasta W13.

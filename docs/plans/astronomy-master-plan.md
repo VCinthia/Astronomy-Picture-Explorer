@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W7 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W8 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -120,6 +120,18 @@ P3-W7 quedo DONE el 2026-07-20:
   descendente en un unico join, sin limite silencioso para la coleccion de la sesion.
 - Build Release sin warnings/errors, 9/9 Favorites y 159/159 backend PASS; review
   independiente, format verification y diff check aprobados.
+
+P3-W8 quedo DONE el 2026-07-20:
+
+- `AuthService` usa signals tipadas para usuario, access JWT, autenticacion, pending y
+  ProblemDetails; el access JWT no usa Web Storage.
+- Registro, login, reenvio y confirmacion usan exclusivamente endpoints `/auth/*`
+  same-origin. Confirmacion valida el link, muta solo por POST y lo limpia antes de
+  llevar a login sin crear una sesion implicita.
+- Las paginas standalone lazy son accesibles y el header ofrece `Sign in` en desktop y
+  mobile sin alterar el bottom nav P2. W9 conserva bootstrap/guard/interceptor/refresh;
+  W10 debe mantener una entrada de cuenta al migrar el shell.
+- Build y 94/94 pruebas ChromeHeadless PASS.
 
 ## 4. Execution contract
 

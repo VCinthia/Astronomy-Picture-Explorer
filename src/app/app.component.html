@@ -13,10 +13,11 @@
     >
       <a
         routerLink="/"
+        aria-label="Astronomy Explorer"
         class="flex items-center gap-2 text-logo font-semibold text-content-primary focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-accent"
       >
         <span aria-hidden="true" class="text-accent">✦</span>
-        Astronomy Explorer
+        <span class="hidden sm:inline">Astronomy Explorer</span>
       </a>
 
       <div class="flex items-center gap-2 sm:gap-3">
@@ -58,6 +59,13 @@
             Favorites
           </a>
         </nav>
+
+        <a
+          routerLink="/login"
+          class="rounded-button px-3 py-1.5 text-meta font-medium text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        >
+          Sign in
+        </a>
 
         <div class="flex items-center gap-2" role="group" aria-label="Step through dates">
           <button

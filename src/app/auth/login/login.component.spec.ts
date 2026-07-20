@@ -1,0 +1,95 @@
+import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
+import { provideHttpClient } from '@angular/common/http';
+import { TestBed } from '@angular/core/testing';
+import { provideRouter } from '@angular/router';
+
+import { LoginComponent } from './login.component';
+
+describe('LoginComponent', () => {
+  let http: HttpTestingController;
+
+  beforeEach(async () => {
+    await TestBed.configureTestingModule({
+      imports: [LoginComponent],
+      providers: [provideHttpClient(), provideHttpClientTesting(), provideRouter([])]
+    }).compileComponents();
+    http = TestBed.inject(HttpTestingController);
+  });
+
+  afterEach(() => http.verify());
+
+  it('renders a generic credentials message for a 401 without surfacing backend detail', () => {
+    const fixture = createValidLoginFixture();
+    fixture.componentInstance.submit();
+    const request = http.expectOne('/auth/login');
+    request.flush({
+      title: 'Invalid credentials.',
+      detail: 'This internal detail must not be rendered.',
+      status: 401,
+      code: 'invalid_credentials'
+    }, { status: 401, statusText: 'Unauthorized' });
+    fixture.detectChanges();
+
+    const alert = (fixture.nativeElement as HTMLElement).querySelector('[role="alert"]');
+    expect(alert?.textContent).toContain('We could not sign you in with those credentials.');
+    expect(alert?.textContent).not.toContain('internal detail');
+  });
+
+  it('offers a resend CTA only for the email_unconfirmed 403 and sends its typed request', () => {
+    const fixture = createValidLoginFixture();
+    fixture.componentInstance.submit();
+    const login = http.expectOne('/auth/login');
+    login.flush({
+      title: 'Email confirmation required.',
+      detail: 'Confirm your email before signing in.',
+      status: 403,
+      code: 'email_unconfirmed'
+    }, { status: 403, statusText: 'Forbidden' });
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const resend = element.querySelector('button[type="button"]') as HTMLButtonElement;
+    expect(resend.textContent).toContain('Resend confirmation email');
+    resend.click();
+
+    const resendRequest = http.expectOne('/auth/resend-confirmation');
+    expect(resendRequest.request.method).toBe('POST');
+    expect(resendRequest.request.body).toEqual({ email: 'astro@example.test' });
+    resendRequest.flush({ message: 'If the address can receive a confirmation email, a message will be sent.' }, {
+      status: 202,
+      statusText: 'Accepted'
+    });
+    fixture.detectChanges();
+
+    expect(element.querySelector('[role="status"]')?.textContent).toContain('confirmation email');
+  });
+
+  it('shows a settled success state and leaves the access token outside web storage', () => {
+    localStorage.clear();
+    sessionStorage.clear();
+    const fixture = createValidLoginFixture();
+    fixture.componentInstance.submit();
+    const request = http.expectOne('/auth/login');
+    request.flush({
+      accessToken: 'header.payload.signature',
+      expiresAt: '2026-07-20T20:00:00Z',
+      user: { id: '5c409cbf-b9cc-4afe-a55b-a8b7c4f1aac4', email: 'astro@example.test' }
+    });
+    fixture.detectChanges();
+
+    expect((fixture.nativeElement as HTMLElement).querySelector('[role="status"]')?.textContent)
+      .toContain('Signed in successfully');
+    expect(localStorage.getItem('accessToken')).toBeNull();
+    expect(sessionStorage.getItem('accessToken')).toBeNull();
+  });
+
+  function createValidLoginFixture() {
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.componentInstance.form.setValue({
+      email: 'astro@example.test',
+      password: 'Valid1!Password'
+    });
+    fixture.detectChanges();
+    return fixture;
+  }
+});

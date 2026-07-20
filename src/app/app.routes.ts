@@ -18,5 +18,22 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./pages/favorites/favorites.component').then((m) => m.FavoritesComponent)
   },
+  {
+    path: 'register',
+    title: 'Create account · Astronomy Picture Explorer',
+    loadComponent: () =>
+      import('./auth/register/register.component').then((m) => m.RegisterComponent)
+  },
+  {
+    path: 'login',
+    title: 'Sign in · Astronomy Picture Explorer',
+    loadComponent: () => import('./auth/login/login.component').then((m) => m.LoginComponent)
+  },
+  {
+    path: 'confirm-email',
+    title: 'Confirm email · Astronomy Picture Explorer',
+    loadComponent: () =>
+      import('./auth/confirm-email/confirm-email.component').then((m) => m.ConfirmEmailComponent)
+  },
   { path: '**', redirectTo: '' }
 ];
