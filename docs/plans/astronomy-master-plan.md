@@ -173,6 +173,20 @@ P3-W11 quedo DONE el 2026-07-20:
 - `ape.favorites.v1` y toda propiedad de favoritos salen de `AstronomyService`. Build,
   115/115 ChromeHeadless, audit runtime cero y diff check PASS.
 
+P3-W12 quedo DONE el 2026-07-20:
+
+- Compose encadena PostgreSQL healthy -> migrator EF one-shot -> demo-seed local
+  idempotente -> API healthy -> frontend healthy; API no tiene migracion ni backfill en
+  startup.
+- API/frontend se ejecutan non-root. Nginx conserva `/api/*` y `/auth/*` same-origin,
+  mientras que la API health queda diagnosticable solo en loopback.
+- Las credenciales locales son Docker secrets desde `.secrets/` ignorado; no se interpolan
+  en Compose ni entran a capas. Email LocalLog y NASA mock/fixture son Development-only,
+  sin proveedores ni llamadas externas.
+- El smoke local aprobo APOD/catalog/search, cuenta-confirmacion-sesion-favorites y un
+  restart sin `-v` con migrations/seed repetibles y datos conservados. W13 permanece
+  como el unico alcance para seed real, proveedores/deploy y smoke productivo.
+
 ## 4. Execution contract
 
 - Branch por wave: `wave/p<n>-w<m>-<slug>` o nombre sugerido en la wave.
@@ -222,7 +236,7 @@ P3-W11 quedo DONE el 2026-07-20:
 | W9 | Frontend bootstrap/guard/single-flight session |
 | W10 | Frontend APOD/date/search; remove availableDates/mock |
 | W11 | Frontend favorites API migration |
-| W12 | Local containers/full stack |
+| W12 | Local containers/full stack ✅ |
 | W13 | Zero-cost seed/deploy/production smoke |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.

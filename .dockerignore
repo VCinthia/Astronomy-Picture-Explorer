@@ -1,0 +1,14 @@
+.git/
+.angular/
+.vscode/
+node_modules/
+dist/
+coverage/
+screenshots/
+docs/
+backend/
+*.md
+.env
+.env.*
+!.env.example
+.secrets/

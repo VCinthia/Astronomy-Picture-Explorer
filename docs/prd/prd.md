@@ -120,7 +120,9 @@ hdurl|null, thumbnail_url|null, copyright|null
 ### Infrastructure/deploy
 
 - .NET 10 LTS, EF Core/Npgsql, PostgreSQL y Testcontainers.
-- Docker Compose local para frontend/API/PostgreSQL.
+- Docker Compose local para frontend/API/PostgreSQL, con migrator y demo fixture
+  Development-only separados del API startup; secretos locales solo como Docker-secret
+  files ignorados.
 - Netlify Free + Render Free + Neon Free + Resend Free.
 - Sin keepalive, cron, workers pagos, overages ni upgrade automatico.
 - Si se alcanza una cuota, el sistema falla cerrado/suspendido antes que cobrar.
@@ -162,7 +164,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 ## Success criteria
 
 - P1/P2 permanecen documentados como entregas historicas cerradas.
-- P3 W1-W13 completadas con build/tests en verde.
+- P3 W1-W13 completadas con build/tests en verde; W12 debe permitir E2E local sin
+  proveedor externo y W13 conserva exclusivamente el smoke con proveedores reales.
 - Catalogo inicial listo en Neon y search FTS probado.
 - Auth/favorites/APOD funcionan E2E desde Netlify mediante proxy same-origin.
 - Cold-start UX verificada.

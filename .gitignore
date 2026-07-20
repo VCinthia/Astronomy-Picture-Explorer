@@ -47,3 +47,7 @@ Thumbs.db
 
 # Private implementation and agent-operation notes
 /IMPLEMENTATION_NOTES.md
+
+# Local Compose configuration. Never commit a populated copy.
+.env
+.secrets/

@@ -3,7 +3,7 @@
 Date: 2026-07-16
 Status: READY - Not Started
 Wave ID: `P3-W13`
-Depends On: P3-W5 + P3-W12 merged
+Depends On: P3-W5 + P3-W12 DONE and merged
 Suggested Branch: `wave/p3-w13-zero-cost-deploy`
 
 ## Goal
@@ -17,6 +17,7 @@ desplegar y ejecutar el smoke que cierra P3.
 - `render.yaml` o `docs/deploy/render-setup.md`
 - `docs/deploy/p3-deploy-runbook.md`
 - `.env.example`
+- `docs/deploy/p3-local-runbook.md` (reference only; do not repurpose its local secrets)
 - documentos de estado P3
 
 ## Checklist
@@ -40,6 +41,9 @@ desplegar y ejecutar el smoke que cierra P3.
   para proxies/redes confiables; demostrar dos IP cliente separadas y rechazo de spoofing.
 - [ ] W13.11 Verificar el cifrado/controles en reposo de Neon para el XML del key ring
   Data Protection y documentar cualquier proteccion adicional $0 requerida.
+- [ ] W13.12 Sustituir de forma explicita los fixtures/sinks Development-only de W12 por
+  configuracion real solo en dashboards de proveedor; no copiar `.env`/`.secrets` locales
+  ni habilitar HTTP NASA fuera de loopback/mock.
 
 ## Acceptance criteria
 

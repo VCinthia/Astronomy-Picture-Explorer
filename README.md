@@ -70,6 +70,25 @@ can't be read it falls back to a fixed brand palette.
 
 ## Run it locally
 
+### Full local stack (recommended)
+
+The Compose stack is entirely local: PostgreSQL, a one-shot migrator, an explicit demo
+fixture seed, API and Angular/Nginx frontend. It includes a local email log sink and a
+deterministic APOD mock, so it does not require NASA, Resend, Neon or a production
+secret. Follow [the local runbook](docs/deploy/p3-local-runbook.md) to create ignored
+Docker-secret files, then run:
+
+```powershell
+docker compose config
+docker compose up -d --build
+```
+
+Open `http://localhost:8080`; API health is additionally available only on
+`http://localhost:5179/health`. `docker compose down` keeps the named local database
+volume; add `-v` only when intentionally discarding local data.
+
+### Frontend-only development
+
 ```bash
 npm ci
 npm start        # dev server at http://localhost:4200
@@ -77,9 +96,8 @@ npm run build    # production build
 npm test         # unit tests
 ```
 
-`npm start` proxies `/api` and `/auth` to the local API at `http://localhost:5179`; run
-the backend separately until the local container stack is added in P3-W12. The public
-Netlify demo remains the P2 release until P3-W13 promotion.
+`npm start` proxies `/api` and `/auth` to the local API at `http://localhost:5179`.
+The public Netlify demo remains the P2 release until P3-W13 promotion.
 
 ## Credits
 

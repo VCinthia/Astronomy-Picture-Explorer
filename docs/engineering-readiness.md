@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-20
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W11 DONE
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W12 DONE
 
 ## Verdict
 
@@ -17,7 +17,8 @@ local resumible, P3-W6 cerro FTS, P3-W7 completo Favorites API protegida y P3-W8
 materializo las pantallas Angular de cuenta. P3-W9 completo bootstrap/guard/interceptor
 y logout frontend. P3-W10 reemplazo el runtime mock por APOD/date/search HTTP; P3-W11
 reemplazo la fachada local de favoritos por la API autenticada. W12-W13 conservan el
-contrato aceptado.
+contrato aceptado. P3-W12 completo el stack local reproducible, con secretos locales
+file-backed, sin proveedores productivos ni llamadas NASA/Resend.
 
 ## Closed gates
 
@@ -154,8 +155,8 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   `npm audit fix` sin `--force` no encontro una actualizacion compatible con Angular
   22.0.7; no se incluyen en runtime. Revalidar al proximo review mensual o con un patch
   Angular 22.0.x compatible, lo que ocurra primero.
-- `docker compose config` no es ejecutable aun: no hay archivo Compose antes de W12.
-  W12 debe crear ese artefacto y ejecutar su validacion; esto no bloquea W10.
+- La ausencia de Compose era una condicion previa a W12; W12 la resolvio y dejo el
+  smoke local/documentacion como gate cerrado abajo.
 
 ## P3-W8 completion gate
 
@@ -229,6 +230,27 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - `npm ci`, `npm run build`, 115/115 ChromeHeadless, `npm audit --omit=dev` con 0
   vulnerabilidades runtime y `git diff --check` PASS.
 
+## P3-W12 completion gate
+
+- `docker compose config` PASS sin password ni Session signing key interpolados: ambos
+  se entregan desde archivos ignorados como Docker secrets y se leen dentro del
+  entrypoint API, no en capas de imagen ni output de Compose.
+- `docker compose up -d --build` PASS. PostgreSQL y `nasa-mock` quedan healthy;
+  `migrator` aplica EF una sola vez, `demo-seed` Development-only queda `Exited (0)`, y
+  API/frontend non-root quedan healthy. API no ejecuta migration ni catalog/backfill al
+  arrancar.
+- El fixture se limita a `2020-01-01`, es idempotente y marca ese rango local ready;
+  test focalizado demuestra que actualiza URL/metadatos ante cambio de origen local en
+  lugar de duplicar filas. El catalogo historico W5/W13 no se ejecuta.
+- HTTP local PASS: `/health` 200 por loopback, catalog `completed/ready`, search FTS,
+  APOD fixture date, APOD today mock y `/home` same-origin devuelven resultado.
+- E2E sin proveedor PASS: register 202, LocalLog confirmation POST 204, login 200,
+  favorite POST 204/GET una entrada y logout 204. El sender local y LocalFixtures fallan
+  cerrados fuera de Development; BaseUrl NASA HTTP acepta solo `nasa-mock`/loopback en
+  Development y tests rechazan HTTP arbitrary/Production.
+- `docker compose down` sin `-v` seguido de `up -d` preservo favoritos; conteo final
+  `3 migrations | 1 fixture | 1 catalog state | 1 favorite`, sin duplicados.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -265,7 +287,7 @@ Stack completo desde W12:
 ```powershell
 docker compose config
 docker compose up -d --build
-Invoke-WebRequest http://localhost:<api-port>/health
+Invoke-WebRequest http://localhost:5179/health
 docker compose down
 ```
 
@@ -290,7 +312,7 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W12 desde `codex/p3-integration`. Debe empaquetar frontend, API y PostgreSQL
-sin tocar proveedores productivos, resolver migraciones locales sin carreras y verificar
-el stack con `docker compose`. Neon/Render/Resend, seed productivo y NASA real siguen
-postergados hasta W13.
+Ejecutar P3-W13 desde `codex/p3-integration` solo despues de revalidar precios/cuotas y
+autoridad para Neon, Render, Netlify, Resend, dominio y NASA key propia. W12 ya entrega
+un stack local sin costo; seed historico real, proveedores y smoke productivo siguen
+postergados y no se infieren desde este gate.

@@ -1,3 +1,4 @@
+using System.Net;
 using Microsoft.Extensions.Options;
 
 namespace AstronomyExplorer.Api.Nasa;
@@ -8,12 +9,15 @@ public sealed class NasaApodOptions
 
   public string ApiKey { get; init; } = string.Empty;
 
+  public string BaseUrl { get; init; } = "https://api.nasa.gov/";
+
   public TimeSpan Timeout { get; init; } = TimeSpan.FromSeconds(8);
 
   public int MaxAttempts { get; init; } = 2;
 }
 
-public sealed class NasaApodOptionsValidator : IValidateOptions<NasaApodOptions>
+public sealed class NasaApodOptionsValidator(IHostEnvironment environment)
+  : IValidateOptions<NasaApodOptions>
 {
   public ValidateOptionsResult Validate(string? name, NasaApodOptions options)
   {
@@ -21,6 +25,18 @@ public sealed class NasaApodOptionsValidator : IValidateOptions<NasaApodOptions>
     if (string.IsNullOrWhiteSpace(options.ApiKey))
     {
       failures.Add("NasaApod:ApiKey is required.");
+    }
+
+    if (!Uri.TryCreate(options.BaseUrl, UriKind.Absolute, out var baseUri) ||
+        !string.IsNullOrEmpty(baseUri.UserInfo) ||
+        baseUri.AbsolutePath != "/" ||
+        !string.IsNullOrEmpty(baseUri.Query) ||
+        !string.IsNullOrEmpty(baseUri.Fragment) ||
+        (baseUri.Scheme != Uri.UriSchemeHttps && baseUri.Scheme != Uri.UriSchemeHttp) ||
+        (baseUri.Scheme == Uri.UriSchemeHttp && !IsApprovedDevelopmentHttpEndpoint(baseUri)))
+    {
+      failures.Add(
+        "NasaApod:BaseUrl must be HTTPS, except for the approved local Development mock or loopback endpoint.");
     }
 
     if (options.Timeout <= TimeSpan.Zero || options.Timeout > TimeSpan.FromSeconds(20))
@@ -37,4 +53,10 @@ public sealed class NasaApodOptionsValidator : IValidateOptions<NasaApodOptions>
       ? ValidateOptionsResult.Success
       : ValidateOptionsResult.Fail(failures);
   }
+
+  private bool IsApprovedDevelopmentHttpEndpoint(Uri baseUri) =>
+    environment.IsDevelopment() &&
+    (string.Equals(baseUri.Host, "nasa-mock", StringComparison.OrdinalIgnoreCase) ||
+     string.Equals(baseUri.Host, "localhost", StringComparison.OrdinalIgnoreCase) ||
+     IPAddress.TryParse(baseUri.Host, out var address) && IPAddress.IsLoopback(address));
 }

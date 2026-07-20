@@ -408,6 +408,26 @@ flowchart LR
     W12 --> W13
 ```
 
+### W12 local container alignment
+
+```mermaid
+flowchart LR
+    DB["PostgreSQL healthy"] --> M["migrator --migrate (one shot)"]
+    M --> S["demo-seed --seed-local-fixtures (Development only)"]
+    S --> API["API non-root /health"]
+    API --> FE["Nginx non-root frontend"]
+    FE --> Browser["Browser same-origin /api and /auth"]
+    Mock["nasa-mock local fixture"] --> API
+    FE --> Mock
+```
+
+- `demo-seed` is only a one-row deterministic local catalog fixture; it never invokes
+  the historical catalog CLI and runs before API startup, not inside it.
+- Local Docker-secret files supply PostgreSQL/session values at container runtime. The
+  compose model exposes paths but never the values, and no secret is baked into an image.
+- Local email delivery is an API log sink and the NASA mock is internal. Both are rejected
+  outside Development; a production provider/deploy is still W13 work.
+
 ## 10. Costo cero y primera visita
 
 - Render puede dormir; Angular muestra `Connecting to the astronomy service...`, espera

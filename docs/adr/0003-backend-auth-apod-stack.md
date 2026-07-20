@@ -367,6 +367,26 @@ ocasionales son suficientes y observables.
   accesible a login con `returnUrl` interno normalizado; nunca asocia estado anonimo a
   una cuenta autenticada.
 
+## Implementation clarification - P3-W12 (2026-07-20)
+
+- Compose local ordena PostgreSQL healthy, un `--migrate` one-shot, un
+  `--seed-local-fixtures` one-shot y despues API/frontend. La API no ejecuta migracion,
+  seeding ni catalog ingestion durante su arranque normal; por lo tanto no hay carrera
+  de migraciones ni backfill oculto en una visita.
+- El seed local es Development-only, idempotente y deliberadamente minimo: una entrada
+  APOD y un estado de catalogo Completed del rango `2020-01-01`. Sirve para demostrar
+  search/favorites E2E sin provider y no sustituye el catalogo historico W5/W13.
+- API obtiene password PostgreSQL y signing key desde Docker secrets file-backed al
+  iniciar el contenedor. Los valores no viajan por build arg, environment Compose ni
+  layers. API y frontend corren non-root; Nginx mantiene la frontera browser
+  same-origin `/api/*` y `/auth/*`.
+- `Email:Provider=LocalLog` solo existe en Development y registra el link de
+  confirmacion localmente. `NasaApod:BaseUrl` conserva HTTPS por defecto; HTTP solo es
+  valido para `nasa-mock` o loopback en Development. Esto permite un mock determinista
+  sin habilitar que una key real llegue a un host HTTP arbitrario.
+- El Compose local no configura Resend, NASA, Neon, Render, Netlify ni una URL de
+  produccion. W13 conserva toda autoridad de provider real, seed historico y deploy.
+
 ## Consequences
 
 - Search sigue siendo real y eficiente usando campos APOD disponibles.

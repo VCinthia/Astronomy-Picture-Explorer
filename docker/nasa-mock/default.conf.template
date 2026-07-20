@@ -1,0 +1,14 @@
+server {
+    listen 8080;
+    server_name _;
+
+    location = /planetary/apod {
+        default_type application/json;
+        return 200 '{"date":"$arg_date","title":"Local APOD fixture","explanation":"Deterministic APOD fixture served only by the local Compose stack.","media_type":"image","url":"${FRONTEND_PUBLIC_ORIGIN}/local-apod/fixture.svg","service_version":"v1"}';
+    }
+
+    location = /fixture.svg {
+        default_type image/svg+xml;
+        return 200 '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 450"><rect width="800" height="450" fill="#081328"/><circle cx="400" cy="225" r="120" fill="#5eead4"/><text x="400" y="420" fill="#f8fafc" font-size="36" text-anchor="middle">Local APOD fixture</text></svg>';
+    }
+}

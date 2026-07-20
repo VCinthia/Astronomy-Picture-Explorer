@@ -29,9 +29,9 @@ las migraciones opcionales que cambiarian Karma/Jasmine o el build system sin se
 de esta correccion de seguridad.
 
 Resultado validado: `npm ci`, `npm run build` y 77/77 pruebas ChromeHeadless pasan;
-`npm audit --omit=dev` informa `found 0 vulnerabilities`. La configuracion Docker no
-existe todavia porque pertenece a W12, por lo que `docker compose config` queda como
-validacion pendiente de ese alcance y no como un resultado aprobado de esta rama.
+`npm audit --omit=dev` informa `found 0 vulnerabilities`. P3-W12 incorporo Compose y
+mantiene sus imagenes base en las familias ya fijadas de Node 24.16, .NET 10 y Nginx/
+PostgreSQL 17; `docker compose config` ahora forma parte del gate local de W12.
 
 El audit completo del 2026-07-20 no esta limpio: informa 5 advisories de desarrollo
 (1 low y 4 moderate). Todos son transitivos de `@angular-devkit/build-angular`:
@@ -60,7 +60,8 @@ Cada vez que aparezca una version mayor o LTS relevante:
    - `npm test -- --watch=false --browsers=ChromeHeadless`
    - `dotnet build backend/AstronomyExplorer.sln`
    - `dotnet test backend/AstronomyExplorer.sln`
-   - `docker compose config` cuando W12 haya creado el artefacto Compose
+   - `docker compose config` y `docker compose up -d --build` cuando el cambio afecte
+     Dockerfiles, Compose o los proxies same-origin
 5. Registrar el resultado en `docs/engineering-readiness.md`.
 
 ## Review cadence

@@ -1,0 +1,114 @@
+name: astronomy-picture-explorer
+
+x-api-environment: &api-environment
+  ASPNETCORE_ENVIRONMENT: Development
+  ASPNETCORE_URLS: http://+:8080
+  Frontend__PublicBaseUrl: http://localhost:${FRONTEND_PORT:-8080}
+  Session__Issuer: http://localhost:${FRONTEND_PORT:-8080}
+  Session__Audience: astronomy-explorer-spa
+  NasaApod__ApiKey: local-fixture-no-key
+  NasaApod__BaseUrl: http://nasa-mock:8080/
+  Catalog__RequiredFrom: "2020-01-01"
+  Catalog__RequiredTo: "2020-01-01"
+  Email__Provider: LocalLog
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: astronomy_explorer
+      POSTGRES_USER: astronomy
+      POSTGRES_PASSWORD_FILE: /run/secrets/postgres_password
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U astronomy -d astronomy_explorer"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 5s
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    secrets:
+      - postgres_password
+
+  nasa-mock:
+    image: nginx:1.28-alpine
+    environment:
+      FRONTEND_PUBLIC_ORIGIN: http://localhost:${FRONTEND_PORT:-8080}
+      NGINX_ENVSUBST_FILTER: FRONTEND_PUBLIC_ORIGIN
+    volumes:
+      - ./docker/nasa-mock/default.conf.template:/etc/nginx/templates/default.conf.template:ro
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q -O /dev/null 'http://127.0.0.1:8080/planetary/apod?date=2020-01-01' || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+      start_period: 3s
+
+  migrator:
+    build:
+      context: ./backend
+      dockerfile: AstronomyExplorer.Api/Dockerfile
+    command: ["--migrate"]
+    environment: *api-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+    secrets:
+      - postgres_password
+      - session_signing_key
+    restart: "no"
+
+  demo-seed:
+    build:
+      context: ./backend
+      dockerfile: AstronomyExplorer.Api/Dockerfile
+    command: ["--seed-local-fixtures"]
+    environment:
+      <<: *api-environment
+      LocalFixtures__Enabled: "true"
+    depends_on:
+      migrator:
+        condition: service_completed_successfully
+    secrets:
+      - postgres_password
+      - session_signing_key
+    restart: "no"
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: AstronomyExplorer.Api/Dockerfile
+    environment: *api-environment
+    depends_on:
+      postgres:
+        condition: service_healthy
+      nasa-mock:
+        condition: service_healthy
+      demo-seed:
+        condition: service_completed_successfully
+    secrets:
+      - postgres_password
+      - session_signing_key
+    ports:
+      - 127.0.0.1:${API_DEBUG_PORT:-5179}:8080
+
+  frontend:
+    build:
+      context: .
+      dockerfile: frontend.Dockerfile
+    depends_on:
+      api:
+        condition: service_healthy
+      nasa-mock:
+        condition: service_healthy
+    ports:
+      - ${FRONTEND_PORT:-8080}:8080
+
+volumes:
+  postgres_data:
+
+secrets:
+  postgres_password:
+    file: ${POSTGRES_PASSWORD_FILE:?Set POSTGRES_PASSWORD_FILE in .env}
+  session_signing_key:
+    file: ${SESSION_SIGNING_KEY_FILE:?Set SESSION_SIGNING_KEY_FILE in .env}

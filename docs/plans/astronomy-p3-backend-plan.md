@@ -93,7 +93,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.9** Frontend session bootstrap/guard/interceptor (W9).
 - [x] **R3.10** Frontend APOD/date/search migration (W10).
 - [x] **R3.11** Frontend favorites migration (W11).
-- [ ] **R3.12** Contenedores y stack local (W12).
+- [x] **R3.12** Contenedores y stack local (W12).
 - [ ] **R3.13** Seed, deploy $0 y smoke productivo (W13).
 
 W1 se cerro el 2026-07-17 con build limpio, migracion inicial reproducible y 11/11
@@ -185,6 +185,18 @@ retorno interno normalizado. No queda
 lectura, escritura ni migracion de `ape.favorites.v1`. `npm ci`, `npm run build`,
 115/115 pruebas ChromeHeadless, `npm audit --omit=dev` (0 runtime) y `git diff --check`
 PASS.
+
+W12 se cerro el 2026-07-20 con un stack local Compose reproducible. PostgreSQL healthy
+precede al migrator EF one-shot; un demo-seed Development-only, distinto del backfill,
+crea de forma idempotente la minima entrada/catalogo `2020-01-01` antes de que API y
+frontend arranquen. API no migra ni ejecuta catalogo al iniciar. Nginx sirve Angular como
+usuario no-root y proxifica `/api/*`/`/auth/*` same-origin; API .NET 10 tambien corre
+non-root y su health verifica la DB. Las claves locales se montan como Docker secrets de
+archivos ignorados, por lo que no aparecen en Compose config ni capas. El modo local usa
+un sink de email en log y un APOD mock determinista, ambos restringidos a Development;
+la URL NASA HTTP se limita a mock/loopback y los demas entornos requieren HTTPS. El
+runbook evidencia health, ready/search/date/today, register->confirm->login->favorite
+->logout y reinicio sin volumen que conserva datos sin duplicar migraciones.
 
 ## 6. Exit criteria
 

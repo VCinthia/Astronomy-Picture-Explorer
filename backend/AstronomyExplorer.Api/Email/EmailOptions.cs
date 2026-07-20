@@ -43,3 +43,22 @@ public sealed class ResendEmailOptions
 
   public string FromAddress { get; init; } = string.Empty;
 }
+
+/// <summary>
+/// Deliberately limited to local Development compose runs. It writes the confirmation
+/// message to the API container log so a developer can complete the local-only flow
+/// without provisioning an email provider.
+/// </summary>
+public sealed class LocalLogEmailSender(
+  ILogger<LocalLogEmailSender> logger) : IEmailSender
+{
+  public Task SendAsync(EmailMessage message, CancellationToken cancellationToken)
+  {
+    logger.LogInformation(
+      "Local development email for {Recipient} ({Subject}): {HtmlBody}",
+      message.Recipient,
+      message.Subject,
+      message.HtmlBody);
+    return Task.CompletedTask;
+  }
+}

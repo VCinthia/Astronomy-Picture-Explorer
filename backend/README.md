@@ -54,8 +54,11 @@ Session__AccessTokenLifetime
 Session__RefreshTokenLifetime
 Session__RefreshCookieName
 NasaApod__ApiKey
+NasaApod__BaseUrl
 Catalog__RequiredFrom
 Catalog__RequiredTo
+Email__Provider
+LocalFixtures__Enabled
 ```
 
 `Session__SigningKey` must contain at least 32 UTF-8 bytes and must never be committed,
@@ -64,6 +67,12 @@ production fails closed when issuer, audience, key or HTTPS public origin are in
 
 The application fails at startup when this setting is absent. Do not add connection
 strings, API keys or passwords to either `appsettings.json` file.
+
+`NasaApod__BaseUrl` defaults to `https://api.nasa.gov/`. HTTP is accepted only in
+Development for `nasa-mock`, `localhost` or a loopback address, preventing an API key
+from being routed to an arbitrary insecure host. `Email__Provider` defaults to `Resend`;
+`LocalLog` is rejected outside Development and writes confirmation messages only to the
+local API container log. `LocalFixtures__Enabled` is also rejected outside Development.
 
 ## Schema decisions
 
@@ -106,6 +115,18 @@ dotnet run --project backend/AstronomyExplorer.Api
 
 OpenAPI is mapped only when `ASPNETCORE_ENVIRONMENT=Development`. Health is available
 at `GET /health` and reports unhealthy when PostgreSQL cannot be reached.
+
+## Docker Compose local stack
+
+From P3-W12, the repository-root Compose stack is the preferred reproducible local
+environment. It obtains PostgreSQL and Session values from ignored Docker-secret files,
+runs migrations exactly once through a one-shot service, then runs an explicit local
+fixture seed before the API starts. The API never migrates or backfills at startup.
+
+See [`docs/deploy/p3-local-runbook.md`](../docs/deploy/p3-local-runbook.md) for setup,
+the local-only APOD/email behavior, E2E smoke and safe cleanup. This configuration is
+not a production deployment recipe and neither contacts a real provider nor accepts a
+production secret by default.
 
 Account endpoints are:
 

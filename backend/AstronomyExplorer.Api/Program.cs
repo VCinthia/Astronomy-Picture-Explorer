@@ -18,6 +18,13 @@ using System.Threading.RateLimiting;
 
 var builder = WebApplication.CreateBuilder(args);
 
+var localFixturesEnabled = builder.Configuration.GetValue<bool>("LocalFixtures:Enabled");
+if (localFixturesEnabled && !builder.Environment.IsDevelopment())
+{
+  throw new InvalidOperationException(
+    "LocalFixtures:Enabled is available only in Development.");
+}
+
 var postgresConnection = builder.Configuration.GetConnectionString("Postgres");
 var hasPostgresConnection = !string.IsNullOrWhiteSpace(postgresConnection);
 if (!hasPostgresConnection && !EF.IsDesignTime)
@@ -107,17 +114,33 @@ builder.Services.AddScoped<ApodSearchService>();
 builder.Services.AddScoped<FavoriteService>();
 builder.Services.AddHttpClient<INasaApodClient, NasaApodClient>(client =>
 {
-  client.BaseAddress = new Uri("https://api.nasa.gov/");
+  client.BaseAddress = new Uri(nasaApodOptions.BaseUrl, UriKind.Absolute);
   client.DefaultRequestHeaders.UserAgent.ParseAdd("AstronomyExplorer/1.0");
   client.Timeout = nasaApodOptions.Timeout;
 })
   .ConfigurePrimaryHttpMessageHandler(NasaApodHttpClientConfiguration.CreatePrimaryHandler)
   .RedactLoggedHeaders(["X-Api-Key"]);
-builder.Services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
+
+var emailProvider = builder.Configuration["Email:Provider"] ?? "Resend";
+switch (emailProvider)
 {
-  client.BaseAddress = new Uri("https://api.resend.com/");
-  client.DefaultRequestHeaders.UserAgent.ParseAdd("AstronomyExplorer/1.0");
-});
+  case "Resend":
+    builder.Services.AddHttpClient<IEmailSender, ResendEmailSender>(client =>
+    {
+      client.BaseAddress = new Uri("https://api.resend.com/");
+      client.DefaultRequestHeaders.UserAgent.ParseAdd("AstronomyExplorer/1.0");
+    });
+    break;
+  case "LocalLog" when builder.Environment.IsDevelopment():
+    builder.Services.AddSingleton<IEmailSender, LocalLogEmailSender>();
+    break;
+  case "LocalLog":
+    throw new InvalidOperationException(
+      "Email:Provider=LocalLog is available only in Development.");
+  default:
+    throw new InvalidOperationException(
+      "Email:Provider must be either Resend or LocalLog.");
+}
 
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
@@ -153,6 +176,44 @@ builder.Services
     .AddDbContextCheck<AppDbContext>("postgresql");
 
 var app = builder.Build();
+
+if (args.Contains("--migrate", StringComparer.Ordinal))
+{
+  await using var migrationScope = app.Services.CreateAsyncScope();
+  var database = migrationScope.ServiceProvider.GetRequiredService<AppDbContext>();
+  await database.Database.MigrateAsync();
+  return;
+}
+
+if (args.Contains("--seed-local-fixtures", StringComparer.Ordinal))
+{
+  if (!localFixturesEnabled)
+  {
+    throw new InvalidOperationException(
+      "--seed-local-fixtures requires LocalFixtures:Enabled=true in Development.");
+  }
+
+  await using var fixtureScope = app.Services.CreateAsyncScope();
+  var database = fixtureScope.ServiceProvider.GetRequiredService<AppDbContext>();
+  var frontendOptions = fixtureScope.ServiceProvider
+    .GetRequiredService<IOptions<FrontendOptions>>().Value;
+  await LocalDevelopmentFixtureSeeder.SeedAsync(
+    database,
+    new Uri(frontendOptions.PublicBaseUrl, UriKind.Absolute));
+  return;
+}
+
+if (args.Contains("--healthcheck", StringComparer.Ordinal))
+{
+  await using var healthScope = app.Services.CreateAsyncScope();
+  var database = healthScope.ServiceProvider.GetRequiredService<AppDbContext>();
+  if (!await database.Database.CanConnectAsync())
+  {
+    Environment.ExitCode = 1;
+  }
+
+  return;
+}
 
 app.UseExceptionHandler();
 app.UseRateLimiter();
