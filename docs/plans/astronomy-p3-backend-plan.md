@@ -75,9 +75,10 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - Resend + dominio verificado son requeridos para smoke real de W13, no para tests W2.
 - NASA API key propia es requerida antes del backfill W5; `DEMO_KEY` no se usa en carga.
 - Render y URLs finales son requeridos solo en W13.
-- Antes de W8 debe resolverse el gate de mantenimiento Angular registrado en
-  `docs/maintenance/framework-version-policy.md`; el salto mayor requiere decision y
-  rama dedicada, no `npm audit fix --force` dentro de una wave funcional.
+- Gate Angular previo a W8 cerrado el 2026-07-20 en la rama dedicada
+  `maintenance/angular-22-security-update`: Angular 22.0.7, TypeScript 6.0.3 y audit
+  runtime sin vulnerabilidades. Los futuros majors requieren el mismo tratamiento;
+  nunca `npm audit fix --force` dentro de una wave funcional.
 
 ## 5. Requirements checklist
 

@@ -34,6 +34,13 @@ implementar.
 - Deploy publico: `https://astronomy-picture-explorer.netlify.app/`.
 - Tag `v1.0.0`; polish posterior integrado.
 
+### Framework maintenance - DONE (2026-07-20)
+
+- La base frontend actual es Angular 22.0.7 con TypeScript 6.0.3; core, CLI, devkit y
+  compiler-cli quedaron alineados tras una actualizacion secuencial en rama dedicada.
+- `npm audit --omit=dev` no reporta vulnerabilidades runtime. Este cambio posterior no
+  altera la evidencia de P1, que correctamente registra el scaffold Angular 19 original.
+
 ### P2 - DONE in production
 
 - P2-W1 `7d1f031`: state/search/favorites local + grid.

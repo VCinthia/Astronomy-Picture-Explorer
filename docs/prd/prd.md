@@ -13,7 +13,7 @@ evolucion full-stack segura sin costo monetario de operacion.
 
 ## Product goals
 
-- Angular 19+ standalone + Signals, sin NgModules/BehaviorSubject.
+- Angular 22.0.7 standalone + Signals, sin NgModules/BehaviorSubject.
 - Tailwind CSS con tokens y fidelidad visual.
 - Canvas palette client-side sin dependencia de terceros para el algoritmo.
 - WCAG 2.1 AA minimo.
@@ -181,3 +181,6 @@ reemplazaran contratos temporales:
   computed local a PostgreSQL FTS.
 - Favorites P2 localStorage queda como comportamiento anonimo historico; P3 lo sustituye
   por persistencia autenticada y no lo importa automaticamente a una cuenta.
+- El scaffold historico P1 uso Angular 19.2. El 2026-07-20 una rama de mantenimiento
+  dedicada lo actualizo secuencialmente a Angular 22.0.7 para cerrar vulnerabilidades
+  runtime antes de W8; no modifica la evidencia historica de P1/P2.

@@ -136,6 +136,24 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   sobre PostgreSQL 17 Testcontainers. Review independiente, `dotnet format
   --verify-no-changes` y `git diff --check` tambien PASS.
 
+## Angular security-maintenance gate (2026-07-20) — CLOSED
+
+- La rama dedicada `maintenance/angular-22-security-update` actualizo Angular 19.2 de
+  forma secuencial por 20.3 y 21.2 hasta Angular 22.0.7, con CLI, devkit y
+  compiler-cli alineados y TypeScript 6.0.3.
+- Solo se aplicaron las migraciones obligatorias de `ng update`; no se uso
+  `npm audit fix --force` ni se introdujo la migracion opcional Karma -> Vitest/build
+  system en una correccion de seguridad.
+- `npm ci`, `npm run build`, 77/77 pruebas ChromeHeadless, `npm audit --omit=dev`
+  (0 vulnerabilidades runtime), `dotnet build` sin warnings y 159/159 backend PASS.
+- El audit completo conserva 5 advisories de desarrollo (1 low, 4 moderate), todos
+  transitivos del devkit: `webpack-dev-server`/`sockjs`/`uuid` y `esbuild` bajo Vite.
+  `npm audit fix` sin `--force` no encontro una actualizacion compatible con Angular
+  22.0.7; no se incluyen en runtime. Revalidar al proximo review mensual o con un patch
+  Angular 22.0.x compatible, lo que ocurra primero.
+- `docker compose config` no es ejecutable aun: no hay archivo Compose antes de W12.
+  W12 debe crear ese artefacto y ejecutar su validacion; esto no bloquea W8.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -193,7 +211,7 @@ docker compose down
 | Search costoso | tsvector + GIN; q max 200, page max 1000, pageSize max 30; sin trigram |
 | Cuota/cargo inesperado | Free-only, no keepalive/cron/overages; fail closed y revalidar en W13 |
 | DTO diverge de NASA/frontend | DTO app-owned congelado + contract tests image/video/nulls |
-| Angular 19 tiene 6 high + 1 moderate en `npm audit --omit=dev` | Decidir upgrade mayor en rama dedicada antes de W8-W11/W13; nunca aplicar `--force` dentro de una wave backend |
+| Vulnerabilidades Angular | Runtime: gate cerrado con Angular 22.0.7 y `npm audit --omit=dev` en 0. Desarrollo: 5 advisories transitivos del builder, sin fix compatible no forzado; revalidar mensualmente o ante patch 22.0.x |
 
 ## Recommended next step
 

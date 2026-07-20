@@ -98,3 +98,10 @@ mp4 self-hosted + `thumbnail_url` de JPL).
 El mock/provider contract y `availableDates` fueron una base temporal correcta. P3-W10
 elimina `service_version`, mock imports y listas de fechas del runtime en favor del DTO
 app-owned y consultas calendario reales. La evidencia de esta wave permanece valida.
+
+## Design-change clarification (2026-07-20)
+
+Esta wave conserva como evidencia historica el scaffold Angular 19.2 y su commit. La
+rama dedicada `maintenance/angular-22-security-update` actualizo despues el baseline a
+Angular 22.0.7 para resolver vulnerabilidades runtime antes de W8. Sus migraciones
+obligatorias no alteran el alcance ni los resultados registrados de P1-W1.

@@ -1,30 +1,47 @@
 # Framework Version Policy
 
 Date: 2026-07-08
-Last reviewed: 2026-07-17
-Status: Active
+Last reviewed: 2026-07-20
+Status: Active — Angular security maintenance closed and validated
 
 ## Current pinned stack
 
-- Frontend: Angular 19.2, Tailwind CSS 4.3, Node/npm segun `package-lock.json` y entorno
-  de desarrollo del proyecto.
+- Frontend: Angular 22.0.7 (`core`, CLI, devkit y compiler-cli alineados), TypeScript
+  6.0.3, RxJS 7.8.2, Zone.js 0.15.1 y Tailwind CSS 4.3.
+- Entorno validado: Node 24.16.0 y npm 11.13.0.
 - Backend P3: .NET 10 LTS.
 - Backend SDK pin: `global.json` con `10.0.x`.
 - Backend Docker tags: `mcr.microsoft.com/dotnet/sdk:10.0` y
   `mcr.microsoft.com/dotnet/aspnet:10.0`.
 
-## Open frontend security maintenance
+## Closed frontend security maintenance (2026-07-20)
 
-La validacion W1 del 2026-07-17 ejecuto `npm audit --omit=dev` sobre el lockfile actual:
+La rama dedicada `maintenance/angular-22-security-update` resolvio el gate previo a
+W8. Se aplico `ng update` de manera secuencial y con sus migraciones obligatorias:
 
-- 6 vulnerabilidades high y 1 moderate afectan paquetes runtime Angular 19.
-- npm solo propone remediacion automatica mediante salto mayor a Angular 22.
-- `npm audit fix --force` no esta autorizado dentro de una wave backend porque puede
-  introducir cambios incompatibles sin migracion ni review dedicados.
+1. Angular 19.2 -> 20.3.
+2. Angular 20.3 -> 21.2.
+3. Angular 21.2 -> 22.0.7.
 
-Se requiere decidir y ejecutar una rama de mantenimiento Angular antes de las waves
-frontend W8-W11 y, como maximo, antes del deploy final W13. Esa tarea debe seguir el
-checklist de validacion completa de esta politica.
+El lockfile resultante fija el conjunto instalado y conserva RxJS/Tailwind porque son
+compatibles con la version final. No se ejecuto `npm audit fix --force`, ni se aceptaron
+las migraciones opcionales que cambiarian Karma/Jasmine o el build system sin ser parte
+de esta correccion de seguridad.
+
+Resultado validado: `npm ci`, `npm run build` y 77/77 pruebas ChromeHeadless pasan;
+`npm audit --omit=dev` informa `found 0 vulnerabilities`. La configuracion Docker no
+existe todavia porque pertenece a W12, por lo que `docker compose config` queda como
+validacion pendiente de ese alcance y no como un resultado aprobado de esta rama.
+
+El audit completo del 2026-07-20 no esta limpio: informa 5 advisories de desarrollo
+(1 low y 4 moderate). Todos son transitivos de `@angular-devkit/build-angular`:
+`webpack-dev-server`/`sockjs`/`uuid` y un `esbuild` anidado bajo Vite. No se incluyen
+en el artefacto runtime, como confirma el audit con `--omit=dev`. Se ejecuto
+`npm audit fix` sin `--force`; no tuvo cambios compatibles mientras se fija Angular
+22.0.7. La correccion que npm propone para el grupo webpack requiere un salto/downgrade
+major incompatible del devkit y no esta autorizada. Reintentar el audit y un fix no
+forzado en el proximo review mensual (a mas tardar 2026-08-20) o antes si Angular publica
+un patch 22.0.x compatible para ese builder.
 
 ## Maintenance rule
 
@@ -35,16 +52,15 @@ Cada vez que aparezca una version mayor o LTS relevante:
    soporte o si hay vulnerabilidad/beneficio claro.
 3. Actualizar en una rama dedicada:
    - `package.json` / `package-lock.json`
-   - `global.json`
-   - Dockerfiles
-   - CI/deploy docs si existen
+   - configuracion, fuentes y pruebas que modifique la migracion oficial
+   - Dockerfiles/CI/deploy docs solo si ya existen o si el cambio los afecta
    - PRD/master/readiness si cambia el contrato de soporte
 4. Ejecutar validacion completa:
    - `npm run build`
    - `npm test -- --watch=false --browsers=ChromeHeadless`
    - `dotnet build backend/AstronomyExplorer.sln`
    - `dotnet test backend/AstronomyExplorer.sln`
-   - `docker compose config`
+   - `docker compose config` cuando W12 haya creado el artefacto Compose
 5. Registrar el resultado en `docs/engineering-readiness.md`.
 
 ## Review cadence

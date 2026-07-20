@@ -86,3 +86,11 @@ Checks adicionales recomendados:
 - `rg -n "NgModule" src/app` -> sin resultados.
 - `rg -n "BehaviorSubject|NgRx" src/app` -> sin resultados.
 - `rg -n "bg-\[#|text-\[#|p-\[" src/app` -> sin resultados (sin clases arbitrarias de color/spacing).
+
+## Design-change clarification (2026-07-20)
+
+Esta ADR conserva la decision y el entorno originales de P1, incluido Angular 19.2.
+Una rama de mantenimiento posterior actualizo el proyecto secuencialmente a Angular
+22.0.7 para resolver vulnerabilidades runtime antes de W8. Se mantienen Standalone,
+Signals, Tailwind v4 y la estrategia `@theme`; no se cambia retrospectivamente la
+evidencia P1 ni se adopta una migracion opcional de test/build fuera de ese alcance.

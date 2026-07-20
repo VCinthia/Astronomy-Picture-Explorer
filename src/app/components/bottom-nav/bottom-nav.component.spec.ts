@@ -1,10 +1,13 @@
-import { Component } from '@angular/core';
+import { Component, ChangeDetectionStrategy } from '@angular/core';
 import { TestBed } from '@angular/core/testing';
 import { Router, provideRouter } from '@angular/router';
 
 import { BottomNavComponent } from './bottom-nav.component';
 
-@Component({ template: '' })
+@Component({
+  changeDetection: ChangeDetectionStrategy.Eager,
+  template: '',
+})
 class TestPageComponent {}
 
 const TEST_ROUTES = [

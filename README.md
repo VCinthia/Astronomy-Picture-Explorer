@@ -37,7 +37,7 @@ treated as a first-class concern rather than an afterthought.
 
 ## Tech stack
 
-- **Angular 19** — standalone components and **Signals** for state (no NgModules).
+- **Angular 22.0.7** — standalone components and **Signals** for state (no NgModules).
 - **Tailwind CSS v4** — design implemented from [Figma](https://www.figma.com/design/miqqmNJAcF0Mbe1WizAJIu/01_Astronomy_Picture_Explorer?node-id=0-1&t=N9ZRRaB7gVw4pvpS-1) using named design tokens.
 - **Canvas API** — dominant-color extraction performed entirely client-side, with
   no third-party color libraries.
@@ -64,7 +64,7 @@ can't be read it falls back to a fixed brand palette.
 ## Run it locally
 
 ```bash
-npm install
+npm ci
 npm start        # dev server at http://localhost:4200
 npm run build    # production build
 npm test         # unit tests

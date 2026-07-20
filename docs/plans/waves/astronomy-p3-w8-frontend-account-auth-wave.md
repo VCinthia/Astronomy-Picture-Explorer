@@ -3,7 +3,7 @@
 Date: 2026-07-16
 Status: READY - Not Started
 Wave ID: `P3-W8`
-Depends On: P3-W2 + P3-W3 merged
+Depends On: P3-W2 + P3-W3 merged + Angular 22.0.7 maintenance gate closed
 Suggested Branch: `wave/p3-w8-frontend-account-auth`
 
 ## Goal
