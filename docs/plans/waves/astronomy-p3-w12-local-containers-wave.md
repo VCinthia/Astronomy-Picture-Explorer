@@ -31,7 +31,7 @@ proveedores productivos.
 - `README.md`, `backend/README.md`
 - `docs/prd/prd.md`, `docs/adr/0003-backend-auth-apod-stack.md`,
   `docs/architecture/p3-flow-overview.md`, `docs/engineering-readiness.md`,
-  `docs/maintenance/framework-version-policy.md`, P3/master plans and W13 handoff
+  `docs/maintenance/framework-version-policy.md`, P3/master plans and W14 handoff
 
 ## Checklist
 
@@ -86,3 +86,9 @@ docker compose down
   The local NASA base URL permits HTTP solely for `nasa-mock`/loopback in Development;
   arbitrary HTTP and every Production HTTP origin fail validation before a user key can
   be sent insecurely.
+
+## Planning clarification (2026-07-22)
+
+- W13 de UX y aceptación local se inserta antes de la promoción de proveedor, que pasa a
+  W14. W12 sigue siendo la fuente del stack local y de `LocalLog`; no se habilita un
+  proveedor, no se expone un código de confirmación en la SPA y no cambia su evidencia.

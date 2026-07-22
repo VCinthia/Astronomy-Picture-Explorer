@@ -1,8 +1,8 @@
 # Master Plan - Astronomy Picture Explorer
 
 Date: 2026-06-25
-Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W11 DONE
+Last revised: 2026-07-22
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W12 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -54,7 +54,7 @@ implementar.
 
 ### P3 - IN PROGRESS
 
-La revision del 2026-07-16 establecio 13 waves ejecutables:
+La revision del 2026-07-22 establece 14 waves ejecutables:
 
 - Identity y sesiones rotadas.
 - Confirmacion POST con `userId + code` Base64URL.
@@ -62,6 +62,7 @@ La revision del 2026-07-16 establecio 13 waves ejecutables:
 - PostgreSQL FTS title+explanation; W6 descarto `pg_trgm` con evidencia reproducible.
 - Ingestion CLI local resumible; nunca backfill en Render.
 - Proxy same-origin Netlify -> Render y cookie SameSite=Lax.
+- UX final de Explorer/Home/nav y aceptación local de cuenta antes de proveedor.
 - Costo obligatorio $0 y experiencia explicita de cold start.
 
 P3-W1 quedo DONE el 2026-07-17:
@@ -184,18 +185,19 @@ P3-W12 quedo DONE el 2026-07-20:
   en Compose ni entran a capas. Email LocalLog y NASA mock/fixture son Development-only,
   sin proveedores ni llamadas externas.
 - El smoke local aprobo APOD/catalog/search, cuenta-confirmacion-sesion-favorites y un
-  restart sin `-v` con migrations/seed repetibles y datos conservados. W13 permanece
-  como el unico alcance para seed real, proveedores/deploy y smoke productivo.
+  restart sin `-v` con migrations/seed repetibles y datos conservados. W13 cierra UX y
+  aceptación local; W14 permanece como el unico alcance para seed real, proveedores,
+  deploy y smoke productivo.
 
 ## 4. Execution contract
 
 - Branch por wave: `wave/p<n>-w<m>-<slug>` o nombre sugerido en la wave.
 - P3 acumula waves aprobadas en `codex/p3-integration`; `main` conserva la ultima
-  release productiva hasta el gate W13.
+  release productiva hasta el gate W14.
 - Implementar -> verificar -> review -> aprobacion -> commit/merge -> sincronizar docs.
 - Una wave solo se cierra con evidencia de sus acceptance criteria.
 - No avanzar si una decision cambia ADR/phase/dependency graph sin actualizar docs primero.
-- P3-W13 es la unica wave que despliega/muta produccion; waves previas usan local/fakes.
+- P3-W14 es la unica wave que despliega/muta produccion; waves previas usan local/fakes.
 - Ningun agente habilita recursos pagos, overages, keepalive o upgrades automaticos.
 
 ## 5. Non-negotiable engineering rules
@@ -237,7 +239,8 @@ P3-W12 quedo DONE el 2026-07-20:
 | W10 | Frontend APOD/date/search; remove availableDates/mock |
 | W11 | Frontend favorites API migration |
 | W12 | Local containers/full stack ✅ |
-| W13 | Zero-cost seed/deploy/production smoke |
+| W13 | Final UX, navigation and local account acceptance |
+| W14 | Zero-cost seed/deploy/production smoke |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.
 

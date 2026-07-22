@@ -104,7 +104,8 @@ traffic must use the frontend on port `8080`.
 
 This demonstrates account confirmation, login/cookie, APOD today/date, ready catalog
 search and protected favorites with no NASA or Resend network request. It is not a
-substitute for W13's real-provider and production smoke.
+substitute for W14's real-provider and production smoke; W13 adds final UX/local
+acceptance only and still does not authorize a provider.
 
 ## Restart and cleanup
 
@@ -128,11 +129,11 @@ Remove-Item .env
 `down -v` is limited to the named local Compose volume; it never targets Neon or any
 remote database.
 
-## Boundaries before W13
+## Boundaries before W14
 
 - Do not point this Compose stack at Neon, Render, Resend or a production origin.
 - Do not run `AstronomyExplorer.Catalog` as an API container, cron, worker or startup
   action. The local one-row demo seed is not the historical catalog backfill.
-- Do not replace the fixture with `DEMO_KEY`. W13 separately authorizes and verifies a
+- Do not replace the fixture with `DEMO_KEY`. W14 separately authorizes and verifies a
   personal NASA key, real email provider/domain, free-plan constraints, deployed
   same-origin rewrites and production smoke.

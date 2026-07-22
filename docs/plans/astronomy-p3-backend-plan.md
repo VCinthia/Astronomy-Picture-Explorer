@@ -1,8 +1,8 @@
 # Phase Plan P3 - Backend real, autenticacion y persistencia
 
 Date: 2026-07-08
-Last revised: 2026-07-20
-Status: IN PROGRESS - W1-W11 DONE
+Last revised: 2026-07-22
+Status: IN PROGRESS - W1-W12 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -52,6 +52,10 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - Frontend auth, bootstrap, guard, single-flight interceptor y estados accesibles.
 - Home/Explorer/Search por HTTP; `availableDates` y chips eliminados.
 - DatePicker real `<input type="date" min="1995-06-16" max="hoy">`.
+- UX final: Explorer ordena fecha -> búsqueda, el selector de fecha vive solo sobre Home
+  y la navegación primaria marca su ruta con línea activa accesible.
+- Aceptación local de cuenta usa el `LocalLog` ya existente; no expone códigos de
+  confirmación ni agrega un proveedor antes de producción.
 - Favorites por API; localStorage deja de ser fuente runtime.
 - Docker local y deploy Netlify/Render/Neon/Resend con runbook de costo cero.
 
@@ -68,13 +72,13 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 
 - P2 debe estar `DONE` en produccion con evidencia de smoke.
 - ADR-0003 y esta planificacion deben permanecer sincronizados.
-- W1-W12 se acumulan en `codex/p3-integration`; `main` conserva P2 productivo hasta la
-  promocion validada por W13.
-- W1-W12 pueden implementarse con servicios locales/mocks.
-- Neon es requerido para ejecutar el seed productivo de W5 y W13.
-- Resend + dominio verificado son requeridos para smoke real de W13, no para tests W2.
+- W1-W13 se acumulan en `codex/p3-integration`; `main` conserva P2 productivo hasta la
+  promocion validada por W14.
+- W1-W13 pueden implementarse con servicios locales/mocks.
+- Neon es requerido para ejecutar el seed productivo de W5 y W14.
+- Resend + dominio verificado son requeridos para smoke real de W14, no para tests W2.
 - NASA API key propia es requerida antes del backfill W5; `DEMO_KEY` no se usa en carga.
-- Render y URLs finales son requeridos solo en W13.
+- Render y URLs finales son requeridos solo en W14.
 - Gate Angular previo a W8 cerrado el 2026-07-20 en la rama dedicada
   `maintenance/angular-22-security-update`: Angular 22.0.7, TypeScript 6.0.3 y audit
   runtime sin vulnerabilidades. Los futuros majors requieren el mismo tratamiento;
@@ -94,7 +98,8 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.10** Frontend APOD/date/search migration (W10).
 - [x] **R3.11** Frontend favorites migration (W11).
 - [x] **R3.12** Contenedores y stack local (W12).
-- [ ] **R3.13** Seed, deploy $0 y smoke productivo (W13).
+- [ ] **R3.13** UX final y aceptación local de navegación/cuenta (W13).
+- [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14).
 
 W1 se cerro el 2026-07-17 con build limpio, migracion inicial reproducible y 11/11
 tests Testcontainers sobre PostgreSQL 17. La evidencia y las precisiones fisicas del
@@ -102,7 +107,7 @@ schema viven en la wave W1 y ADR-0003.
 
 W2 se cerro el 2026-07-17 con 13/13 tests Account y 24/24 backend PASS. Registro,
 reenvio y confirmacion usan respuestas anti-enumeracion, Base64URL y sender fake; el
-key ring Identity sobrevive reinicios mediante PostgreSQL. W13 conserva los gates de
+key ring Identity sobrevive reinicios mediante PostgreSQL. W14 conserva los gates de
 proxy confiable para IP real y proteccion en reposo del XML de Data Protection.
 
 W3 se cerro el 2026-07-17 con 23/23 tests Sessions y 47/47 backend PASS. Login usa
@@ -218,6 +223,10 @@ P3 es `DONE` solo con evidencia de todos los puntos:
 - Favorites E2E prueba aislamiento de dos usuarios y listado sin N+1.
 - Frontend no importa `apod.json`, no usa `availableDates`, no persiste tokens y no usa
   `ape.favorites.v1` como fuente runtime.
+- Explorer/Home/nav mantienen el orden, control de fecha y ruta activa definidos por W13;
+  Search conserva resultado independiente de mayúsculas/minúsculas.
+- El smoke local confirma cuenta mediante `LocalLog` sin presentar tokens de confirmación
+  en la SPA, evidencia o documentación.
 - Netlify proxifica `/api/*` y `/auth/*` antes del fallback SPA.
 - Produccion usa exclusivamente planes $0; no hay keepalive, cron u overages pagos.
 - Primera visita durante cold start muestra estado comprensible y permite retry.
@@ -238,7 +247,8 @@ P3 es `DONE` solo con evidencia de todos los puntos:
 10. `astronomy-p3-w10-frontend-apod-search-wave.md`
 11. `astronomy-p3-w11-frontend-favorites-wave.md`
 12. `astronomy-p3-w12-local-containers-wave.md`
-13. `astronomy-p3-w13-zero-cost-deploy-wave.md`
+13. `astronomy-p3-w13-final-ux-local-acceptance-wave.md`
+14. `astronomy-p3-w14-zero-cost-deploy-wave.md`
 
 All files live under `docs/plans/waves/`.
 
@@ -261,14 +271,17 @@ flowchart LR
     W10 --> W11
     W1 --> W12
     W11 --> W12
-    W5 --> W13
+    W11 --> W13
     W12 --> W13
+    W5 --> W14
+    W12 --> W14
+    W13 --> W14
 ```
 
 - W2 y W4 pueden ejecutarse en paralelo despues de W1 si el scope de `Program.cs` se
   coordina o se integran secuencialmente en `main`.
 - No se paralelizan waves que compartan servicios Angular centrales.
-- W13 es la unica wave autorizada a mutar proveedores productivos.
+- W14 es la unica wave autorizada a mutar proveedores productivos.
 
 ## 9. Phase verification
 
@@ -283,6 +296,6 @@ Invoke-WebRequest http://localhost:<api-port>/health
 docker compose down
 ```
 
-El seed y smoke productivo usan comandos exactos documentados por W5/W13 cuando existan
+El seed y smoke productivo usan comandos exactos documentados por W5/W14 cuando existan
 los recursos externos; no se consideran verificados mediante afirmaciones manuales sin
 fecha y resultado.

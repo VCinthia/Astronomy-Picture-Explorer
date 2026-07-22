@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-20
-Status: Accepted; P3-W1-W11 implemented
+Status: Accepted; P3-W1-W12 implemented
 
 ## Context
 
@@ -191,11 +191,11 @@ ocasionales son suficientes y observables.
 - Identity Data Protection usa application name `AstronomyExplorer` y persiste el key
   ring en PostgreSQL mediante una segunda migracion. Esto evita invalidar links cuando
   Render Free pierde su filesystem al dormir/reiniciar.
-- La persistencia EF guarda XML de claves sin un certificado externo. W13 debe verificar
+- La persistencia EF guarda XML de claves sin un certificado externo. W14 debe verificar
   cifrado/controles en reposo de Neon y decidir si exige una capa adicional compatible
   con costo cero antes del deploy.
 - W2 usa `RemoteIpAddress` fail-closed y no confia directamente en headers reenviados.
-  W13 debe verificar la cadena Netlify -> Render, configurar solo forwarders confiables
+  W14 debe verificar la cadena Netlify -> Render, configurar solo forwarders confiables
   y demostrar que el limiter separa visitantes sin aceptar spoofing.
 
 ## Implementation clarification - P3-W3 (2026-07-17)
@@ -213,7 +213,7 @@ ocasionales son suficientes y observables.
   estado. Logout usa la cookie, revoca toda su familia activa y sigue funcionando con
   Bearer ausente o vencido; otras familias del usuario permanecen vigentes.
 - Login se limita por IP de transporte, default 10 intentos/15 minutos y queue 0. No se
-  agrega particion email ni lockout por cuenta para evitar DoS dirigido; W13 conserva el
+  agrega particion email ni lockout por cuenta para evitar DoS dirigido; W14 conserva el
   gate de proxies confiables para resolver la IP real.
 - Cookie refresh no declara Domain y usa HttpOnly, SameSite=Lax, Path `/auth`, Max-Age,
   Expires y Secure. Solo Development sobre HTTP loopback permite `Secure=false`.
@@ -256,7 +256,7 @@ ocasionales son suficientes y observables.
   invalido dejan Failed. 429 no espera una ventana larga: persiste `retry_not_before`,
   usando una hora desde el reloj inyectable si falta `Retry-After`, y resume temprano
   falla antes de llamar NASA.
-- `Catalog__RequiredFrom/To` define el target canónico de produccion que W13 fija al
+- `Catalog__RequiredFrom/To` define el target canónico de produccion que W14 fija al
   seed. `GET /api/apod/catalog-status` ignora estados ad-hoc para readiness y serializa
   estados lowercase. Ready exige Completed, checkpoint final y row count al menos igual
   al synced count. Completed con drift solo se repara reejecutando el rango con resume.
@@ -375,7 +375,7 @@ ocasionales son suficientes y observables.
   de migraciones ni backfill oculto en una visita.
 - El seed local es Development-only, idempotente y deliberadamente minimo: una entrada
   APOD y un estado de catalogo Completed del rango `2020-01-01`. Sirve para demostrar
-  search/favorites E2E sin provider y no sustituye el catalogo historico W5/W13.
+  search/favorites E2E sin provider y no sustituye el catalogo historico W5/W14.
 - API obtiene password PostgreSQL y signing key desde Docker secrets file-backed al
   iniciar el contenedor. Los valores no viajan por build arg, environment Compose ni
   layers. API y frontend corren non-root; Nginx mantiene la frontera browser
@@ -385,7 +385,7 @@ ocasionales son suficientes y observables.
   valido para `nasa-mock` o loopback en Development. Esto permite un mock determinista
   sin habilitar que una key real llegue a un host HTTP arbitrario.
 - El Compose local no configura Resend, NASA, Neon, Render, Netlify ni una URL de
-  produccion. W13 conserva toda autoridad de provider real, seed historico y deploy.
+  produccion. W14 conserva toda autoridad de provider real, seed historico y deploy.
 
 ## Consequences
 

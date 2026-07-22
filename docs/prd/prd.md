@@ -1,8 +1,8 @@
 # PRD - Astronomy Picture Explorer
 
 Date: 2026-07-08
-Last revised: 2026-07-20
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W11 DONE
+Last revised: 2026-07-22
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W12 DONE
 
 ## Vision
 
@@ -48,9 +48,14 @@ evolucion full-stack segura sin costo monetario de operacion.
 
 - `/home` usa APOD real del dia.
 - `/explorer` acepta una fecha real entre `1995-06-16` y hoy.
-- Header stepper avanza/retrocede un dia calendario y consulta esa fecha real.
+- Home ofrece el selector anterior/siguiente sobre la imagen APOD; el header global no
+  controla fechas fuera de esa ruta.
 - `availableDates`, chips y mock desaparecen del runtime.
-- Search consulta catalogo PostgreSQL por title + explanation con FTS.
+- Search consulta catalogo PostgreSQL por title + explanation con FTS case-insensitive.
+- Explorer presenta primero la fecha y luego la búsqueda, alineados en desktop y apilados
+  en ese orden en mobile.
+- La navegación primaria comunica su ruta activa con color, `aria-current` y una línea
+  inferior fina en desktop y mobile.
 - Estados loading, empty, upstream error, catalog-not-ready y cold-start son accesibles y
   recuperables mediante Retry.
 
@@ -94,6 +99,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 - Link Angular contiene `userId + code` Base64URL.
 - Confirmacion muta mediante `POST /auth/confirm-email`, no GET.
 - Login anti-enumeracion, access JWT corto en memoria y refresh opaco rotado.
+- Login exitoso oculta el formulario, confirma el éxito de forma transitoria y navega al
+  destino interno solicitado o a Home.
 - Replay revoca familia; logout revoca sesion.
 - Bootstrap, guard e interceptor single-flight en Angular.
 
@@ -150,6 +157,12 @@ hdurl|null, thumbnail_url|null, copyright|null
 10. Favoritos estan aislados por usuario y GET devuelve cards completas.
 11. Logout limpia cookie, JWT y datos de usuario/favoritos en memoria.
 12. Primera visita durante cold start comunica conexion y permite reintentar.
+13. La navegación activa y los controles de fecha/search conservan jerarquía visual,
+    foco y orden comprensible en desktop y mobile.
+14. El stack local permite demostrar registro, confirmación por `LocalLog`, login y
+    favoritos sin proveedor externo ni exponer códigos de confirmación en la SPA.
+15. Login exitoso no deja controles que inviten a reautenticarse: muestra un éxito breve
+    y conserva un `returnUrl` interno válido o navega a Home.
 
 ## Non-functional requirements P3
 
@@ -164,8 +177,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 ## Success criteria
 
 - P1/P2 permanecen documentados como entregas historicas cerradas.
-- P3 W1-W13 completadas con build/tests en verde; W12 debe permitir E2E local sin
-  proveedor externo y W13 conserva exclusivamente el smoke con proveedores reales.
+- P3 W1-W14 completadas con build/tests en verde; W12-W13 deben permitir UX y E2E local
+  sin proveedor externo, y W14 conserva exclusivamente el smoke con proveedores reales.
 - Catalogo inicial listo en Neon y search FTS probado.
 - Auth/favorites/APOD funcionan E2E desde Netlify mediante proxy same-origin.
 - Cold-start UX verificada.

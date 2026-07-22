@@ -75,7 +75,7 @@ dotnet run --project backend/AstronomyExplorer.Catalog -- catalog sync --from 20
   invalido dejan `Failed`. 429 no duerme: persiste `retry_not_before`, usa una ventana
   segura de una hora cuando falta `Retry-After`, y un `--resume` temprano falla antes
   de llamar NASA.
-- `Catalog__RequiredFrom/To` define el unico target canónico de readiness y W13 lo fija
+- `Catalog__RequiredFrom/To` define el unico target canónico de readiness y W14 lo fija
   al seed aprobado. Sin configuracion/estado usa `not_started`; un sync ad-hoc mas nuevo
   no lo reemplaza. Ready exige Completed, checkpoint final y row count al menos igual a
   `synced_entry_count`.
@@ -84,4 +84,9 @@ dotnet run --project backend/AstronomyExplorer.Catalog -- catalog sync --from 20
 - La conexion dedicada del lock tiene heartbeat. Perder la sesion cancela mediante
   `LockLostToken`, deja Paused y evita confirmar el batch en curso.
 - Render queda bloqueado sin excepcion. `--allow-local-production` solo habilita una
-  consola local marcada Production; no autoriza mutaciones productivas antes de W13.
+  consola local marcada Production; no autoriza mutaciones productivas antes de W14.
+
+## Planning clarification (2026-07-22)
+
+- La wave de proveedor/seed/deploy se renumera de W13 a W14 al insertar W13 de UX y
+  aceptación local. La seguridad, límites y evidencia implementada de W5 no cambian.

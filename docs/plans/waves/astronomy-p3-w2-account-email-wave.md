@@ -82,8 +82,14 @@ dotnet list backend/AstronomyExplorer.sln package --vulnerable --include-transit
   W2 `PersistDataProtectionKeys` guarda el key ring compartido en PostgreSQL con
   application name estable `AstronomyExplorer`; la migracion inicial W1 no fue alterada.
 - La proteccion en reposo del XML del key ring depende de los controles/cifrado del
-  proveedor PostgreSQL. W13 debe verificar esa garantia y documentar si requiere
+  proveedor PostgreSQL. W14 debe verificar esa garantia y documentar si requiere
   proteccion adicional antes del deploy.
 - W2 limita la IP de transporte (`RemoteIpAddress`) y no confia ciegamente en
-  `X-Forwarded-For`. W13 debe verificar la cadena Netlify -> Render y configurar solo
+  `X-Forwarded-For`. W14 debe verificar la cadena Netlify -> Render y configurar solo
   proxies confiables antes de afirmar que la particion representa al visitante real.
+
+## Planning clarification (2026-07-22)
+
+- La promoción productiva originalmente numerada W13 pasa a W14 porque se incorpora W13
+  para UX final y aceptación local. No cambia el contrato, la seguridad ni la evidencia
+  implementada de W2; únicamente desplaza sus gates de proveedor a la wave correcta.

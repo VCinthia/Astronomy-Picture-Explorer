@@ -1,11 +1,11 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
-Date: 2026-07-20
-Status: P3 IN PROGRESS - W1-W11 implemented
+Date: 2026-07-22
+Status: P3 IN PROGRESS - W1-W12 implemented
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
-viven en ADR-0003; las unidades de ejecucion viven en las waves W1-W13.
+viven en ADR-0003; las unidades de ejecucion viven en las waves W1-W14.
 
 ## 1. Contexto del sistema
 
@@ -114,7 +114,7 @@ mantener un control de cuenta accesible.
 El key ring que firma los tokens Identity vive en PostgreSQL con application name
 estable; por eso un link emitido antes de un restart/cold start sigue validando en una
 nueva instancia. Register/resend se limitan separadamente por IP de transporte y por
-hash de email normalizado. W13 debe resolver la IP original solo mediante forwarders
+hash de email normalizado. W14 debe resolver la IP original solo mediante forwarders
 verificados de la cadena Netlify -> Render.
 
 ### W10 frontend APOD/search alignment
@@ -144,6 +144,26 @@ publicos cacheados y deja que B exponga su coleccion al completarse la carga. El
 anonimo es un CTA accesible a login con retorno interno
 normalizado. La fachada P2, `ape.favorites.v1` y cualquier migracion de favoritos
 anonimos dejan de existir.
+
+### W13 final UX and local acceptance alignment
+
+Explorer presenta primero el DatePicker y luego Search; en desktop ambos controles se
+alinean por su borde inferior y en mobile conservan ese orden vertical. El stepper de
+fecha deja el shell global y vive sobre el extremo derecho de la imagen Home, por lo que
+no distrae rutas que no usan esa interacción. Desktop y mobile añaden una línea inferior
+fina a la ruta primaria activa, además de color y `aria-current`.
+
+PostgreSQL FTS ya compara sin distinguir mayúsculas/minúsculas. W13 conserva el texto
+escrito por la persona y prueba `astronomy`, `ASTRONOMY` y `Astronomy` contra el fixture
+local, sin habilitar trigram ni cambiar el ranking. La aceptación de cuenta permanece
+local: `401 /auth/refresh` sin cookie representa bootstrap anónimo; `403
+email_unconfirmed` muestra reenvío. El enlace efímero se consulta solo en el log local
+de API y nunca se expone desde la SPA ni se registra en evidencia.
+
+Después de un login exitoso, la ruta Login deja de renderizar los campos y presenta solo
+`Signed in successfully.` como estado transitorio. Luego navega al `returnUrl` interno
+normalizado o, en su ausencia, a `/home`; esto evita repetir una acción ya completada
+sin romper el retorno desde Favorites.
 
 ## 4. Login, refresh single-flight y logout
 
@@ -226,7 +246,7 @@ flowchart LR
     FTS --> RESULTS["DTO array, max 30, rank + fecha"]
 ```
 
-La carga historica se hace una vez desde desarrollo contra Neon, autorizada en W13. W5
+La carga historica se hace una vez desde desarrollo contra Neon, autorizada en W14. W5
 permite dry-run sin dependencias y bloquea cualquier ejecucion en Render. Un lock
 advisory global impide corridas simultaneas incluso con rangos solapados; un heartbeat
 cancela fail-closed si se pierde esa sesion. Cada respuesta NASA puede ser vacia,
@@ -338,7 +358,7 @@ La migracion inicial implementa el diagrama con estas precisiones:
 - Confirmacion no persiste el token raw: almacena solo el key ring de Data Protection.
 - Email/username respetan el limite fisico Identity de 256 caracteres.
 - El XML del key ring y la resolucion de IP real conservan gates productivos explicitos
-  en W13 antes de habilitar la release.
+  en W14 antes de habilitar la release.
 
 ### W3 session/security alignment
 
@@ -347,7 +367,7 @@ La migracion inicial implementa el diagrama con estas precisiones:
   consumido con su reemplazo. Replay y logout revocan todas las filas activas de esa
   familia sin afectar otra familia del mismo usuario.
 - JWT no se persiste. Cookie y respuestas auth usan `Cache-Control: no-store`.
-- W13 debe verificar forwarders Netlify/Render antes de sustituir la IP de transporte.
+- W14 debe verificar forwarders Netlify/Render antes de sustituir la IP de transporte.
 
 ### W4 APOD/provider alignment
 
@@ -363,7 +383,7 @@ La migracion inicial implementa el diagrama con estas precisiones:
 ### W5 catalog ingestion alignment
 
 - La consola tiene entry point namespaced y no comparte el `Program` global de la API.
-- `Catalog__RequiredFrom/To` define el target canónico que W13 fija al seed. Sin
+- `Catalog__RequiredFrom/To` define el target canónico que W14 fija al seed. Sin
   configuracion o state se expone `not_started`; el target configurado sigue visible.
   `ready` requiere Completed, checkpoint final y row count >= `synced_entry_count`.
 - Network/408/5xx/timeout dejan Paused; 4xx permanente o payload invalido dejan Failed.
@@ -404,8 +424,11 @@ flowchart LR
     W10 --> W11
     W1 --> W12["W12 Local containers"]
     W11 --> W12
-    W5 --> W13["W13 Seed/deploy/smoke"]
+    W11 --> W13["W13 UX final/local acceptance"]
     W12 --> W13
+    W5 --> W14["W14 Seed/deploy/smoke"]
+    W12 --> W14
+    W13 --> W14
 ```
 
 ### W12 local container alignment
@@ -426,7 +449,7 @@ flowchart LR
 - Local Docker-secret files supply PostgreSQL/session values at container runtime. The
   compose model exposes paths but never the values, and no secret is baked into an image.
 - Local email delivery is an API log sink and the NASA mock is internal. Both are rejected
-  outside Development; a production provider/deploy is still W13 work.
+  outside Development; a production provider/deploy is still W14 work.
 
 ## 10. Costo cero y primera visita
 
@@ -436,4 +459,4 @@ flowchart LR
 - Neon escala a cero; el seed verifica tamaño y se detiene ante limites.
 - Resend se protege con rate limits y solo se usa para confirmacion.
 - No hay keepalive, jobs pagos, cargos por exceso ni upgrade automatico.
-- El runbook W13 debe volver a verificar planes/cuotas porque son datos temporales.
+- El runbook W14 debe volver a verificar planes/cuotas porque son datos temporales.

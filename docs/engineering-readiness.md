@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
-Date: 2026-07-20
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W12 DONE
+Date: 2026-07-22
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W12 DONE; W13 READY
 
 ## Verdict
 
@@ -16,8 +16,9 @@ sesiones seguras, P3-W4 cerro NASA today/date con cache, P3-W5 completo la inges
 local resumible, P3-W6 cerro FTS, P3-W7 completo Favorites API protegida y P3-W8
 materializo las pantallas Angular de cuenta. P3-W9 completo bootstrap/guard/interceptor
 y logout frontend. P3-W10 reemplazo el runtime mock por APOD/date/search HTTP; P3-W11
-reemplazo la fachada local de favoritos por la API autenticada. W12-W13 conservan el
-contrato aceptado. P3-W12 completo el stack local reproducible, con secretos locales
+reemplazo la fachada local de favoritos por la API autenticada. W13 cierra UX y
+aceptación local antes de producción; W14 conserva proveedores/deploy. P3-W12 completo
+el stack local reproducible, con secretos locales
 file-backed, sin proveedores productivos ni llamadas NASA/Resend.
 
 ## Closed gates
@@ -72,7 +73,7 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   logout contra rotation terminan sin sesiones activas en esa familia y no afectan otra.
 - Refresh/logout validan Origin exacto en Production antes de mutar DB/cookie; logout no
   depende de un Bearer vigente.
-- Login se limita por IP sin particion email para no habilitar DoS dirigido. W13 mantiene
+- Login se limita por IP sin particion email para no habilitar DoS dirigido. W14 mantiene
   el gate de forwarders confiables antes de interpretar la IP publica.
 
 ## P3-W4 completion gate
@@ -241,7 +242,7 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   arrancar.
 - El fixture se limita a `2020-01-01`, es idempotente y marca ese rango local ready;
   test focalizado demuestra que actualiza URL/metadatos ante cambio de origen local en
-  lugar de duplicar filas. El catalogo historico W5/W13 no se ejecuta.
+  lugar de duplicar filas. El catalogo historico W5/W14 no se ejecuta.
 - HTTP local PASS: `/health` 200 por loopback, catalog `completed/ready`, search FTS,
   APOD fixture date, APOD today mock y `/home` same-origin devuelven resultado.
 - E2E sin proveedor PASS: register 202, LocalLog confirmation POST 204, login 200,
@@ -250,6 +251,19 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   Development y tests rechazan HTTP arbitrary/Production.
 - `docker compose down` sin `-v` seguido de `up -d` preservo favoritos; conteo final
   `3 migrations | 1 fixture | 1 catalog state | 1 favorite`, sin duplicados.
+
+## P3-W13 readiness gate
+
+- No requiere proveedor, cuenta externa, key NASA, sender Resend ni despliegue.
+- El scope es frontend y aceptación local: orden de Explorer, selector de Home, indicador
+  activo de navegación y evidencia de búsqueda independiente de capitalización.
+- La cuenta de prueba local usa exclusivamente `LocalLog`; `401 /auth/refresh` sin cookie
+  es bootstrap anónimo y `403 email_unconfirmed` debe conservar su CTA de reenvío. Los
+  enlaces/códigos de confirmación son credenciales efímeras y no se guardan como evidencia.
+- El arranque Compose debe ser reproducible también desde Windows; la normalización CRLF
+  del entrypoint ocurre dentro de la imagen y no altera secretos ni semántica Linux.
+- P3-W14 permanece bloqueada hasta que W13 deje build/tests/Compose/visual QA/E2E local
+  en verde y sus documentos estén sincronizados.
 
 Antes de cada wave restante:
 
@@ -260,10 +274,10 @@ Antes de cada wave restante:
 
 Recursos externos se habilitan just-in-time:
 
-- Resend/dominio: necesario para smoke real W13; W2 usa fake en tests.
-- NASA key propia: necesaria para el seed real autorizado en W13; W5 usa mocks/dry-run.
+- Resend/dominio: necesario para smoke real W14; W2 usa fake en tests.
+- NASA key propia: necesaria para el seed real autorizado en W14; W5 usa mocks/dry-run.
 - Neon: necesario para seed/deploy, no para Testcontainers W1.
-- Render/URL final: necesario solo en W13.
+- Render/URL final: necesario solo en W14.
 
 ## Current validation contract
 
@@ -302,17 +316,18 @@ docker compose down
 | CSRF sobre refresh/logout | SameSite=Lax + Origin exacto; CORS no se usa como defensa |
 | 401 simultaneos consumen refresh dos veces | Angular single-flight + backend rotation atomica |
 | Token de confirmacion ambiguo/filtrado | userId+code Base64URL; Angular POST; no mutacion GET |
-| Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; revisar cifrado en reposo en W13 |
-| IP real oculta por Netlify/Render | Fail-closed sobre peer; W13 configura solo proxies verificados y prueba particiones |
+| Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; revisar cifrado en reposo en W14 |
+| IP real oculta por Netlify/Render | Fail-closed sobre peer; W14 configura solo proxies verificados y prueba particiones |
 | Render cold start confunde primera visita | Estado connecting + timeout + Retry accesible |
 | Search costoso | tsvector + GIN; q max 200, page max 1000, pageSize max 30; sin trigram |
-| Cuota/cargo inesperado | Free-only, no keepalive/cron/overages; fail closed y revalidar en W13 |
+| Cuota/cargo inesperado | Free-only, no keepalive/cron/overages; fail closed y revalidar en W14 |
 | DTO diverge de NASA/frontend | DTO app-owned congelado + contract tests image/video/nulls |
 | Vulnerabilidades Angular | Runtime: gate cerrado con Angular 22.0.7 y `npm audit --omit=dev` en 0. Desarrollo: 5 advisories transitivos del builder, sin fix compatible no forzado; revalidar mensualmente o ante patch 22.0.x |
 
 ## Recommended next step
 
-Ejecutar P3-W13 desde `codex/p3-integration` solo despues de revalidar precios/cuotas y
-autoridad para Neon, Render, Netlify, Resend, dominio y NASA key propia. W12 ya entrega
-un stack local sin costo; seed historico real, proveedores y smoke productivo siguen
-postergados y no se infieren desde este gate.
+Ejecutar P3-W13 desde `codex/p3-integration` sin recursos externos para cerrar el UX
+final y el smoke local de cuenta. Solo despues de esa evidencia se habilita P3-W14, que
+requiere revalidar precios/cuotas y autoridad para Neon, Render, Netlify, Resend, dominio
+y NASA key propia. El seed historico real, proveedores y smoke productivo no se infieren
+desde el gate local.
