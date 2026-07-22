@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-22
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W12 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -185,9 +185,22 @@ P3-W12 quedo DONE el 2026-07-20:
   en Compose ni entran a capas. Email LocalLog y NASA mock/fixture son Development-only,
   sin proveedores ni llamadas externas.
 - El smoke local aprobo APOD/catalog/search, cuenta-confirmacion-sesion-favorites y un
-  restart sin `-v` con migrations/seed repetibles y datos conservados. W13 cierra UX y
-  aceptación local; W14 permanece como el unico alcance para seed real, proveedores,
-  deploy y smoke productivo.
+  restart sin `-v` con migrations/seed repetibles y datos conservados.
+
+P3-W13 quedo DONE el 2026-07-22:
+
+- Explorer ubica la fecha antes de Search y alinea ambos controles en desktop; Home toma
+  el stepper UTC sobre su imagen, sin dejar controles de fecha en el header global.
+- Las navegaciones primaria desktop y mobile muestran una sola ruta activa mediante
+  `aria-current`, color y línea inferior. La búsqueda conserva la capitalización escrita
+  y las tres variantes de `astronomy` retornan el mismo fixture FTS local.
+- Login reemplaza todo formulario por `Signed in successfully.` y redirige después de
+  650 ms al retorno interno validado o `/home`, evitando la invitación a reautenticarse.
+- 117/117 pruebas frontend, build, backend, Compose Windows/Linux y smoke LocalLog de
+  registro -> confirmación -> sesión -> favoritos -> logout PASS, sin proveedor externo.
+
+W14 permanece como el unico alcance para seed real, proveedores, deploy y smoke
+productivo.
 
 ## 4. Execution contract
 
@@ -239,7 +252,7 @@ P3-W12 quedo DONE el 2026-07-20:
 | W10 | Frontend APOD/date/search; remove availableDates/mock |
 | W11 | Frontend favorites API migration |
 | W12 | Local containers/full stack ✅ |
-| W13 | Final UX, navigation and local account acceptance |
+| W13 | Final UX, navigation and local account acceptance ✅ |
 | W14 | Zero-cost seed/deploy/production smoke |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.

@@ -1,7 +1,7 @@
 # Wave P3-W13 - UX final y aceptación local
 
 Date: 2026-07-22
-Status: READY - Not Started
+Status: DONE - 2026-07-22
 Wave ID: `P3-W13`
 Source Phase: `P3`
 Source Phase Plan: `docs/plans/astronomy-p3-backend-plan.md`
@@ -57,22 +57,22 @@ recursos productivos.
 
 ## Checklist
 
-- [ ] W13.1 Reordenar Explorer como DatePicker -> SearchBar y alinear inferiormente ambos
+- [x] W13.1 Reordenar Explorer como DatePicker -> SearchBar y alinear inferiormente ambos
   controles en desktop sin degradar el layout mobile ni los labels accesibles.
-- [ ] W13.2 Trasladar el stepper de fecha del shell global a Home, posicionado sobre la
+- [x] W13.2 Trasladar el stepper de fecha del shell global a Home, posicionado sobre la
   imagen APOD con separación y contraste correctos; conservar límites UTC y cancelar
   requests obsoletos mediante el estado existente de `AstronomyService`.
-- [ ] W13.3 Añadir indicador de ruta activa con línea inferior fina y color de acento en
+- [x] W13.3 Añadir indicador de ruta activa con línea inferior fina y color de acento en
   navegación desktop y mobile; conservar `aria-current`, focus visible y matching exacto.
-- [ ] W13.4 Probar que `astronomy`, `ASTRONOMY` y `Astronomy` producen el mismo resultado
+- [x] W13.4 Probar que `astronomy`, `ASTRONOMY` y `Astronomy` producen el mismo resultado
   con el catálogo local preparado, sin lowercasing destructivo de la entrada ni cambio de
   contrato/ranking FTS.
-- [ ] W13.5 Completar y registrar el smoke local de cuenta: bootstrap anónimo 401 esperado,
+- [x] W13.5 Completar y registrar el smoke local de cuenta: bootstrap anónimo 401 esperado,
 -  register, enlace `LocalLog`, confirm POST, login con pantalla transitoria y redirección
   a `returnUrl`/Home, reload/refresh, favorite, logout y CTA resend para 403
   `email_unconfirmed`; el código de confirmación nunca se conserva en una captura, commit,
   issue ni documentación.
-- [ ] W13.6 Garantizar que `docker compose up -d --build` funciona desde Windows y Linux:
+- [x] W13.6 Garantizar que `docker compose up -d --build` funciona desde Windows y Linux:
   el entrypoint normaliza CRLF dentro de la imagen antes de ejecutar como usuario no-root.
 
 ## Acceptance criteria
@@ -112,6 +112,26 @@ docker compose down
 
 ## Parent plan sync
 
-- [ ] Actualizar `R3.13`, master, readiness, PRD y flow overview al cerrar esta wave.
-- [ ] Mantener P3-W14 como única wave autorizada a proveedores/seed/deploy productivo.
-- [ ] Registrar evidencia visual desktop/mobile y resultado del smoke local sin secretos.
+- [x] Actualizar `R3.13`, master, readiness, PRD y flow overview al cerrar esta wave.
+- [x] Mantener P3-W14 como única wave autorizada a proveedores/seed/deploy productivo.
+- [x] Registrar evidencia visual desktop/mobile y resultado del smoke local sin secretos.
+
+## Completion evidence (2026-07-22)
+
+- Explorer presenta DatePicker antes de Search y el grid desktop alinea ambos por el borde
+  inferior. Home contiene el stepper UTC sobre la imagen; el header global ya no lo
+  renderiza. Desktop y mobile mantienen una única ruta activa con color, `aria-current`
+  y línea inferior.
+- `AstronomyService` conserva el texto de entrada y las tres consultas `astronomy`,
+  `ASTRONOMY` y `Astronomy` devolvieron el fixture `2020-01-01` idéntico.
+- Tras login, el formulario se sustituye por `Signed in successfully.` y navega a un
+  `returnUrl` interno normalizado o a `/home` tras 650 ms. No queda un control visible
+  que sugiera un segundo login.
+- El entrypoint se normaliza dentro de la imagen Linux antes de recibir permisos, por lo
+  que checkouts CRLF de Windows arrancan sin alterar secretos ni semántica Linux.
+- Gates: `npm run build` PASS; `npm test -- --watch=false --browsers=ChromeHeadless`
+  PASS (117/117); `dotnet test backend/AstronomyExplorer.sln -c Release --no-restore`
+  PASS; `docker compose up -d --build` PASS con servicios healthy, migrator/demo-seed
+  exit 0. Smoke local: register 202, pre-confirmación 403, confirm 204, login/refresh
+  200, favorite 204/GET una entrada y logout 204. No se registraron URLs ni códigos de
+  confirmación y no se usó ningún proveedor externo.

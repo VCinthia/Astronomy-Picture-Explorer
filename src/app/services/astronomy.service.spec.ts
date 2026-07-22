@@ -108,6 +108,16 @@ describe('AstronomyService', () => {
     expect(service.searchLoading()).toBeFalse();
   });
 
+  it('preserves the written query for equivalent backend casing matches', () => {
+    for (const query of ['astronomy', 'ASTRONOMY', 'Astronomy']) {
+      service.setSearchQuery(query);
+      const request = http.expectOne((candidate) => candidate.url === '/api/apod/search');
+      expect(request.request.params.get('q')).toBe(query);
+      request.flush([imageEntry]);
+      expect(service.searchResults()).toEqual([imageEntry]);
+    }
+  });
+
   it('cancels stale searches and exposes catalog_not_ready as a recoverable error', () => {
     service.setSearchQuery('nebula');
     const stale = http.expectOne((candidate) => candidate.url === '/api/apod/search');

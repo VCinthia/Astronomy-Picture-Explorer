@@ -52,6 +52,7 @@ describe('BottomNavComponent', () => {
     ]);
     expect(links.every((link) => link.querySelector('svg[aria-hidden="true"]'))).toBeTrue();
     expect(links.every((link) => link.classList.contains('focus-visible:outline-accent'))).toBeTrue();
+    expect(links.every((link) => link.classList.contains('border-b-2'))).toBeTrue();
     expect(element.textContent).not.toMatch(/[⌂◎♥♡🔍📅←→↗]/);
   });
 
@@ -76,12 +77,14 @@ describe('BottomNavComponent', () => {
       expect(activeLinks[0]).toBe(link);
       expect(link.classList).toContain('text-accent');
       expect(link.classList).not.toContain('text-content-secondary');
+      expect(link.classList).toContain('border-accent');
       links
         .filter((candidate) => candidate !== link)
         .forEach((inactiveLink) => {
           expect(inactiveLink.getAttribute('aria-current')).toBeNull();
           expect(inactiveLink.classList).toContain('text-content-secondary');
           expect(inactiveLink.classList).not.toContain('text-accent');
+          expect(inactiveLink.classList).toContain('border-transparent');
         });
     }
   });
@@ -97,5 +100,12 @@ describe('BottomNavComponent', () => {
     expect(
       (fixture.nativeElement as HTMLElement).querySelectorAll('a[aria-current="page"]').length
     ).toBe(0);
+
+    await router.navigateByUrl('/favorites?view=cards');
+    fixture.detectChanges();
+
+    expect(
+      (fixture.nativeElement as HTMLElement).querySelector('a[href="/favorites"]')?.getAttribute('aria-current')
+    ).toBe('page');
   });
 });

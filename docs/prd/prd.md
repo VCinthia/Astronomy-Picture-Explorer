@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-22
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W12 DONE
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 DONE
 
 ## Vision
 

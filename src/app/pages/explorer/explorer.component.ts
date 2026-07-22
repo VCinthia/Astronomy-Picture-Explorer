@@ -13,11 +13,9 @@ import { AstronomyService } from '../../services/astronomy.service';
   imports: [DatePickerComponent, PictureCardComponent, PictureGridComponent, SearchBarComponent],
   template: `
     <div class="flex flex-col gap-8">
-      <div class="grid grid-cols-1 gap-2 md:grid-cols-3 md:gap-6">
-        <div class="md:col-span-2">
-          <app-search-bar [query]="searchQuery()" (queryChange)="onSearch($event)" />
-        </div>
+      <div class="grid grid-cols-1 gap-6 md:grid-cols-[minmax(16rem,1fr)_minmax(0,2fr)] md:items-end">
         <app-date-picker [selected]="requestedDate()" (dateSelected)="onSelect($event)" />
+        <app-search-bar [query]="searchQuery()" (queryChange)="onSearch($event)" />
       </div>
 
       @if (hasSearchQuery()) {

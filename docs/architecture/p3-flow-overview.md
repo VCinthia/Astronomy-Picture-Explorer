@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-07-22
-Status: P3 IN PROGRESS - W1-W12 implemented
+Status: P3 IN PROGRESS - W1-W13 implemented; W14 pending production release
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -164,6 +164,11 @@ Después de un login exitoso, la ruta Login deja de renderizar los campos y pres
 `Signed in successfully.` como estado transitorio. Luego navega al `returnUrl` interno
 normalizado o, en su ausencia, a `/home`; esto evita repetir una acción ya completada
 sin romper el retorno desde Favorites.
+
+W13 cerró esta alineación el 2026-07-22 con pruebas de componente/servicio, build y
+smoke Compose LocalLog sin recursos externos. El entrypoint API se normaliza dentro de
+la imagen para aceptar checkouts CRLF de Windows. W14 sigue siendo el único punto donde
+pueden configurarse proveedores, seed histórico y producción.
 
 ## 4. Login, refresh single-flight y logout
 

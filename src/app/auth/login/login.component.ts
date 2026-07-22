@@ -1,5 +1,5 @@
 import { Location } from '@angular/common';
-import { ChangeDetectionStrategy, Component, inject, signal } from '@angular/core';
+import { ChangeDetectionStrategy, Component, DestroyRef, inject, signal } from '@angular/core';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 
@@ -8,12 +8,19 @@ import { AuthProblem, AuthService } from '../../services/auth.service';
 
 export { normalizeReturnUrl } from '../return-url';
 
+const POST_LOGIN_REDIRECT_MS = 650;
+
 @Component({
   selector: 'app-login',
   changeDetection: ChangeDetectionStrategy.OnPush,
   imports: [ReactiveFormsModule, RouterLink],
   template: `
-    <section class="mx-auto max-w-md" aria-labelledby="login-title">
+    <section class="mx-auto max-w-md" [attr.aria-labelledby]="signedIn() ? null : 'login-title'">
+      @if (signedIn()) {
+        <p role="status" aria-live="polite" class="rounded-button border border-accent/50 bg-accent/10 px-4 py-3 text-meta text-content-primary">
+          Signed in successfully.
+        </p>
+      } @else {
       <p class="text-caption font-medium uppercase tracking-widest text-accent">Your account</p>
       <h1 id="login-title" class="mt-2 text-title font-bold text-content-primary">Sign in</h1>
       <p class="mt-3 text-body text-content-secondary">Continue to your astronomy favorites.</p>
@@ -85,12 +92,6 @@ export { normalizeReturnUrl } from '../return-url';
             {{ resendError() }}
           </p>
         }
-        @if (signedIn()) {
-          <p role="status" aria-live="polite" class="rounded-button border border-accent/50 bg-accent/10 px-4 py-3 text-meta text-content-primary">
-            Signed in successfully. Your session will stay available while this page is open.
-          </p>
-        }
-
         <button
           type="submit"
           [disabled]="auth.loading()"
@@ -104,6 +105,7 @@ export { normalizeReturnUrl } from '../return-url';
         Need an account?
         <a routerLink="/register" class="font-medium text-accent underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Create one</a>.
       </p>
+      }
     </section>
   `
 })
@@ -113,6 +115,8 @@ export class LoginComponent {
   private readonly location = inject(Location);
   private readonly route = inject(ActivatedRoute);
   private readonly router = inject(Router);
+  private readonly destroyRef = inject(DestroyRef);
+  private redirectTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly confirmationSuccess = signal(hasConfirmationSuccess(this.location.getState()));
   readonly submitted = signal(false);
@@ -124,6 +128,14 @@ export class LoginComponent {
     email: ['', [Validators.required, Validators.email, Validators.maxLength(256)]],
     password: ['', Validators.required]
   });
+
+  constructor() {
+    this.destroyRef.onDestroy(() => {
+      if (this.redirectTimer !== null) {
+        clearTimeout(this.redirectTimer);
+      }
+    });
+  }
 
   get email() {
     return this.form.controls.email;
@@ -147,12 +159,11 @@ export class LoginComponent {
     this.auth.login(this.form.getRawValue()).subscribe({
       next: () => {
         const returnUrl = normalizeReturnUrl(this.route.snapshot.queryParamMap.get('returnUrl'));
-        if (returnUrl !== null) {
-          void this.router.navigateByUrl(returnUrl);
-          return;
-        }
-
         this.signedIn.set(true);
+        this.redirectTimer = setTimeout(() => {
+          this.redirectTimer = null;
+          void this.router.navigateByUrl(returnUrl ?? '/home');
+        }, POST_LOGIN_REDIRECT_MS);
       },
       error: (problem: AuthProblem) => {
         this.loginError.set(

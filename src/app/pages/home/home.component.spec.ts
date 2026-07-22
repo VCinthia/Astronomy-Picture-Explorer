@@ -39,6 +39,24 @@ describe('HomeComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('app-picture-card')).not.toBeNull();
   });
 
+  it('places accessible date controls over the displayed picture and requests the next UTC date', () => {
+    fixture.detectChanges();
+    http.expectOne('/api/apod/today').flush(entry);
+    fixture.detectChanges();
+
+    const element = fixture.nativeElement as HTMLElement;
+    const controls = element.querySelector('[role="group"][aria-label="Step through dates"]');
+    const mediaContainer = controls?.parentElement;
+    expect(mediaContainer?.classList).toContain('relative');
+    expect(controls?.classList).toContain('bottom-4');
+    expect(controls?.classList).toContain('right-4');
+    expect(controls?.querySelector('button[aria-label="Previous date"] svg')).not.toBeNull();
+    expect(controls?.querySelector('button[aria-label="Next date"] svg')).not.toBeNull();
+
+    (controls?.querySelector('button[aria-label="Next date"]') as HTMLButtonElement).click();
+    http.expectOne('/api/apod/date/2026-05-23').flush({ ...entry, date: '2026-05-23' });
+  });
+
   it('communicates a recoverable cold-start failure and retries today', () => {
     fixture.detectChanges();
     http.expectOne('/api/apod/today').flush(

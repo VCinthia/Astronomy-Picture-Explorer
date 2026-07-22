@@ -16,7 +16,10 @@ WORKDIR /app
 COPY --from=build /app/publish ./
 COPY AstronomyExplorer.Api/docker-entrypoint.sh ./docker-entrypoint.sh
 
-RUN chmod 0555 ./docker-entrypoint.sh
+# Checkouts created on Windows can retain CRLF. Normalize inside the Linux image before
+# the script becomes executable, avoiding a `^M` interpreter failure at container start.
+RUN sed -i 's/\r$//' ./docker-entrypoint.sh \
+    && chmod 0555 ./docker-entrypoint.sh
 
 ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080

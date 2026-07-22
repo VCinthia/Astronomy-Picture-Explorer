@@ -17,10 +17,12 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           #homeActive="routerLinkActive"
           routerLinkActive=""
           ariaCurrentWhenActive="page"
-          [routerLinkActiveOptions]="{ exact: true }"
+          [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
           [class.text-accent]="homeActive.isActive"
           [class.text-content-secondary]="!homeActive.isActive"
-          class="flex h-full flex-1 flex-col items-center justify-center gap-1 text-caption font-medium transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          [class.border-accent]="homeActive.isActive"
+          [class.border-transparent]="!homeActive.isActive"
+          class="flex h-full flex-1 flex-col items-center justify-center gap-1 border-b-2 text-caption font-medium transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <svg
             class="size-5"
@@ -44,10 +46,12 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           #exploreActive="routerLinkActive"
           routerLinkActive=""
           ariaCurrentWhenActive="page"
-          [routerLinkActiveOptions]="{ exact: true }"
+          [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
           [class.text-accent]="exploreActive.isActive"
           [class.text-content-secondary]="!exploreActive.isActive"
-          class="flex h-full flex-1 flex-col items-center justify-center gap-1 text-caption font-medium transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          [class.border-accent]="exploreActive.isActive"
+          [class.border-transparent]="!exploreActive.isActive"
+          class="flex h-full flex-1 flex-col items-center justify-center gap-1 border-b-2 text-caption font-medium transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <svg
             class="size-5"
@@ -70,10 +74,12 @@ import { RouterLink, RouterLinkActive } from '@angular/router';
           #favoritesActive="routerLinkActive"
           routerLinkActive=""
           ariaCurrentWhenActive="page"
-          [routerLinkActiveOptions]="{ exact: true }"
+          [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
           [class.text-accent]="favoritesActive.isActive"
           [class.text-content-secondary]="!favoritesActive.isActive"
-          class="flex h-full flex-1 flex-col items-center justify-center gap-1 text-caption font-medium transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+          [class.border-accent]="favoritesActive.isActive"
+          [class.border-transparent]="!favoritesActive.isActive"
+          class="flex h-full flex-1 flex-col items-center justify-center gap-1 border-b-2 text-caption font-medium transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
         >
           <svg
             class="size-5"

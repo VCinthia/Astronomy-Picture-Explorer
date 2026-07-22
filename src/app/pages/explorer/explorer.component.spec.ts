@@ -35,10 +35,15 @@ describe('ExplorerComponent', () => {
 
   afterEach(() => http.verify({ ignoreCancelled: true }));
 
-  it('always renders search and real-calendar date controls', () => {
+  it('renders the real-calendar control before Search and aligns their desktop baselines', () => {
     expect(element.querySelector('app-search-bar')).not.toBeNull();
     expect(element.querySelector('input[type="date"]')).not.toBeNull();
     expect(element.querySelector('[role="listbox"]')).toBeNull();
+
+    const controls = element.querySelector('div.grid') as HTMLDivElement;
+    expect(controls.classList).toContain('md:items-end');
+    expect(controls.children[0].tagName.toLowerCase()).toBe('app-date-picker');
+    expect(controls.children[1].tagName.toLowerCase()).toBe('app-search-bar');
   });
 
   it('loads the selected date over HTTP and renders the returned picture', () => {

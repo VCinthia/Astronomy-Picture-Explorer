@@ -54,27 +54,21 @@ describe('AppComponent', () => {
     expect(layout?.classList).toContain('md:pb-0');
   });
 
-  it('shows the selected date in the header stepper', () => {
+  it('keeps date stepping out of the global header', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
 
-    // The date stepper displays the currently requested calendar date.
-    expect(compiled.textContent).toMatch(/[A-Z][a-z]{2} \d{2}, \d{4}/);
-    expect(compiled.querySelector('button[aria-label="Previous date"]')).not.toBeNull();
-    expect(compiled.querySelector('button[aria-label="Next date"]')).not.toBeNull();
+    expect(compiled.querySelector('header button[aria-label="Previous date"]')).toBeNull();
+    expect(compiled.querySelector('header button[aria-label="Next date"]')).toBeNull();
   });
 
-  it('uses SVGs instead of Unicode arrows for controls and external links', () => {
+  it('uses SVGs instead of Unicode arrows for external links', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    const previousButton = compiled.querySelector('button[aria-label="Previous date"]');
-    const nextButton = compiled.querySelector('button[aria-label="Next date"]');
     const portfolioLink = compiled.querySelector(`a[href] svg path[d="M7 17 17 7"]`);
 
-    expect(previousButton?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
-    expect(nextButton?.querySelector('svg[aria-hidden="true"]')).not.toBeNull();
     expect(portfolioLink).not.toBeNull();
     expect(compiled.textContent).not.toMatch(/[←→↗]/);
   });
@@ -161,6 +155,7 @@ describe('AppComponent', () => {
     expect(favorites.getAttribute('aria-current')).toBe('page');
     expect(favorites.classList.contains('text-accent')).toBeTrue();
     expect(favorites.classList.contains('text-content-secondary')).toBeFalse();
+    expect(favorites.classList.contains('border-accent')).toBeTrue();
 
     const inactiveLinks = element.querySelectorAll(
       'nav a[href="/home"], nav a[href="/explorer"]'
@@ -190,6 +185,7 @@ describe('AppComponent', () => {
       expect(activeLinks[0].getAttribute('href')).toBe(destination);
       expect(activeLinks[0].classList.contains('text-accent')).toBeTrue();
       expect(activeLinks[0].classList.contains('text-content-secondary')).toBeFalse();
+      expect(activeLinks[0].classList.contains('border-accent')).toBeTrue();
     }
 
     await router.navigateByUrl('/favorites/detail');
@@ -199,5 +195,10 @@ describe('AppComponent', () => {
       'nav[aria-label="Primary"] a[aria-current="page"]'
     );
     expect(falselyActive.length).toBe(0);
+
+    await router.navigateByUrl('/favorites?view=cards');
+    fixture.detectChanges();
+
+    expect(element.querySelector('nav[aria-label="Primary"] a[href="/favorites"]')?.getAttribute('aria-current')).toBe('page');
   });
 });

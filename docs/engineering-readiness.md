@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-22
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W12 DONE; W13 READY
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 READY
 
 ## Verdict
 
@@ -16,10 +16,16 @@ sesiones seguras, P3-W4 cerro NASA today/date con cache, P3-W5 completo la inges
 local resumible, P3-W6 cerro FTS, P3-W7 completo Favorites API protegida y P3-W8
 materializo las pantallas Angular de cuenta. P3-W9 completo bootstrap/guard/interceptor
 y logout frontend. P3-W10 reemplazo el runtime mock por APOD/date/search HTTP; P3-W11
-reemplazo la fachada local de favoritos por la API autenticada. W13 cierra UX y
+reemplazo la fachada local de favoritos por la API autenticada. W13 cerró UX y
 aceptación local antes de producción; W14 conserva proveedores/deploy. P3-W12 completo
 el stack local reproducible, con secretos locales
 file-backed, sin proveedores productivos ni llamadas NASA/Resend.
+
+P3-W13 cerró el 2026-07-22 con fecha antes de búsqueda en Explorer, stepper UTC solo
+sobre la imagen Home, subrayado activo desktop/mobile y búsqueda FTS probada sin
+distinción de mayúsculas. El login muestra exclusivamente `Signed in successfully.`
+durante 650 ms antes de navegar a retorno interno o Home. El smoke LocalLog y Compose
+con entrada CRLF normalizada pasaron sin servicios externos.
 
 ## Closed gates
 
@@ -252,18 +258,17 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - `docker compose down` sin `-v` seguido de `up -d` preservo favoritos; conteo final
   `3 migrations | 1 fixture | 1 catalog state | 1 favorite`, sin duplicados.
 
-## P3-W13 readiness gate
+## P3-W13 completion gate
 
-- No requiere proveedor, cuenta externa, key NASA, sender Resend ni despliegue.
-- El scope es frontend y aceptación local: orden de Explorer, selector de Home, indicador
-  activo de navegación y evidencia de búsqueda independiente de capitalización.
-- La cuenta de prueba local usa exclusivamente `LocalLog`; `401 /auth/refresh` sin cookie
-  es bootstrap anónimo y `403 email_unconfirmed` debe conservar su CTA de reenvío. Los
-  enlaces/códigos de confirmación son credenciales efímeras y no se guardan como evidencia.
-- El arranque Compose debe ser reproducible también desde Windows; la normalización CRLF
-  del entrypoint ocurre dentro de la imagen y no altera secretos ni semántica Linux.
-- P3-W14 permanece bloqueada hasta que W13 deje build/tests/Compose/visual QA/E2E local
-  en verde y sus documentos estén sincronizados.
+- No se usó proveedor, cuenta externa, key NASA, sender Resend ni despliegue.
+- Explorer/Home/nav, casing FTS y el success+redirect de Login tienen pruebas de
+  componente/servicio; `npm run build` y 117/117 ChromeHeadless PASS.
+- LocalLog verificó registro 202, `email_unconfirmed` 403, confirmación 204, login y
+  refresh 200, favorite 204/GET una entrada y logout 204. Los enlaces/códigos efímeros
+  no quedaron registrados como evidencia.
+- Compose reconstruyó correctamente en Windows tras normalizar CRLF dentro de la imagen;
+  API/frontend healthy y migrator/demo-seed exit 0. W14 queda como la única wave con
+  autoridad de proveedor, seed real y deploy.
 
 Antes de cada wave restante:
 
@@ -326,8 +331,6 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W13 desde `codex/p3-integration` sin recursos externos para cerrar el UX
-final y el smoke local de cuenta. Solo despues de esa evidencia se habilita P3-W14, que
-requiere revalidar precios/cuotas y autoridad para Neon, Render, Netlify, Resend, dominio
-y NASA key propia. El seed historico real, proveedores y smoke productivo no se infieren
-desde el gate local.
+Ejecutar P3-W14 solo con autorización explícita para revalidar precios/cuotas y crear o
+configurar recursos Neon, Render, Netlify, Resend, dominio y NASA key propia. El seed
+histórico real, proveedores y smoke productivo no se infieren desde el gate local cerrado.

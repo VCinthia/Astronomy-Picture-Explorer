@@ -1,6 +1,6 @@
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { provideHttpClient } from '@angular/common/http';
-import { TestBed } from '@angular/core/testing';
+import { TestBed, fakeAsync, tick } from '@angular/core/testing';
 import { ActivatedRoute, Router, provideRouter } from '@angular/router';
 
 import { LoginComponent, normalizeReturnUrl } from './login.component';
@@ -80,9 +80,11 @@ describe('LoginComponent', () => {
     expect(element.querySelector('[role="status"]')?.textContent).toContain('confirmation email');
   });
 
-  it('shows a settled success state and leaves the access token outside web storage', () => {
+  it('replaces the form with one short success message before redirecting home', fakeAsync(() => {
     localStorage.clear();
     sessionStorage.clear();
+    const router = TestBed.inject(Router);
+    const navigate = spyOn(router, 'navigateByUrl').and.returnValue(Promise.resolve(true));
     const fixture = createValidLoginFixture();
     fixture.componentInstance.submit();
     const request = http.expectOne('/auth/login');
@@ -93,13 +95,20 @@ describe('LoginComponent', () => {
     });
     fixture.detectChanges();
 
-    expect((fixture.nativeElement as HTMLElement).querySelector('[role="status"]')?.textContent)
-      .toContain('Signed in successfully');
+    const element = fixture.nativeElement as HTMLElement;
+    expect(element.querySelector('[role="status"]')?.textContent?.trim()).toBe('Signed in successfully.');
+    expect(element.querySelector('form')).toBeNull();
+    expect(element.querySelector('input')).toBeNull();
+    expect(element.querySelector('section')?.getAttribute('aria-labelledby')).toBeNull();
     expect(localStorage.getItem('accessToken')).toBeNull();
     expect(sessionStorage.getItem('accessToken')).toBeNull();
-  });
+    tick(649);
+    expect(navigate).not.toHaveBeenCalled();
+    tick(1);
+    expect(navigate).toHaveBeenCalledWith('/home');
+  }));
 
-  it('returns to an internal path after login and rejects protocol-relative or hosted values', () => {
+  it('returns to an internal path after its success state and rejects unsafe values', fakeAsync(() => {
     returnUrl = '/favorites?view=cards';
     const router = TestBed.inject(Router);
     const navigate = spyOn(router, 'navigateByUrl').and.returnValue(Promise.resolve(true));
@@ -111,12 +120,14 @@ describe('LoginComponent', () => {
       user: { id: '5c409cbf-b9cc-4afe-a55b-a8b7c4f1aac4', email: 'astro@example.test' }
     });
 
+    expect(navigate).not.toHaveBeenCalled();
+    tick(650);
     expect(navigate).toHaveBeenCalledWith('/favorites?view=cards');
     expect(normalizeReturnUrl('//evil.example')).toBeNull();
     expect(normalizeReturnUrl('https://evil.example')).toBeNull();
     expect(normalizeReturnUrl('/%2f%2fevil.example')).toBeNull();
     expect(normalizeReturnUrl('/auth/refresh')).toBeNull();
-  });
+  }));
 
   function createValidLoginFixture() {
     const fixture = TestBed.createComponent(LoginComponent);

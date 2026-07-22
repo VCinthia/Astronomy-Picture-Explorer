@@ -17,8 +17,8 @@ browser.
 
 - **Picture of the day** — a hero view with the image, title, date and the full
   description, plus image credit.
-- **Explore by date** — a native calendar input and UTC header stepper query the selected
-  APOD date through the app API.
+- **Explore by date** — a native calendar input queries the selected APOD date through
+  the app API; Home keeps its UTC previous/next controls over the displayed picture.
 - **Image *and* video entries** — when an entry is a video, the card shows a
   thumbnail and a link to watch it (no embedded players).
 - **Live color palette** — the dominant colors of each image are computed in the
@@ -27,9 +27,9 @@ browser.
   styles, WCAG AA color contrast, and a layout tuned from mobile to desktop.
 - **Keyword search** — debounced title/description search uses the prepared PostgreSQL
   catalog, with explicit empty, cold-start and catalog-not-ready states.
-- **Account-ready shell** — sign-in, refresh and protected-route behavior use same-origin
-  `/auth/*` and `/api/*` calls. Favorites move from their temporary P2 storage to the
-  protected API in the next P3 wave.
+- **Accounts and favorites** — sign-in, refresh, protected routes and per-user favorites
+  use same-origin `/auth/*` and `/api/*` calls; browser storage is not the source of
+  truth for favorites.
 
 ## Why it exists
 
@@ -97,7 +97,7 @@ npm test         # unit tests
 ```
 
 `npm start` proxies `/api` and `/auth` to the local API at `http://localhost:5179`.
-The public Netlify demo remains the P2 release until P3-W13 promotion.
+The public Netlify demo remains the P2 release until P3-W14 promotion.
 
 ## Credits
 

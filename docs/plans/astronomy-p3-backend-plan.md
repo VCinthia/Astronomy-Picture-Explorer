@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-22
-Status: IN PROGRESS - W1-W12 DONE
+Status: IN PROGRESS - W1-W13 DONE
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -98,7 +98,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.10** Frontend APOD/date/search migration (W10).
 - [x] **R3.11** Frontend favorites migration (W11).
 - [x] **R3.12** Contenedores y stack local (W12).
-- [ ] **R3.13** UX final y aceptación local de navegación/cuenta (W13).
+- [x] **R3.13** UX final y aceptación local de navegación/cuenta (W13).
 - [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14).
 
 W1 se cerro el 2026-07-17 con build limpio, migracion inicial reproducible y 11/11
@@ -202,6 +202,13 @@ un sink de email en log y un APOD mock determinista, ambos restringidos a Develo
 la URL NASA HTTP se limita a mock/loopback y los demas entornos requieren HTTPS. El
 runbook evidencia health, ready/search/date/today, register->confirm->login->favorite
 ->logout y reinicio sin volumen que conserva datos sin duplicar migraciones.
+
+W13 se cerro el 2026-07-22: Explorer ordena DatePicker -> Search y alinea los controles
+por el borde inferior en desktop; el stepper UTC deja el shell y vive sobre Home. La
+navegación desktop/mobile expone color, `aria-current` y línea inferior en su única ruta
+activa. Login reemplaza el formulario por `Signed in successfully.` y redirige de forma
+acotada a un retorno interno o Home. Build, 117/117 pruebas frontend, backend, Compose
+Windows con normalización CRLF y smoke LocalLog de cuenta/favoritos pasaron sin proveedor.
 
 ## 6. Exit criteria
 

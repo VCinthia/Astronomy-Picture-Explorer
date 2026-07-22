@@ -27,10 +27,12 @@
             #homeActive="routerLinkActive"
             routerLinkActive=""
             ariaCurrentWhenActive="page"
-            [routerLinkActiveOptions]="{ exact: true }"
+            [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
             [class.text-accent]="homeActive.isActive"
             [class.text-content-secondary]="!homeActive.isActive"
-            class="rounded-button px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            [class.border-accent]="homeActive.isActive"
+            [class.border-transparent]="!homeActive.isActive"
+            class="rounded-button border-b px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Home
           </a>
@@ -39,10 +41,12 @@
             #exploreActive="routerLinkActive"
             routerLinkActive=""
             ariaCurrentWhenActive="page"
-            [routerLinkActiveOptions]="{ exact: true }"
+            [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
             [class.text-accent]="exploreActive.isActive"
             [class.text-content-secondary]="!exploreActive.isActive"
-            class="rounded-button px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            [class.border-accent]="exploreActive.isActive"
+            [class.border-transparent]="!exploreActive.isActive"
+            class="rounded-button border-b px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Explore
           </a>
@@ -51,10 +55,12 @@
             #favoritesActive="routerLinkActive"
             routerLinkActive=""
             ariaCurrentWhenActive="page"
-            [routerLinkActiveOptions]="{ exact: true }"
+            [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
             [class.text-accent]="favoritesActive.isActive"
             [class.text-content-secondary]="!favoritesActive.isActive"
-            class="rounded-button px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            [class.border-accent]="favoritesActive.isActive"
+            [class.border-transparent]="!favoritesActive.isActive"
+            class="rounded-button border-b px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Favorites
           </a>
@@ -77,54 +83,6 @@
           </a>
         }
 
-        <div class="flex items-center gap-2" role="group" aria-label="Step through dates">
-          <button
-            type="button"
-            (click)="prev()"
-            [disabled]="!canPrev()"
-            aria-label="Previous date"
-            class="flex size-9 items-center justify-center rounded-button bg-space-surface-hi text-nav text-content-secondary transition hover:text-content-primary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            <svg
-              class="size-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m15 18-6-6 6-6" />
-            </svg>
-          </button>
-          <span
-            class="min-w-24 text-center text-meta font-medium text-content-primary"
-            aria-live="polite"
-          >
-            {{ formattedDate() }}
-          </span>
-          <button
-            type="button"
-            (click)="next()"
-            [disabled]="!canNext()"
-            aria-label="Next date"
-            class="flex size-9 items-center justify-center rounded-button bg-space-surface-hi text-nav text-content-secondary transition hover:text-content-primary disabled:cursor-not-allowed disabled:opacity-40 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            <svg
-              class="size-4"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              stroke-width="2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-              aria-hidden="true"
-            >
-              <path d="m9 18 6-6-6-6" />
-            </svg>
-          </button>
-        </div>
       </div>
     </div>
   </header>
