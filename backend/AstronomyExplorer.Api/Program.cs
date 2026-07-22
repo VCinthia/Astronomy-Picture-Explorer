@@ -44,6 +44,10 @@ builder.Services.AddSingleton<IValidateOptions<FrontendOptions>, FrontendOptions
 builder.Services.AddOptions<FrontendOptions>()
   .Bind(builder.Configuration.GetSection(FrontendOptions.SectionName))
   .ValidateOnStart();
+builder.Services.AddSingleton<IValidateOptions<NetlifyProxyOptions>, NetlifyProxyOptionsValidator>();
+builder.Services.AddOptions<NetlifyProxyOptions>()
+  .Bind(builder.Configuration.GetSection(NetlifyProxyOptions.SectionName))
+  .ValidateOnStart();
 builder.Services.Configure<ResendEmailOptions>(
   builder.Configuration.GetSection(ResendEmailOptions.SectionName));
 builder.Services.AddSingleton<IValidateOptions<AuthSessionOptions>, SessionOptionsValidator>();
@@ -76,29 +80,36 @@ builder.Services.AddMemoryCache(options =>
 var accountRateLimitOptions = builder.Configuration
   .GetSection(AccountRateLimitOptions.SectionName)
   .Get<AccountRateLimitOptions>() ?? new AccountRateLimitOptions();
+var useNetlifyEdgeRateLimits = builder.Environment.IsProduction();
 
 builder.Services.AddRateLimiter(options =>
 {
   options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
   options.OnRejected = AccountRateLimitProblemDetails.WriteAsync;
   options.AddPolicy(AccountRateLimitPolicies.RegisterByIp, httpContext =>
-    RateLimitPartition.GetFixedWindowLimiter(
-      AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
-      _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
-        accountRateLimitOptions.RegisterIpPermitLimit,
-        accountRateLimitOptions.Window)));
+    useNetlifyEdgeRateLimits
+      ? RateLimitPartition.GetNoLimiter("netlify-edge")
+      : RateLimitPartition.GetFixedWindowLimiter(
+        AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
+        _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
+          accountRateLimitOptions.RegisterIpPermitLimit,
+          accountRateLimitOptions.Window)));
   options.AddPolicy(AccountRateLimitPolicies.ResendConfirmationByIp, httpContext =>
-    RateLimitPartition.GetFixedWindowLimiter(
-      AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
-      _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
-        accountRateLimitOptions.ResendConfirmationIpPermitLimit,
-        accountRateLimitOptions.Window)));
+    useNetlifyEdgeRateLimits
+      ? RateLimitPartition.GetNoLimiter("netlify-edge")
+      : RateLimitPartition.GetFixedWindowLimiter(
+        AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
+        _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
+          accountRateLimitOptions.ResendConfirmationIpPermitLimit,
+          accountRateLimitOptions.Window)));
   options.AddPolicy(AccountRateLimitPolicies.LoginByIp, httpContext =>
-    RateLimitPartition.GetFixedWindowLimiter(
-      AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
-      _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
-        accountRateLimitOptions.LoginIpPermitLimit,
-        accountRateLimitOptions.Window)));
+    useNetlifyEdgeRateLimits
+      ? RateLimitPartition.GetNoLimiter("netlify-edge")
+      : RateLimitPartition.GetFixedWindowLimiter(
+        AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
+        _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
+          accountRateLimitOptions.LoginIpPermitLimit,
+          accountRateLimitOptions.Window)));
 });
 
 builder.Services.AddSingleton<IAccountEmailRateLimiter, AccountEmailRateLimiter>();
@@ -216,6 +227,7 @@ if (args.Contains("--healthcheck", StringComparer.Ordinal))
 }
 
 app.UseExceptionHandler();
+app.UseNetlifyProxySignature();
 app.UseRateLimiter();
 app.UseAuthentication();
 app.UseAuthorization();

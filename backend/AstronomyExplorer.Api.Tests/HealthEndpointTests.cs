@@ -1,4 +1,5 @@
 using System.Net;
+using AstronomyExplorer.Api.Tests.Auth.Sessions;
 using AstronomyExplorer.Api.Tests.Infrastructure;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -75,6 +76,7 @@ public sealed class HealthEndpointTests(PostgreSqlFixture database)
         .UseSetting("Session:Issuer", "https://api.example.test")
         .UseSetting("Session:Audience", "astronomy-explorer-tests")
         .UseSetting("Session:SigningKey", "test-signing-key-at-least-32-bytes-long")
+        .UseSetting("NetlifyProxy:SigningKey", SessionApiFactory.NetlifyProxySigningKey)
         .UseSetting("NasaApod:ApiKey", "test-nasa-api-key"));
   }
 }

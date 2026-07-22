@@ -1,10 +1,15 @@
 using AstronomyExplorer.Api.Email;
 using AstronomyExplorer.Api.Domain;
+using AstronomyExplorer.Api.Security;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.DependencyInjection.Extensions;
+using Microsoft.AspNetCore.WebUtilities;
+using System.Security.Cryptography;
+using System.Text;
+using System.Text.Json;
 
 namespace AstronomyExplorer.Api.Tests.Auth.Sessions;
 
@@ -14,6 +19,8 @@ public sealed class SessionApiFactory : WebApplicationFactory<Program>
   public const string Audience = "astronomy-explorer-tests";
   public const string SigningKey =
     "test-signing-key-at-least-64-bytes-long-for-hs512-rejection-check";
+  public const string NetlifyProxySigningKey =
+    "test-netlify-proxy-signing-key-at-least-32-bytes-long";
   public const string AllowedOrigin = "https://portfolio.example";
   public const string CookieName = "ape.refresh";
 
@@ -49,6 +56,7 @@ public sealed class SessionApiFactory : WebApplicationFactory<Program>
     builder.UseSetting("Session:RefreshTokenLifetime", "30.00:00:00");
     builder.UseSetting("Session:RefreshCookieName", CookieName);
     builder.UseSetting("NasaApod:ApiKey", "test-nasa-api-key");
+    builder.UseSetting("NetlifyProxy:SigningKey", NetlifyProxySigningKey);
 
     foreach (var setting in _settings)
     {
@@ -65,6 +73,39 @@ public sealed class SessionApiFactory : WebApplicationFactory<Program>
         services.AddSingleton(_passwordHasher);
       }
     });
+  }
+
+  public HttpClient CreateSignedClient(WebApplicationFactoryClientOptions? options = null)
+  {
+    var client = options is null
+      ? base.CreateClient()
+      : base.CreateClient(options);
+    client.DefaultRequestHeaders.Add(
+      NetlifyProxySignatureMiddleware.SignatureHeaderName,
+      CreateNetlifySignature(expiresAt: _timeProvider.GetUtcNow().AddDays(365)));
+    return client;
+  }
+
+  public static string CreateNetlifySignature(
+    string? signingKey = null,
+    string siteUrl = AllowedOrigin,
+    string deployContext = "production",
+    DateTimeOffset? expiresAt = null)
+  {
+    var header = WebEncoders.Base64UrlEncode(
+      Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new { alg = "HS256", typ = "JWT" })));
+    var payload = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(JsonSerializer.Serialize(new
+    {
+      iss = "netlify",
+      site_url = siteUrl,
+      deploy_context = deployContext,
+      exp = (expiresAt ?? DateTimeOffset.UtcNow.AddMinutes(5)).ToUnixTimeSeconds()
+    })));
+    var signedValue = Encoding.ASCII.GetBytes($"{header}.{payload}");
+    var signature = HMACSHA256.HashData(
+      Encoding.UTF8.GetBytes(signingKey ?? NetlifyProxySigningKey),
+      signedValue);
+    return $"{header}.{payload}.{WebEncoders.Base64UrlEncode(signature)}";
   }
 }
 

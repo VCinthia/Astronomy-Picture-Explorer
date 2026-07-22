@@ -72,6 +72,13 @@ Evidence 2026-07-17:
 - W9 debe mantener single-flight: concurrencia normal no debe consumir dos veces un
   refresh; si ocurre, el backend la trata como replay y cierra la familia.
 
+## Design clarification - P3-W14 (2026-07-22)
+
+La IP pública de las policies de cuenta no se deriva de Forwarded Headers en Render.
+Netlify firmará los proxy redirects y aplicará el límite por visitante; la API valida el
+JWS antes de `/auth/*` y deja sin cuota su limitador por IP de transporte en Production
+para no agrupar usuarios tras el proxy. Refresh/logout y su validación Origin no cambian.
+
 ## Parent sync
 
 - [x] Actualizar `R3.3`, master/readiness y estado con evidencia.

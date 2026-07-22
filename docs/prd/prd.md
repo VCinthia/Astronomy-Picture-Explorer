@@ -107,6 +107,9 @@ hdurl|null, thumbnail_url|null, copyright|null
 ### Browser/backend topology
 
 - Netlify sirve Angular y proxifica same-origin `/api/*` y `/auth/*` a Render.
+- En produccion esas rewrites son firmadas por Netlify. Render acepta rutas de
+  aplicacion solo con el JWS de la URL publica/deploy productivo y conserva `/health`
+  exclusivamente para su sonda.
 - Cookie refresh host-only `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/auth`.
 - Refresh/logout validan `Origin` exacto; no se confia en CORS como CSRF defense.
 - Desarrollo usa proxy Angular equivalente.
@@ -166,7 +169,9 @@ hdurl|null, thumbnail_url|null, copyright|null
 
 ## Non-functional requirements P3
 
-- Security: Identity, no raw tokens, secrets por env, Origin validation, rate limits.
+- Security: Identity, no raw tokens, secrets por env, Origin validation, rate limits y
+  proxy Netlify firmado; la IP de visitante se limita en el borde sin confiar en
+  `X-Forwarded-For` de Render.
 - Reliability: cache controlada, retries acotados, ingestion resumible, errores tipados.
 - Performance: FTS indexado, page max 1000, pageSize max 30, no N+1, lazy routes.
 - Accessibility: WCAG AA, teclado, foco, aria-live para estados async.
@@ -183,6 +188,13 @@ hdurl|null, thumbnail_url|null, copyright|null
 - Auth/favorites/APOD funcionan E2E desde Netlify mediante proxy same-origin.
 - Cold-start UX verificada.
 - Produccion y quotas documentadas sin secretos ni riesgo de cargo.
+
+## Clarificacion de implementacion P3-W14 (2026-07-22)
+
+El requisito de IP real no se resuelve aceptando forwarded headers en Render Free. La
+implementacion preparada usa redirects Netlify firmadas y límites por IP en Netlify; la
+API verifica el JWS y rechaza bypass directo/spoof. La configuración de proveedores y
+el smoke externo siguen pendientes y son condición para marcar P3 DONE.
 
 ## Clarificaciones posteriores sobre P1/P2
 

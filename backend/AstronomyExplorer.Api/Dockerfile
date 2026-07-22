@@ -21,7 +21,6 @@ COPY AstronomyExplorer.Api/docker-entrypoint.sh ./docker-entrypoint.sh
 RUN sed -i 's/\r$//' ./docker-entrypoint.sh \
     && chmod 0555 ./docker-entrypoint.sh
 
-ENV ASPNETCORE_URLS=http://+:8080
 EXPOSE 8080
 
 # The runtime image supplies the unprivileged `app` user. The health probe uses the

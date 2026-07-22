@@ -40,7 +40,7 @@ ConnectionStrings__Postgres
 ```
 
 Account email links use `Frontend:PublicBaseUrl` (local default
-`http://localhost:4200`). Real delivery is deferred to W13; when enabled, secrets and
+`http://localhost:4200`). Real delivery is deferred to W14; when enabled, secrets and
 sender configuration are supplied only through user-secrets/provider environment:
 
 ```text
@@ -59,6 +59,8 @@ Catalog__RequiredFrom
 Catalog__RequiredTo
 Email__Provider
 LocalFixtures__Enabled
+NetlifyProxy__SigningKey
+NetlifyProxy__UseEdgeRateLimits
 ```
 
 `Session__SigningKey` must contain at least 32 UTF-8 bytes and must never be committed,
@@ -91,7 +93,7 @@ local API container log. `LocalFixtures__Enabled` is also rejected outside Devel
 - All persisted instants use PostgreSQL `timestamp with time zone`. Application values
   must use `DateTimeOffset.UtcNow`; Npgsql rejects non-zero offsets for this type.
 - Identity Data Protection keys use application name `AstronomyExplorer` and persist in
-  PostgreSQL so confirmation links survive host restart/cold start. W13 revalidates
+  PostgreSQL so confirmation links survive host restart/cold start. W14 revalidates
   provider encryption at rest before production.
 
 The initial migration creates the Identity tables plus `refresh_sessions`,
@@ -138,9 +140,11 @@ Account endpoints are:
 - `POST /auth/logout`
 
 Register/resend are generic to avoid direct account enumeration. Confirmation accepts
-`userId + code` and mutates state only through POST. Register/resend have independent
-limits by transport IP and normalized email; W13 must configure only verified forwarded
-proxies before treating the partition as the public client IP.
+`userId + code` and mutates state only through POST. In local/Test environments,
+register/resend have independent limits by transport IP and normalized email. In
+Production, signed Netlify proxy redirects enforce the visitor-IP limits at the edge and
+the API retains the normalized-email limit; it deliberately does not trust a forwarded
+client-IP header received by Render.
 
 Login returns a ten-minute HS256 access JWT plus a host-only refresh cookie. Unknown
 emails verify a dummy hash using the configured Identity hasher to reduce timing
@@ -149,10 +153,17 @@ require the exact configured Origin in Production; logout needs the cookie rathe
 valid Bearer token. Cookie attributes are HttpOnly, SameSite=Lax, Path `/auth`, explicit
 Max-Age/Expires and Secure, with an HTTP exception only for loopback Development.
 
-Login uses an IP-only fixed-window limit (default 10 attempts per 15 minutes, no queue).
-There is deliberately no email partition or account lockout, avoiding targeted denial of
-service. W13 must verify the trusted Netlify/Render forwarding chain before resolving the
-public visitor IP.
+Login uses an IP-only fixed-window limit (default 10 attempts per 15 minutes, no queue)
+outside Production. Production uses the signed Netlify edge rate limit for the real
+visitor IP, and never derives that identity from `X-Forwarded-For`; there is deliberately
+no email partition or account lockout, avoiding targeted denial of service.
+
+Production requires `NetlifyProxy__SigningKey` with at least 32 UTF-8 bytes and
+`NetlifyProxy__UseEdgeRateLimits=true`. Every `/api/*` and `/auth/*` request must carry a
+valid Netlify `x-nf-sign` HS256 JWS for the exact public frontend origin and a production
+deploy context. Direct Render application requests, preview signatures and spoofed
+forwarded headers fail with `403 invalid_proxy_request`; `/health` remains available for
+the Render probe. See [`docs/deploy/render-setup.md`](../docs/deploy/render-setup.md).
 
 Public APOD endpoints are:
 
@@ -240,7 +251,7 @@ unchanged and records `Paused`; the operator can then resume safely.
 
 Render execution is always blocked, including when an override flag is present. If a
 local shell intentionally uses `DOTNET_ENVIRONMENT=Production`, it additionally
-requires `--allow-local-production`. That flag never bypasses Render detection. W13 is
+requires `--allow-local-production`. That flag never bypasses Render detection. W14 is
 the only wave authorized to point this command at the production Neon database, after
 revalidating free-plan quotas and zero-overage controls.
 

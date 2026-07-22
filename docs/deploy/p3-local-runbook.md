@@ -137,3 +137,5 @@ remote database.
 - Do not replace the fixture with `DEMO_KEY`. W14 separately authorizes and verifies a
   personal NASA key, real email provider/domain, free-plan constraints, deployed
   same-origin rewrites and production smoke.
+- Production will use Netlify-signed proxy rewrites and edge visitor-IP limits; this
+  Development stack intentionally does neither and must not be pointed at Render.

@@ -146,3 +146,5 @@ docker compose down
   le aplica el mismo indicador solo en `/login`, ignorando el `returnUrl`. Por ello, un
   visitante redirigido desde Favorites marca `Sign in`; Favorites conserva su propio
   indicador únicamente cuando la ruta protegida se alcanza con sesión válida.
+- La regresión frontend posterior al segundo fix es 118/118. La evidencia 117/117 de
+  cierre anterior queda como registro histórico y no se reescribe.

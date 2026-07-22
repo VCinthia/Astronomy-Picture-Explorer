@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-22
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 READY
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 deployment preparation in progress
 
 ## Verdict
 
@@ -26,6 +26,11 @@ sobre la imagen Home, subrayado activo desktop/mobile y búsqueda FTS probada si
 distinción de mayúsculas. El login muestra exclusivamente `Signed in successfully.`
 durante 650 ms antes de navegar a retorno interno o Home. El smoke LocalLog y Compose
 con entrada CRLF normalizada pasaron sin servicios externos.
+
+W14 preparó el 2026-07-22 la configuración de proveedor sin mutar cuentas: el contenedor
+acepta secretos del dashboard/puerto Render, Netlify tiene rewrites firmadas con límites
+por IP y la API rechaza rutas de aplicación directas o `X-Forwarded-For` falsificado. El
+seed Neon, la configuración de dashboards, el correo real y el smoke siguen pendientes.
 
 ## Closed gates
 
@@ -79,8 +84,9 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   logout contra rotation terminan sin sesiones activas en esa familia y no afectan otra.
 - Refresh/logout validan Origin exacto en Production antes de mutar DB/cookie; logout no
   depende de un Bearer vigente.
-- Login se limita por IP sin particion email para no habilitar DoS dirigido. W14 mantiene
-  el gate de forwarders confiables antes de interpretar la IP publica.
+- Login se limita por IP sin particion email para no habilitar DoS dirigido. En
+  producción W14 traslada esa partición a Netlify firmado y no interpreta forwarded
+  headers en Render.
 
 ## P3-W4 completion gate
 
@@ -270,6 +276,18 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   API/frontend healthy y migrator/demo-seed exit 0. W14 queda como la única wave con
   autoridad de proveedor, seed real y deploy.
 
+## P3-W14 preparation gate
+
+- Preparación sin proveedores PASS: Netlify proxy signed/edge-rate-limited, validación
+  JWS API y runbooks de Render/Neon/Resend no contienen secrets ni URLs reales.
+- Backend build sin warnings y 172/172 tests PASS; las pruebas nuevas cubren firma
+  válida, directa/spoof, claims, expiración, HMAC, health y configuración Production
+  fail-closed.
+- Frontend build y 118/118 ChromeHeadless PASS; Compose reconstruido sin volumen,
+  healthy y smoke HTTP local `health`/catalog ready/search PASS.
+- Este gate no reemplaza R3.14: no hay proveedores configurados, seed real, correo real
+  ni smoke productivo aún.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -322,7 +340,7 @@ docker compose down
 | 401 simultaneos consumen refresh dos veces | Angular single-flight + backend rotation atomica |
 | Token de confirmacion ambiguo/filtrado | userId+code Base64URL; Angular POST; no mutacion GET |
 | Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; revisar cifrado en reposo en W14 |
-| IP real oculta por Netlify/Render | Fail-closed sobre peer; W14 configura solo proxies verificados y prueba particiones |
+| IP real oculta por Netlify/Render | Netlify firmado limita por dominio+IP; API rechaza URL directa/spoof y no acepta forwarded headers |
 | Render cold start confunde primera visita | Estado connecting + timeout + Retry accesible |
 | Search costoso | tsvector + GIN; q max 200, page max 1000, pageSize max 30; sin trigram |
 | Cuota/cargo inesperado | Free-only, no keepalive/cron/overages; fail closed y revalidar en W14 |
@@ -331,6 +349,8 @@ docker compose down
 
 ## Recommended next step
 
-Ejecutar P3-W14 solo con autorización explícita para revalidar precios/cuotas y crear o
-configurar recursos Neon, Render, Netlify, Resend, dominio y NASA key propia. El seed
-histórico real, proveedores y smoke productivo no se infieren desde el gate local cerrado.
+Para completar P3-W14 aún hace falta la autorización y acceso de la dueña para revalidar
+precios/cuotas, configurar Neon/Render/Netlify/Resend, confirmar dominio y NASA key,
+ejecutar el seed y obtener evidencia del smoke. El procedimiento exacto está en
+[`docs/deploy/p3-deploy-runbook.md`](deploy/p3-deploy-runbook.md); nada de eso se infiere
+desde el gate local cerrado.

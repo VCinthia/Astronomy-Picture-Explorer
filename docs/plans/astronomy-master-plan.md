@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-22
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 preparation in progress
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -255,7 +255,7 @@ productivo.
 | W11 | Frontend favorites API migration |
 | W12 | Local containers/full stack ✅ |
 | W13 | Final UX, navigation and local account acceptance ✅ |
-| W14 | Zero-cost seed/deploy/production smoke |
+| W14 | Zero-cost seed/deploy/production smoke (provider evidence pending) |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.
 
@@ -281,3 +281,17 @@ docker compose config
 ```
 
 Los comandos .NET/Docker aplican desde las waves que crean esos artefactos.
+
+## Implementation clarification - P3-W14 preparation (2026-07-22)
+
+- La promoción P3 deja de depender de forwarded headers en Render. El borde Netlify
+  firma los proxy redirects y limita por IP de visitante; la API valida el JWS y rechaza
+  acceso Render directo o `X-Forwarded-For` falsificado antes de ejecutar `/api/*` o
+  `/auth/*`.
+- Docker Compose continúa usando secretos file-backed. La imagen de producción, en
+  cambio, exige connection string/session key desde el dashboard y respeta el puerto
+  que Render asigna.
+- La regresión de preparación actual es backend 172/172 y frontend 118/118; las cifras
+  históricas W13 permanecen como evidencia de su cierre previo a los fixes posteriores.
+- El plan sigue abierto: no se ha creado, pagado ni configurado un proveedor; seed,
+  despliegue y evidencia externa son exclusivamente el gate restante de W14.

@@ -123,14 +123,18 @@ ocasionales son suficientes y observables.
 ### Topologia same-origin, cookie y CSRF
 
 - El navegador llama `/api/*` y `/auth/*` sobre el origen Netlify.
-- Rewrites `200` de Netlify proxifican esas rutas al backend Render antes del fallback
-  SPA. Desarrollo usa proxy Angular equivalente.
+- Rewrites `200` firmados de Netlify proxifican esas rutas al backend Render antes del
+  fallback SPA. Desarrollo usa proxy Angular equivalente.
+- En Production, la API valida el JWS HS256 `x-nf-sign` de Netlify antes de cualquier
+  ruta `/api/*` o `/auth/*`: issuer `netlify`, `site_url` exacto, deploy `production`,
+  expiracion y firma. La URL Render directa no es una ruta alternativa de aplicación.
 - La cookie refresh es host-only, `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/auth` y
   tiene expiracion explicita. No declara `Domain` ni atributos cross-site.
 - En produccion, refresh y logout rechazan requests cuyo encabezado `Origin` no coincide
   exactamente con el origen publico configurado. CORS no se considera defensa CSRF.
-- El backend no habilita CORS amplio. Acceso directo desde un origen de navegador queda
-  fuera del contrato productivo.
+- El backend no habilita CORS amplio. Un acceso directo a Render o un header
+  `X-Forwarded-For` falsificado falla antes de llegar al endpoint; `/health` queda fuera
+  de ese gate únicamente para la sonda Render.
 - El interceptor Angular implementa single-flight: todos los 401 concurrentes esperan
   un unico refresh y luego se reintentan una sola vez.
 - Login, refresh y logout quedan excluidos del auto-refresh para evitar loops.
@@ -412,3 +416,18 @@ ocasionales son suficientes y observables.
 - Render Free: `https://render.com/docs/free`
 - Neon plans: `https://neon.com/docs/introduction/plans`
 - Resend pricing: `https://resend.com/pricing`
+
+## Implementation clarification - P3-W14 preparation (2026-07-22)
+
+- La hipótesis previa de resolver IP pública con `Forwarded Headers` de la cadena
+  Netlify -> Render queda descartada: en Render Free no hay una lista de ingress
+  verificable que permita aceptar `X-Forwarded-For` sin abrir spoofing.
+- Netlify firma las proxy rewrites con un secreto de Runtime; la API valida `x-nf-sign`
+  HS256 por HMAC, issuer, URL pública exacta, deploy productivo y expiración. El gate
+  cubre todas las rutas `/api/*` y `/auth/*`, por lo que la URL Render solo conserva
+  `/health` para su sonda.
+- Los límites por IP productivos se trasladan a redirects Netlify por dominio+IP real.
+  La API conserva límites por email normalizado; en Production su policy por IP de
+  transporte queda sin cuota para no agrupar visitantes detrás del proxy autenticado.
+- Esto no reemplaza el gate externo W14: aún se requieren la configuración de secretos,
+  el deploy y la demostración con dos visitantes y un bypass/spoof rechazado.

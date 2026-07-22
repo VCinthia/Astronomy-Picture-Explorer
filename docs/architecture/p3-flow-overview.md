@@ -12,7 +12,7 @@ viven en ADR-0003; las unidades de ejecucion viven en las waves W1-W14.
 ```mermaid
 flowchart LR
     U([Usuario]) --> FE["Angular en Netlify"]
-    FE -->|"same-origin /api/* y /auth/*"| NP["Netlify proxy rewrites"]
+    FE -->|"same-origin /api/* y /auth/*"| NP["Netlify signed proxy + edge limits"]
     NP --> API["ASP.NET Core en Render Free"]
     API --> DB[("PostgreSQL Neon Free")]
     API --> MEM["IMemoryCache"]
@@ -25,8 +25,9 @@ flowchart LR
 Reglas de frontera:
 
 - El navegador nunca recibe NASA/Resend/DB secrets.
-- Las llamadas de navegador se mantienen same-origin; la API Render directa no es el
-  contrato publico de la SPA.
+- Las llamadas de navegador se mantienen same-origin; la API Render directa rechaza
+  rutas de aplicación sin un JWS firmado por Netlify y no es el contrato público de la
+  SPA.
 - El backfill nunca atraviesa Netlify ni corre en Render.
 - Imagenes/video siguen siendo URLs remotas; PostgreSQL guarda solo metadata.
 - Ninguna pieza puede escalar automaticamente a un plan pago.
@@ -113,9 +114,10 @@ mantener un control de cuenta accesible.
 
 El key ring que firma los tokens Identity vive en PostgreSQL con application name
 estable; por eso un link emitido antes de un restart/cold start sigue validando en una
-nueva instancia. Register/resend se limitan separadamente por IP de transporte y por
-hash de email normalizado. W14 debe resolver la IP original solo mediante forwarders
-verificados de la cadena Netlify -> Render.
+nueva instancia. Register/resend se limitan por IP real en las redirects firmadas de
+Netlify y por hash de email normalizado en la API. W14 no interpreta
+`X-Forwarded-For`: la firma del proxy bloquea la URL Render directa y evita que un
+header de cliente falsificado se convierta en identidad.
 
 ### W10 frontend APOD/search alignment
 
@@ -374,7 +376,8 @@ La migracion inicial implementa el diagrama con estas precisiones:
   consumido con su reemplazo. Replay y logout revocan todas las filas activas de esa
   familia sin afectar otra familia del mismo usuario.
 - JWT no se persiste. Cookie y respuestas auth usan `Cache-Control: no-store`.
-- W14 debe verificar forwarders Netlify/Render antes de sustituir la IP de transporte.
+- W14 demuestra que la firma Netlify rechaza el acceso Render directo y headers
+  falsificados; los límites de borde se prueban desde dos visitantes independientes.
 
 ### W4 APOD/provider alignment
 
@@ -467,3 +470,23 @@ flowchart LR
 - Resend se protege con rate limits y solo se usa para confirmacion.
 - No hay keepalive, jobs pagos, cargos por exceso ni upgrade automatico.
 - El runbook W14 debe volver a verificar planes/cuotas porque son datos temporales.
+
+### W14 signed proxy preparation (2026-07-22)
+
+```mermaid
+flowchart LR
+    B[Browser] -->|same-origin request| N[Netlify signed rewrite]
+    N -->|x-nf-sign HS256| R[Render API]
+    X[Direct Render or spoofed X-Forwarded-For] --> R
+    R -->|valid signature| A[/api or /auth endpoint/]
+    R -->|missing or invalid signature| F[403 invalid_proxy_request]
+    R --> H[/health only/]
+```
+
+- Netlify owns the production visitor-IP limit with redirect rules that aggregate by
+  domain and IP. This is the only component that observes the browser IP safely.
+- The API validates issuer, public `site_url`, `deploy_context=production`, expiration
+  and HMAC in constant time before it considers application routing. It intentionally
+  does not enable generic forwarded-header processing.
+- The diagram is prepared and covered by local integration tests; its external Netlify,
+  Render and two-client evidence remains the W14 production gate.

@@ -1,7 +1,7 @@
 # Wave P3-W14 - Seed, deploy $0 y smoke productivo
 
-Date: 2026-07-16
-Status: READY - Not Started
+Date: 2026-07-22
+Status: IN PROGRESS - deployment preparation complete; provider execution pending
 Wave ID: `P3-W14`
 Depends On: P3-W5 + P3-W12 + P3-W13 DONE and merged
 Suggested Branch: `wave/p3-w14-zero-cost-deploy`
@@ -14,7 +14,11 @@ desplegar y ejecutar el smoke que cierra P3.
 ## File scope
 
 - `netlify.toml`
-- `render.yaml` o `docs/deploy/render-setup.md`
+- `scripts/prepare-netlify-redirects.mjs`
+- `backend/AstronomyExplorer.Api/Security/NetlifyProxySignature.cs`
+- `backend/AstronomyExplorer.Api/docker-entrypoint.sh`
+- `backend/AstronomyExplorer.Api/Dockerfile`
+- `docs/deploy/render-setup.md`
 - `docs/deploy/p3-deploy-runbook.md`
 - `.env.example`
 - `docs/deploy/p3-local-runbook.md` (reference only; do not repurpose its local secrets)
@@ -22,8 +26,9 @@ desplegar y ejecutar el smoke que cierra P3.
 
 ## Checklist
 
-- [ ] W14.1 Revalidar el mismo dia cuotas/terminos oficiales de Netlify, Render, Neon y
-  Resend; registrar enlaces, fecha y comportamiento al exceder.
+- [x] W14.1 Revalidar el 2026-07-22 cuotas/terminos oficiales de Netlify, Render, Neon y
+  Resend; registrar enlaces, fecha y comportamiento al exceder en el runbook. Revalidar
+  nuevamente en el mismo día de la mutación de proveedores.
 - [ ] W14.2 Crear solo planes Free; sin keepalive/cron/worker pago/overages/upgrades.
   Configurar gasto cero o no registrar metodo de pago cuando aplique.
 - [ ] W14.3 Aplicar migraciones Neon y ejecutar CLI local `--dry-run`, seed resumible y
@@ -31,14 +36,19 @@ desplegar y ejecutar el smoke que cierra P3.
   rango seed aprobado y registrar conteo/tamaño sin secrets.
 - [ ] W14.4 Verificar dominio/sender Resend y rate limits antes del email real.
 - [ ] W14.5 Render recibe env vars en dashboard; no ejecuta backfill ni guarda archivos.
-- [ ] W14.6 Netlify proxifica `/api/*` y `/auth/*` a Render antes de `/* -> index.html`.
+- [x] W14.6 Netlify queda preparado para proxificar `/api/*` y `/auth/*` a Render antes de
+  `/* -> index.html`, con placeholder inválido que solo el build productivo sustituye.
+  Cada proxy usa JWS firmado por Netlify y rate limits de borde por visitante.
 - [ ] W14.7 Verificar cookie host-only/Lax, Origin, HTTPS y que browser no llame Render
   directamente.
 - [ ] W14.8 Smoke: cold start/retry, today, fecha, search, register, email, confirm POST,
   login, refresh/reload, favorite/list/delete, aislamiento y logout.
 - [ ] W14.9 Registrar fecha/URLs/cuenta de prueba/resultados y limpiar datos de prueba.
-- [ ] W14.10 Verificar la cadena Netlify -> Render y configurar Forwarded Headers solo
-  para proxies/redes confiables; demostrar dos IP cliente separadas y rechazo de spoofing.
+- [x] W14.10 Sustituir la hipótesis de Forwarded Headers: Render Free no ofrece una cadena
+  de ingress verificable para interpretar `X-Forwarded-For` sin spoofing. La API rechaza
+  rutas de aplicación directas y valida el JWS `x-nf-sign` (issuer, sitio, deploy
+  production, expiración y HMAC); Netlify limita las redirects por IP real. El smoke
+  pendiente demuestra bypass directo/spoof rechazado y dos visitantes independientes.
 - [ ] W14.11 Verificar el cifrado/controles en reposo de Neon para el XML del key ring
   Data Protection y documentar cualquier proteccion adicional $0 requerida.
 - [ ] W14.12 Sustituir de forma explicita los fixtures/sinks Development-only de W12 por
@@ -51,7 +61,8 @@ desplegar y ejecutar el smoke que cierra P3.
 - Catalogo esta ready antes de anunciar produccion.
 - Primera visita sobre cold start termina en contenido o CTA Retry comprensible.
 - Auth y favorites funcionan mediante origen Netlify con cookie segura.
-- Rate limiting usa la IP real sin confiar en headers falsificables; links de email
+- Rate limiting productivo usa la IP real de Netlify sin confiar en headers falsificables;
+  la URL directa de Render no sirve rutas de aplicación; links de email
   sobreviven restart/cold start y el key ring cumple el gate en reposo.
 - Todos los exit criteria P3 tienen evidencia y docs sincronizados.
 
@@ -63,8 +74,22 @@ dotnet build backend/AstronomyExplorer.sln
 dotnet test backend/AstronomyExplorer.sln
 npm run build
 npm test -- --watch=false --browsers=ChromeHeadless
+node scripts/prepare-netlify-redirects.mjs
 # comandos seed y smoke exactos se registran en docs/deploy/p3-deploy-runbook.md
 ```
+
+## Preparation record (2026-07-22)
+
+- La configuración local/Render ya separa secretos Docker locales de variables secretas
+  de dashboard y acepta el `PORT` asignado por Render.
+- `docs/deploy/render-setup.md` y `docs/deploy/p3-deploy-runbook.md` contienen el único
+  procedimiento de proveedores, seed y smoke. No contienen secretos ni mutan cuentas.
+- Verificación local de preparación PASS: backend build sin warnings, 172/172 tests,
+  frontend build y 118/118 ChromeHeadless, Compose healthy con `/health` 200 y catálogo
+  fixture `ready`; el script de redirects rechazó silenciosamente el origen ausente y
+  sustituyó/validó un origen HTTPS de prueba sin persistirlo.
+- La promoción, creación de recursos, seed real, correo real y toda evidencia externa
+  permanecen pendientes de las decisiones de dueña enumeradas en el runbook.
 
 ## Parent sync
 

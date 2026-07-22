@@ -498,7 +498,10 @@ public sealed class SessionEndpointTests(PostgreSqlFixture database)
     {
       ["AccountRateLimits:LoginIpPermitLimit"] = "2"
     };
-    await using var factory = new SessionApiFactory(database.ConnectionString, settings);
+    await using var factory = new SessionApiFactory(
+      database.ConnectionString,
+      settings,
+      environment: "Testing");
     using var client = CreateClient(factory);
 
     using var first = await LoginAsync(client, UniqueEmail("limit-one"), ValidPassword);
@@ -523,6 +526,7 @@ public sealed class SessionEndpointTests(PostgreSqlFixture database)
         .UseSetting("Session:Issuer", SessionApiFactory.Issuer)
         .UseSetting("Session:Audience", SessionApiFactory.Audience)
         .UseSetting("Session:SigningKey", "too-short")
+        .UseSetting("NetlifyProxy:SigningKey", SessionApiFactory.NetlifyProxySigningKey)
         .UseSetting("NasaApod:ApiKey", "test-nasa-api-key"));
 
     var exception = Assert.Throws<OptionsValidationException>(() => factory.CreateClient());
@@ -540,7 +544,7 @@ public sealed class SessionEndpointTests(PostgreSqlFixture database)
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
   }
 
-  private static HttpClient CreateClient(SessionApiFactory factory) => factory.CreateClient(
+  private static HttpClient CreateClient(SessionApiFactory factory) => factory.CreateSignedClient(
     new WebApplicationFactoryClientOptions { HandleCookies = false });
 
   private static async Task<ApplicationUser> CreateUserAsync(

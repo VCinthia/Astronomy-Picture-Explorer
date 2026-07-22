@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-22
-Status: IN PROGRESS - W1-W13 DONE
+Status: IN PROGRESS - W1-W13 DONE; W14 deployment preparation in progress
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -99,7 +99,8 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.11** Frontend favorites migration (W11).
 - [x] **R3.12** Contenedores y stack local (W12).
 - [x] **R3.13** UX final y aceptación local de navegación/cuenta (W13).
-- [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14).
+- [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14; preparación local completa,
+  evidencia de proveedores pendiente).
 
 W1 se cerro el 2026-07-17 con build limpio, migracion inicial reproducible y 11/11
 tests Testcontainers sobre PostgreSQL 17. La evidencia y las precisiones fisicas del
@@ -108,7 +109,7 @@ schema viven en la wave W1 y ADR-0003.
 W2 se cerro el 2026-07-17 con 13/13 tests Account y 24/24 backend PASS. Registro,
 reenvio y confirmacion usan respuestas anti-enumeracion, Base64URL y sender fake; el
 key ring Identity sobrevive reinicios mediante PostgreSQL. W14 conserva los gates de
-proxy confiable para IP real y proteccion en reposo del XML de Data Protection.
+proxy firmado/edge IP y proteccion en reposo del XML de Data Protection.
 
 W3 se cerro el 2026-07-17 con 23/23 tests Sessions y 47/47 backend PASS. Login usa
 Identity con hash dummy anti-timing y JWT HS256 corto. Refresh/logout se serializan con
@@ -213,6 +214,15 @@ Windows con normalización CRLF y smoke LocalLog de cuenta/favoritos pasaron sin
 El fix posterior de navegación alinea `Sign in` con las rutas de contenido y aplica el mismo
 indicador exclusivamente sobre `/login`, también cuando Favorites anónimo redirige allí.
 
+W14 inició preparación el 2026-07-22: el contenedor diferencia secretos Docker locales de
+variables secretas de provider y respeta el puerto Render; Netlify tiene rewrites firmadas
+con límites por IP y la API valida el JWS Netlify antes de `/api/*`/`/auth/*`. Esto reemplaza
+la propuesta de confiar en forwarded headers: no se interpreta `X-Forwarded-For` y un
+bypass directo/spoof recibe 403. `docs/deploy/p3-deploy-runbook.md` mantiene la evidencia
+pendiente de Neon/Render/Netlify/Resend, seed y smoke; R3.14 sigue abierto hasta entonces.
+La regresión de preparación actual pasa backend 172/172 y frontend 118/118; los conteos
+W13 anteriores permanecen como evidencia histórica antes de sus fixes posteriores.
+
 ## 6. Exit criteria
 
 P3 es `DONE` solo con evidencia de todos los puntos:
@@ -237,7 +247,8 @@ P3 es `DONE` solo con evidencia de todos los puntos:
   Search conserva resultado independiente de mayúsculas/minúsculas.
 - El smoke local confirma cuenta mediante `LocalLog` sin presentar tokens de confirmación
   en la SPA, evidencia o documentación.
-- Netlify proxifica `/api/*` y `/auth/*` antes del fallback SPA.
+- Netlify proxifica firmada `/api/*` y `/auth/*` antes del fallback SPA y Render rechaza
+  llamadas de aplicación sin firma.
 - Produccion usa exclusivamente planes $0; no hay keepalive, cron u overages pagos.
 - Primera visita durante cold start muestra estado comprensible y permite retry.
 - Runbook registra fecha, URLs, cuotas, configuracion de gasto cero y smoke completo.

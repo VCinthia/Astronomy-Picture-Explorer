@@ -93,3 +93,11 @@ dotnet list backend/AstronomyExplorer.sln package --vulnerable --include-transit
 - La promoción productiva originalmente numerada W13 pasa a W14 porque se incorpora W13
   para UX final y aceptación local. No cambia el contrato, la seguridad ni la evidencia
   implementada de W2; únicamente desplaza sus gates de proveedor a la wave correcta.
+
+## Design clarification - P3-W14 (2026-07-22)
+
+La decisión pendiente sobre forwarders se resolvió sin reescribir esta evidencia W2:
+Render no acepta `X-Forwarded-For` como IP pública. Producción usa redirects Netlify
+firmadas y límites de borde por IP; la API conserva el límite por email normalizado y
+rechaza bypass directo/spoof antes de llegar a estos endpoints. La evidencia real de
+proveedores sigue pendiente en W14.
