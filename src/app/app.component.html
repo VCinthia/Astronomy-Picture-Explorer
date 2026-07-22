@@ -28,13 +28,15 @@
             routerLinkActive=""
             ariaCurrentWhenActive="page"
             [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
-            [class.text-accent]="homeActive.isActive"
-            [class.text-content-secondary]="!homeActive.isActive"
-            [class.border-accent]="homeActive.isActive"
-            [class.border-transparent]="!homeActive.isActive"
-            class="rounded-button border-b px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            class="px-3 py-1.5 text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            Home
+            <span
+              [class.border-accent]="homeActive.isActive"
+              [class.border-transparent]="!homeActive.isActive"
+              class="inline-flex border-b pb-1"
+            >
+              Home
+            </span>
           </a>
           <a
             routerLink="/explorer"
@@ -42,13 +44,15 @@
             routerLinkActive=""
             ariaCurrentWhenActive="page"
             [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
-            [class.text-accent]="exploreActive.isActive"
-            [class.text-content-secondary]="!exploreActive.isActive"
-            [class.border-accent]="exploreActive.isActive"
-            [class.border-transparent]="!exploreActive.isActive"
-            class="rounded-button border-b px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            class="px-3 py-1.5 text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            Explore
+            <span
+              [class.border-accent]="exploreActive.isActive"
+              [class.border-transparent]="!exploreActive.isActive"
+              class="inline-flex border-b pb-1"
+            >
+              Explore
+            </span>
           </a>
           <a
             routerLink="/favorites"
@@ -56,13 +60,15 @@
             routerLinkActive=""
             ariaCurrentWhenActive="page"
             [routerLinkActiveOptions]="{ paths: 'exact', queryParams: 'ignored', matrixParams: 'ignored', fragment: 'ignored' }"
-            [class.text-accent]="favoritesActive.isActive"
-            [class.text-content-secondary]="!favoritesActive.isActive"
-            [class.border-accent]="favoritesActive.isActive"
-            [class.border-transparent]="!favoritesActive.isActive"
-            class="rounded-button border-b px-3 py-1.5 transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            class="px-3 py-1.5 text-content-secondary transition hover:text-content-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
-            Favorites
+            <span
+              [class.border-accent]="favoritesActive.isActive"
+              [class.border-transparent]="!favoritesActive.isActive"
+              class="inline-flex border-b pb-1"
+            >
+              Favorites
+            </span>
           </a>
         </nav>
 

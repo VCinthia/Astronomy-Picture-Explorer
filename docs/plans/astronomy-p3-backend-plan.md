@@ -205,8 +205,8 @@ runbook evidencia health, ready/search/date/today, register->confirm->login->fav
 
 W13 se cerro el 2026-07-22: Explorer ordena DatePicker -> Search y alinea los controles
 por el borde inferior en desktop; el stepper UTC deja el shell y vive sobre Home. La
-navegación desktop/mobile expone color, `aria-current` y línea inferior en su única ruta
-activa. Login reemplaza el formulario por `Signed in successfully.` y redirige de forma
+navegación desktop/mobile expone `aria-current` y una única línea inferior de acento en su
+ruta activa. Login reemplaza el formulario por `Signed in successfully.` y redirige de forma
 acotada a un retorno interno o Home. Build, 117/117 pruebas frontend, backend, Compose
 Windows con normalización CRLF y smoke LocalLog de cuenta/favoritos pasaron sin proveedor.
 

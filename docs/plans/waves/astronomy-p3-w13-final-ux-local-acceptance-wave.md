@@ -21,8 +21,8 @@ recursos productivos.
   comparten el borde inferior; en pantallas angostas se apilan calendario -> búsqueda.
 - El selector anterior/siguiente deja de ser parte del header global. Solo Home lo ofrece
   sobre el extremo derecho de la imagen APOD, con contraste, foco y márgenes responsivos.
-- Desktop y mobile conservan `aria-current="page"`, color de acento y agregan una línea
-  inferior fina para la ruta activa. La ruta de cuenta no marca falsamente Home/Explorer/
+- Desktop y mobile conservan `aria-current="page"` y agregan una única línea inferior fina
+  de acento para la ruta activa. La ruta de cuenta no marca falsamente Home/Explorer/
   Favorites.
 - Search continúa enviando el texto que escribió la persona; PostgreSQL FTS ya es
   case-insensitive. Esta wave agrega evidencia para minúsculas, MAYÚSCULAS y PascalCase,
@@ -62,8 +62,8 @@ recursos productivos.
 - [x] W13.2 Trasladar el stepper de fecha del shell global a Home, posicionado sobre la
   imagen APOD con separación y contraste correctos; conservar límites UTC y cancelar
   requests obsoletos mediante el estado existente de `AstronomyService`.
-- [x] W13.3 Añadir indicador de ruta activa con línea inferior fina y color de acento en
-  navegación desktop y mobile; conservar `aria-current`, focus visible y matching exacto.
+- [x] W13.3 Añadir indicador de ruta activa con una única línea inferior fina de acento en
+  navegación desktop y mobile; conservar `aria-current`, foco visible y matching exacto.
 - [x] W13.4 Probar que `astronomy`, `ASTRONOMY` y `Astronomy` producen el mismo resultado
   con el catálogo local preparado, sin lowercasing destructivo de la entrada ni cambio de
   contrato/ranking FTS.
@@ -120,8 +120,8 @@ docker compose down
 
 - Explorer presenta DatePicker antes de Search y el grid desktop alinea ambos por el borde
   inferior. Home contiene el stepper UTC sobre la imagen; el header global ya no lo
-  renderiza. Desktop y mobile mantienen una única ruta activa con color, `aria-current`
-  y línea inferior.
+  renderiza. Desktop y mobile mantienen una única ruta activa con `aria-current` y una
+  línea inferior de acento.
 - `AstronomyService` conserva el texto de entrada y las tres consultas `astronomy`,
   `ASTRONOMY` y `Astronomy` devolvieron el fixture `2020-01-01` idéntico.
 - Tras login, el formulario se sustituye por `Signed in successfully.` y navega a un
@@ -135,3 +135,10 @@ docker compose down
   exit 0. Smoke local: register 202, pre-confirmación 403, confirm 204, login/refresh
   200, favorite 204/GET una entrada y logout 204. No se registraron URLs ni códigos de
   confirmación y no se usó ningún proveedor externo.
+
+## Design clarification after completion (2026-07-22)
+
+- El fix `P3-W13 navigation indicator` sustituye la duplicación de color y subrayado por
+  una única línea azul de 1 px. La línea queda centrada bajo el label, sin borde redondeado
+  ni fondo; el texto activo conserva el color neutral de la navegación. Aplica a desktop y
+  mobile, manteniendo `aria-current`, foco visible y matching de ruta.

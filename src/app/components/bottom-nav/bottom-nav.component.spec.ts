@@ -52,7 +52,11 @@ describe('BottomNavComponent', () => {
     ]);
     expect(links.every((link) => link.querySelector('svg[aria-hidden="true"]'))).toBeTrue();
     expect(links.every((link) => link.classList.contains('focus-visible:outline-accent'))).toBeTrue();
-    expect(links.every((link) => link.classList.contains('border-b-2'))).toBeTrue();
+    const indicators = links.map((link) => link.querySelector('span'));
+    expect(links.every((link) => !link.classList.contains('border-b'))).toBeTrue();
+    expect(links.some((link) => link.classList.contains('border-b-2'))).toBeFalse();
+    expect(indicators.every((indicator) => indicator?.classList.contains('border-b'))).toBeTrue();
+    expect(links.every((link) => link.classList.contains('text-content-secondary'))).toBeTrue();
     expect(element.textContent).not.toMatch(/[⌂◎♥♡🔍📅←→↗]/);
   });
 
@@ -75,16 +79,18 @@ describe('BottomNavComponent', () => {
 
       expect(activeLinks.length).toBe(1);
       expect(activeLinks[0]).toBe(link);
-      expect(link.classList).toContain('text-accent');
-      expect(link.classList).not.toContain('text-content-secondary');
-      expect(link.classList).toContain('border-accent');
+      const indicator = link.querySelector('span') as HTMLSpanElement;
+      expect(indicator.classList).not.toContain('text-accent');
+      expect(indicator.classList).toContain('border-accent');
+      expect(link.classList).toContain('text-content-secondary');
       links
         .filter((candidate) => candidate !== link)
         .forEach((inactiveLink) => {
           expect(inactiveLink.getAttribute('aria-current')).toBeNull();
+          const inactiveIndicator = inactiveLink.querySelector('span') as HTMLSpanElement;
+          expect(inactiveIndicator.classList).not.toContain('text-accent');
+          expect(inactiveIndicator.classList).toContain('border-transparent');
           expect(inactiveLink.classList).toContain('text-content-secondary');
-          expect(inactiveLink.classList).not.toContain('text-accent');
-          expect(inactiveLink.classList).toContain('border-transparent');
         });
     }
   });

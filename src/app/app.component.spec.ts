@@ -92,6 +92,11 @@ describe('AppComponent', () => {
       '/explorer',
       '/favorites'
     ]);
+    const indicators = links.map((link) => link.querySelector('span'));
+    expect(links.every((link) => !link.classList.contains('border-b'))).toBeTrue();
+    expect(links.every((link) => !link.classList.contains('rounded-button'))).toBeTrue();
+    expect(indicators.every((indicator) => indicator?.classList.contains('border-b'))).toBeTrue();
+    expect(links.every((link) => link.classList.contains('text-content-secondary'))).toBeTrue();
     expect(links.every((link) => link.classList.contains('focus-visible:outline-accent'))).toBeTrue();
   });
 
@@ -153,16 +158,19 @@ describe('AppComponent', () => {
 
     expect(router.url).toBe('/favorites');
     expect(favorites.getAttribute('aria-current')).toBe('page');
-    expect(favorites.classList.contains('text-accent')).toBeTrue();
-    expect(favorites.classList.contains('text-content-secondary')).toBeFalse();
-    expect(favorites.classList.contains('border-accent')).toBeTrue();
+    const favoriteIndicator = favorites.querySelector('span') as HTMLSpanElement;
+    expect(favoriteIndicator.classList.contains('text-accent')).toBeFalse();
+    expect(favoriteIndicator.classList.contains('border-accent')).toBeTrue();
+    expect(favorites.classList.contains('text-content-secondary')).toBeTrue();
 
     const inactiveLinks = element.querySelectorAll(
-      'nav a[href="/home"], nav a[href="/explorer"]'
+      'nav[aria-label="Primary"] a[href="/home"], nav[aria-label="Primary"] a[href="/explorer"]'
     );
     inactiveLinks.forEach((link) => {
       expect(link.getAttribute('aria-current')).toBeNull();
-      expect(link.classList.contains('text-accent')).toBeFalse();
+      const indicator = link.querySelector('span') as HTMLSpanElement;
+      expect(indicator.classList.contains('text-accent')).toBeFalse();
+      expect(indicator.classList.contains('border-transparent')).toBeTrue();
       expect(link.classList.contains('text-content-secondary')).toBeTrue();
     });
   });
@@ -183,9 +191,10 @@ describe('AppComponent', () => {
 
       expect(activeLinks.length).toBe(1);
       expect(activeLinks[0].getAttribute('href')).toBe(destination);
-      expect(activeLinks[0].classList.contains('text-accent')).toBeTrue();
-      expect(activeLinks[0].classList.contains('text-content-secondary')).toBeFalse();
-      expect(activeLinks[0].classList.contains('border-accent')).toBeTrue();
+      const indicator = activeLinks[0].querySelector('span') as HTMLSpanElement;
+      expect(indicator.classList.contains('text-accent')).toBeFalse();
+      expect(indicator.classList.contains('border-accent')).toBeTrue();
+      expect(activeLinks[0].classList.contains('text-content-secondary')).toBeTrue();
     }
 
     await router.navigateByUrl('/favorites/detail');
