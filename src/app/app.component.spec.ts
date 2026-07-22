@@ -17,7 +17,8 @@ const TEST_ROUTES = [
   { path: 'home', component: TestPageComponent },
   { path: 'explorer', component: TestPageComponent },
   { path: 'favorites', component: TestPageComponent },
-  { path: 'favorites/detail', component: TestPageComponent }
+  { path: 'favorites/detail', component: TestPageComponent },
+  { path: 'login', component: TestPageComponent }
 ];
 
 describe('AppComponent', () => {
@@ -100,7 +101,7 @@ describe('AppComponent', () => {
     expect(links.every((link) => link.classList.contains('focus-visible:outline-accent'))).toBeTrue();
   });
 
-  it('keeps a visible Sign in entry in the header at every breakpoint', () => {
+  it('keeps a visible, aligned Sign in entry in the header at every breakpoint', () => {
     const fixture = TestBed.createComponent(AppComponent);
     fixture.detectChanges();
 
@@ -109,6 +110,10 @@ describe('AppComponent', () => {
     ) as HTMLAnchorElement;
     expect(signIn.textContent?.trim()).toBe('Sign in');
     expect(signIn.classList.contains('hidden')).toBeFalse();
+    expect(signIn.classList.contains('rounded-button')).toBeFalse();
+    expect(signIn.classList.contains('border-b')).toBeFalse();
+    expect(signIn.querySelector('span')?.classList.contains('border-b')).toBeTrue();
+    expect(signIn.classList.contains('text-content-secondary')).toBeTrue();
     expect(signIn.classList.contains('focus-visible:outline-accent')).toBeTrue();
   });
 
@@ -209,5 +214,22 @@ describe('AppComponent', () => {
     fixture.detectChanges();
 
     expect(element.querySelector('nav[aria-label="Primary"] a[href="/favorites"]')?.getAttribute('aria-current')).toBe('page');
+  });
+
+  it('marks Sign in for login with a favorites return URL', async () => {
+    const fixture = TestBed.createComponent(AppComponent);
+    fixture.detectChanges();
+    const router = TestBed.inject(Router);
+    const element = fixture.nativeElement as HTMLElement;
+
+    await router.navigateByUrl('/login?returnUrl=%2Ffavorites');
+    fixture.detectChanges();
+
+    const signIn = element.querySelector('header a[href="/login"]') as HTMLAnchorElement;
+    const signInIndicator = signIn.querySelector('span') as HTMLSpanElement;
+    expect(signIn.getAttribute('aria-current')).toBe('page');
+    expect(signInIndicator.classList.contains('border-accent')).toBeTrue();
+    expect(signIn.classList.contains('text-content-secondary')).toBeTrue();
+    expect(element.querySelectorAll('nav[aria-label="Primary"] a[aria-current="page"]').length).toBe(0);
   });
 });

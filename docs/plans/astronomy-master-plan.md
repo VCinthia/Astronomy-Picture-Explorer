@@ -194,6 +194,8 @@ P3-W13 quedo DONE el 2026-07-22:
 - Las navegaciones primaria desktop y mobile muestran una sola ruta activa mediante
   `aria-current` y una única línea inferior de acento. La búsqueda conserva la
   capitalización escrita y las tres variantes de `astronomy` retornan el mismo fixture FTS local.
+- La entrada `Sign in` se alinea con esa navegación y marca `/login`, incluso cuando un
+  visitante anónimo llega allí al pedir Favorites.
 - Login reemplaza todo formulario por `Signed in successfully.` y redirige después de
   650 ms al retorno interno validado o `/home`, evitando la invitación a reautenticarse.
 - 117/117 pruebas frontend, build, backend, Compose Windows/Linux y smoke LocalLog de

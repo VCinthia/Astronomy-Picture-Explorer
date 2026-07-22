@@ -142,3 +142,7 @@ docker compose down
   una única línea azul de 1 px. La línea queda centrada bajo el label, sin borde redondeado
   ni fondo; el texto activo conserva el color neutral de la navegación. Aplica a desktop y
   mobile, manteniendo `aria-current`, foco visible y matching de ruta.
+- El fix `P3-W13 account navigation state` alinea `Sign in` con las rutas de contenido y
+  le aplica el mismo indicador solo en `/login`, ignorando el `returnUrl`. Por ello, un
+  visitante redirigido desde Favorites marca `Sign in`; Favorites conserva su propio
+  indicador únicamente cuando la ruta protegida se alcanza con sesión válida.

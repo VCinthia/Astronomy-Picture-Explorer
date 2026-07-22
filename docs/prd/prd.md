@@ -54,8 +54,8 @@ evolucion full-stack segura sin costo monetario de operacion.
 - Search consulta catalogo PostgreSQL por title + explanation con FTS case-insensitive.
 - Explorer presenta primero la fecha y luego la búsqueda, alineados en desktop y apilados
   en ese orden en mobile.
-- La navegación primaria comunica su ruta activa con `aria-current` y una única línea
-  inferior fina de acento en desktop y mobile.
+- La navegación primaria y la entrada `Sign in` comunican su ruta activa con
+  `aria-current` y una única línea inferior fina de acento en desktop y mobile.
 - Estados loading, empty, upstream error, catalog-not-ready y cold-start son accesibles y
   recuperables mediante Retry.
 

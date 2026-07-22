@@ -210,6 +210,9 @@ ruta activa. Login reemplaza el formulario por `Signed in successfully.` y redir
 acotada a un retorno interno o Home. Build, 117/117 pruebas frontend, backend, Compose
 Windows con normalización CRLF y smoke LocalLog de cuenta/favoritos pasaron sin proveedor.
 
+El fix posterior de navegación alinea `Sign in` con las rutas de contenido y aplica el mismo
+indicador exclusivamente sobre `/login`, también cuando Favorites anónimo redirige allí.
+
 ## 6. Exit criteria
 
 P3 es `DONE` solo con evidencia de todos los puntos:

@@ -151,7 +151,9 @@ Explorer presenta primero el DatePicker y luego Search; en desktop ambos control
 alinean por su borde inferior y en mobile conservan ese orden vertical. El stepper de
 fecha deja el shell global y vive sobre el extremo derecho de la imagen Home, por lo que
 no distrae rutas que no usan esa interacción. Desktop y mobile añaden una única línea
-inferior fina de acento a la ruta primaria activa, junto con `aria-current`.
+inferior fina de acento a la ruta primaria activa, junto con `aria-current`; `Sign in`
+mantiene ese mismo patrón al llegar a `/login`, incluso tras un redirect anónimo desde
+Favorites.
 
 PostgreSQL FTS ya compara sin distinguir mayúsculas/minúsculas. W13 conserva el texto
 escrito por la persona y prueba `astronomy`, `ASTRONOMY` y `Astronomy` contra el fixture
