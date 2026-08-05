@@ -22,6 +22,16 @@ export interface ConfirmEmailRequest {
   code: string;
 }
 
+export interface ForgotPasswordRequest {
+  email: string;
+}
+
+export interface ResetPasswordRequest {
+  userId: string;
+  code: string;
+  password: string;
+}
+
 export interface LoginRequest {
   email: string;
   password: string;
@@ -108,6 +118,27 @@ export class AuthService {
 
   confirmEmail(request: ConfirmEmailRequest): Observable<void> {
     return this.track(this.http.post<void>('/auth/confirm-email', request));
+  }
+
+  forgotPassword(request: ForgotPasswordRequest): Observable<AccountRequestAcceptedResponse> {
+    return this.track(
+      this.http.post<AccountRequestAcceptedResponse>('/auth/forgot-password', request)
+    );
+  }
+
+  /**
+   * A successful reset is not a login. It invalidates the local memory session before
+   * the caller navigates so no prior user state can survive the password change.
+   */
+  resetPassword(request: ResetPasswordRequest): Observable<void> {
+    return this.track(
+      this.http.post<void>('/auth/reset-password', request).pipe(
+        tap(() => {
+          this.sessionEpoch += 1;
+          this.clearSession();
+        })
+      )
+    );
   }
 
   login(request: LoginRequest): Observable<SessionResponse> {

@@ -29,6 +29,11 @@ const POST_LOGIN_REDIRECT_MS = 650;
           Your email has been confirmed. You can now sign in.
         </p>
       }
+      @if (passwordResetSuccess()) {
+        <p role="status" aria-live="polite" class="mt-5 rounded-button border border-accent/50 bg-accent/10 px-4 py-3 text-meta text-content-primary">
+          Your password has been reset. Sign in with your new password.
+        </p>
+      }
 
       <form class="mt-8 space-y-5" [formGroup]="form" (ngSubmit)="submit()" novalidate>
         <div>
@@ -101,6 +106,11 @@ const POST_LOGIN_REDIRECT_MS = 650;
         </button>
       </form>
 
+      <p class="mt-4 text-meta text-content-secondary">
+        Forgot your password?
+        <a routerLink="/forgot-password" class="font-medium text-accent underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Reset it</a>.
+      </p>
+
       <p class="mt-6 text-meta text-content-secondary">
         Need an account?
         <a routerLink="/register" class="font-medium text-accent underline underline-offset-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent">Create one</a>.
@@ -119,6 +129,7 @@ export class LoginComponent {
   private redirectTimer: ReturnType<typeof setTimeout> | null = null;
 
   readonly confirmationSuccess = signal(hasConfirmationSuccess(this.location.getState()));
+  readonly passwordResetSuccess = signal(hasPasswordResetSuccess(this.location.getState()));
   readonly submitted = signal(false);
   readonly loginError = signal<'credentials' | 'unconfirmed' | null>(null);
   readonly resendMessage = signal<string | null>(null);
@@ -193,4 +204,9 @@ export class LoginComponent {
 function hasConfirmationSuccess(state: unknown): boolean {
   return typeof state === 'object' && state !== null &&
     (state as { confirmationSuccess?: unknown }).confirmationSuccess === true;
+}
+
+function hasPasswordResetSuccess(state: unknown): boolean {
+  return typeof state === 'object' && state !== null &&
+    (state as { passwordResetSuccess?: unknown }).passwordResetSuccess === true;
 }

@@ -51,6 +51,15 @@ describe('LoginComponent', () => {
     expect(alert?.textContent).not.toContain('internal detail');
   });
 
+  it('offers the password recovery route from the sign-in form', () => {
+    const fixture = TestBed.createComponent(LoginComponent);
+    fixture.detectChanges();
+
+    const link = Array.from((fixture.nativeElement as HTMLElement).querySelectorAll('a'))
+      .find((candidate) => candidate.textContent?.includes('Reset it'));
+    expect(link?.getAttribute('href')).toBe('/forgot-password');
+  });
+
   it('offers a resend CTA only for the email_unconfirmed 403 and sends its typed request', () => {
     const fixture = createValidLoginFixture();
     fixture.componentInstance.submit();

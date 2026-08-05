@@ -66,6 +66,50 @@ describe('AuthService', () => {
     confirmation.flush(null, { status: 204, statusText: 'No Content' });
   });
 
+  it('posts password recovery requests without persisting the email or reset capability', () => {
+    let message = '';
+    service.forgotPassword({ email: 'astro@example.test' }).subscribe((response) => message = response.message);
+    const request = http.expectOne('/auth/forgot-password');
+
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({ email: 'astro@example.test' });
+    request.flush({ message: 'If the address can receive a password reset email, a message will be sent.' }, {
+      status: 202,
+      statusText: 'Accepted'
+    });
+
+    expect(message).toContain('password reset email');
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
+  });
+
+  it('clears the in-memory session after a successful password reset without auto-login', () => {
+    service.login({ email: 'astro@example.test', password: 'Valid1!Password' }).subscribe();
+    http.expectOne('/auth/login').flush(sessionResponse('access-token', 'first-user'));
+    let resetComplete = false;
+
+    service.resetPassword({
+      userId: '5c409cbf-b9cc-4afe-a55b-a8b7c4f1aac4',
+      code: 'UmVzZXQtdG9rZW4',
+      password: 'New2!Password'
+    }).subscribe(() => resetComplete = true);
+    const reset = http.expectOne('/auth/reset-password');
+    expect(reset.request.method).toBe('POST');
+    expect(reset.request.body).toEqual({
+      userId: '5c409cbf-b9cc-4afe-a55b-a8b7c4f1aac4',
+      code: 'UmVzZXQtdG9rZW4',
+      password: 'New2!Password'
+    });
+    reset.flush(null, { status: 204, statusText: 'No Content' });
+
+    expect(resetComplete).toBeTrue();
+    expect(service.isAuthenticated()).toBeFalse();
+    expect(service.accessToken()).toBeNull();
+    expect(service.currentUser()).toBeNull();
+    expect(localStorage.length).toBe(0);
+    expect(sessionStorage.length).toBe(0);
+  });
+
   it('keeps a successful access JWT and user only in signals, never browser storage', () => {
     const localSetItem = spyOn(localStorage, 'setItem').and.callThrough();
     const sessionSetItem = spyOn(sessionStorage, 'setItem').and.callThrough();

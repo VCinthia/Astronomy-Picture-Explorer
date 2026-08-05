@@ -54,6 +54,11 @@ public static class SessionEndpoints
     }
 
     var refreshSession = await refreshSessionService.CreateAsync(authenticatedUser, cancellationToken);
+    if (refreshSession is null)
+    {
+      return SessionProblems.InvalidCredentials();
+    }
+
     refreshCookieService.Write(
       httpContext,
       refreshSession.RawToken,

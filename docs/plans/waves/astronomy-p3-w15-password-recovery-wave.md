@@ -1,7 +1,7 @@
 # Wave P3-W15 - Recuperacion de contraseña segura
 
 Date: 2026-08-05
-Status: PLANNED
+Status: IMPLEMENTED LOCALLY - 2026-08-05; integration review pending
 Wave ID: `P3-W15`
 Depends On: P3-W2 + P3-W3 + P3-W8 + P3-W9 + P3-W12 + P3-W13 DONE and merged
 Unblocks: external execution and production smoke of P3-W14
@@ -56,17 +56,17 @@ OAuth, MFA, cambio de email ni auto-login.
 
 ## Implementation checklist
 
-- [ ] W15.1 Agregar DTOs y endpoints genéricos request/reset, validación Base64URL y
+- [x] W15.1 Agregar DTOs y endpoints genéricos request/reset, validación Base64URL y
   ProblemDetails controlado; preservar anti-enumeración y no-store donde corresponda.
-- [ ] W15.2 Generar plantilla/link de reset con Identity + `IEmailSender`; LocalLog entrega
+- [x] W15.2 Generar plantilla/link de reset con Identity + `IEmailSender`; LocalLog entrega
   el enlace sólo en Development y Resend conserva el mismo contrato genérico.
-- [ ] W15.3 Revocar en bloque refresh sessions al éxito y verificar que una cookie previa
+- [x] W15.3 Revocar en bloque refresh sessions al éxito y verificar que una cookie previa
   no puede renovar, mientras la contraseña vieja no puede login.
-- [ ] W15.4 Agregar límites IP/hash-email locales y rewrites/edge limits para ambos POSTs
+- [x] W15.4 Agregar límites IP/hash-email locales y rewrites/edge limits para ambos POSTs
   sin confiar en forwarded headers ni crear un secret nuevo.
-- [ ] W15.5 Añadir rutas/componentes Angular, link desde Login, validación accesible,
+- [x] W15.5 Añadir rutas/componentes Angular, link desde Login, validación accesible,
   URL scrub, limpieza de sesión propia, estados success/error y pruebas sin token en storage.
-- [ ] W15.6 Actualizar el smoke LocalLog y W14 production smoke para recuperación; no
+- [x] W15.6 Actualizar el smoke LocalLog y W14 production smoke para recuperación; no
   registrar links, contraseñas, correos ni valores secretos en evidencia.
 
 ## Acceptance criteria
@@ -103,3 +103,32 @@ Invoke-WebRequest http://localhost:5179/health
 Ejecutar además el flujo completo de `docs/deploy/p3-local-runbook.md`, incluida la
 extracción local del último enlace reset. No ejecutar seed Neon, Resend, Render ni
 Netlify: siguen siendo autoridad exclusiva de W14.
+
+## Completion evidence (2026-08-05)
+
+- El request `forgot-password` responde el mismo `202` para cuenta confirmada, ausente,
+  no confirmada, vacía o inválida. Solo la cuenta confirmada añade el correo al sender;
+  el nuevo enlace usa el token Identity Base64URL y HTML-encoding, sin esquema ni secreto
+  nuevo.
+- `reset-password` responde un único `400` controlado para GUID/código inválido, usuario
+  ausente, token reutilizado y fallo de política Identity. El éxito devuelve `204` sin
+  JWT/cookie, revoca transaccionalmente todas las refresh sessions activas del usuario y
+  expira la cookie recibida.
+- Un advisory lock por usuario serializa login/session-create, refresh rotation y reset.
+  Rotate vuelve a leer el token/familia después del lock, por lo que una rotación que ya
+  había comenzado no puede insertar un reemplazo activo después de la revocación del reset.
+- Netlify tiene límites firmados específicos para request/reset antes del comodín
+  `/auth/*`. En local, ambos endpoints tienen límites IP independientes y forgot además
+  limita el hash del email normalizado; no se interpreta ningún forwarded header.
+- Las rutas Angular son lazy. El código se valida y se elimina de history antes de mostrar
+  el formulario, se descarta luego de un intento y nunca entra en Web Storage. Un reset
+  exitoso limpia la sesión en memoria y redirige a Login con estado transitorio, sin
+  auto-login.
+- Gates locales: `dotnet build backend/AstronomyExplorer.sln --no-restore` PASS sin
+  warnings; Account focalizado 17/17 y backend completo 177/177 PASS; `npm run build`
+  PASS y ChromeHeadless 128/128 PASS. Compose aislado (`8081`/`5180`) quedó healthy con
+  migrator/demo-seed exit 0; el smoke LocalLog confirmó register -> confirm -> login ->
+  forgot -> reset -> password anterior rechazada -> nuevo login, sin emitir enlaces,
+  correos ni contraseñas en evidencia.
+- La ejecución externa W14 sigue pendiente: no se crearon proveedores, no se usaron
+  credenciales reales y `main` no se promociona por W15 sola.

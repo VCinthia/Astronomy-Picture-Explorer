@@ -16,6 +16,9 @@ public static class AccountEndpoints
   private const string AcceptedMessage =
     "If the address can receive a confirmation email, a message will be sent.";
   private const string ConfirmationEmailSubject = "Confirm your Astronomy Explorer account";
+  private const string PasswordResetAcceptedMessage =
+    "If the address can receive a password reset email, a message will be sent.";
+  private const string PasswordResetEmailSubject = "Reset your Astronomy Explorer password";
   private const int MaxIdentityEmailLength = 256;
 
   public static IEndpointRouteBuilder MapAccountEndpoints(this IEndpointRouteBuilder endpoints)
@@ -33,6 +36,14 @@ public static class AccountEndpoints
 
     group.MapPost("/confirm-email", ConfirmEmailAsync)
       .WithName("ConfirmAccountEmail");
+
+    group.MapPost("/forgot-password", ForgotPasswordAsync)
+      .WithName("RequestPasswordReset")
+      .RequireRateLimiting(AccountRateLimitPolicies.ForgotPasswordByIp);
+
+    group.MapPost("/reset-password", ResetPasswordAsync)
+      .WithName("ResetPassword")
+      .RequireRateLimiting(AccountRateLimitPolicies.ResetPasswordByIp);
 
     return endpoints;
   }
@@ -177,6 +188,70 @@ public static class AccountEndpoints
       : InvalidConfirmation();
   }
 
+  private static async Task<IResult> ForgotPasswordAsync(
+    ForgotPasswordRequest request,
+    UserManager<ApplicationUser> userManager,
+    IAccountEmailRateLimiter emailRateLimiter,
+    PasswordResetLinkFactory linkFactory,
+    IEmailSender emailSender,
+    ILoggerFactory loggerFactory,
+    HttpContext httpContext,
+    CancellationToken cancellationToken)
+  {
+    SetNoStore(httpContext.Response);
+    var email = request.Email?.Trim() ?? string.Empty;
+    var normalizedEmail = NormalizeEmailForRateLimit(userManager, email);
+    if (!emailRateLimiter.TryAcquirePasswordRecovery(normalizedEmail))
+    {
+      return Results.Problem(AccountRateLimitProblemDetails.Create());
+    }
+
+    if (email.Length is 0 or > MaxIdentityEmailLength)
+    {
+      return PasswordResetAccepted();
+    }
+
+    var user = await userManager.FindByEmailAsync(email);
+    if (user is not null && await userManager.IsEmailConfirmedAsync(user))
+    {
+      await TrySendPasswordResetEmailAsync(
+        user,
+        userManager,
+        linkFactory,
+        emailSender,
+        loggerFactory,
+        cancellationToken);
+    }
+
+    return PasswordResetAccepted();
+  }
+
+  private static async Task<IResult> ResetPasswordAsync(
+    ResetPasswordRequest request,
+    PasswordResetService passwordResetService,
+    RefreshCookieService refreshCookieService,
+    HttpContext httpContext,
+    CancellationToken cancellationToken)
+  {
+    SetNoStore(httpContext.Response);
+    if (!Guid.TryParse(request.UserId, out var userId) || !TryDecodeBase64Url(request.Code, out var token))
+    {
+      return InvalidPasswordReset();
+    }
+
+    if (!await passwordResetService.ResetAsync(userId, token, request.Password, cancellationToken))
+    {
+      return InvalidPasswordReset();
+    }
+
+    if (!string.IsNullOrWhiteSpace(refreshCookieService.Read(httpContext.Request)))
+    {
+      refreshCookieService.Delete(httpContext);
+    }
+
+    return Results.NoContent();
+  }
+
   private static async Task TrySendConfirmationEmailAsync(
     ApplicationUser user,
     UserManager<ApplicationUser> userManager,
@@ -205,6 +280,38 @@ public static class AccountEndpoints
         .CreateLogger("AstronomyExplorer.Api.EmailConfirmation")
         .LogWarning(
           "Confirmation email delivery failed with {ExceptionType}.",
+          exception.GetType().Name);
+    }
+  }
+
+  private static async Task TrySendPasswordResetEmailAsync(
+    ApplicationUser user,
+    UserManager<ApplicationUser> userManager,
+    PasswordResetLinkFactory linkFactory,
+    IEmailSender emailSender,
+    ILoggerFactory loggerFactory,
+    CancellationToken cancellationToken)
+  {
+    var token = await userManager.GeneratePasswordResetTokenAsync(user);
+    var base64UrlCode = WebEncoders.Base64UrlEncode(Encoding.UTF8.GetBytes(token));
+    var resetLink = linkFactory.Create(user.Id, base64UrlCode);
+    var encodedLink = HtmlEncoder.Default.Encode(resetLink);
+    var email = new EmailMessage(
+      user.Email!,
+      PasswordResetEmailSubject,
+      "<p>Reset your Astronomy Explorer password.</p>" +
+      $"<p><a href=\"{encodedLink}\">Reset password</a></p>");
+
+    try
+    {
+      await emailSender.SendAsync(email, cancellationToken);
+    }
+    catch (Exception exception) when (!cancellationToken.IsCancellationRequested)
+    {
+      loggerFactory
+        .CreateLogger("AstronomyExplorer.Api.PasswordReset")
+        .LogWarning(
+          "Password reset email delivery failed with {ExceptionType}.",
           exception.GetType().Name);
     }
   }
@@ -243,12 +350,46 @@ public static class AccountEndpoints
     code.All(character =>
       char.IsAsciiLetterOrDigit(character) || character is '-' or '_');
 
+  private static bool TryDecodeBase64Url(string? code, out string token)
+  {
+    token = string.Empty;
+    if (!IsBase64Url(code) || code!.Length % 4 == 1)
+    {
+      return false;
+    }
+
+    try
+    {
+      token = Encoding.UTF8.GetString(WebEncoders.Base64UrlDecode(code));
+      return true;
+    }
+    catch (FormatException)
+    {
+      return false;
+    }
+  }
+
   private static IResult Accepted() => Results.Accepted(
     value: new AccountRequestAcceptedResponse(AcceptedMessage));
+
+  private static IResult PasswordResetAccepted() => Results.Accepted(
+    value: new AccountRequestAcceptedResponse(PasswordResetAcceptedMessage));
 
   private static IResult InvalidConfirmation() => Results.Problem(
     statusCode: StatusCodes.Status400BadRequest,
     title: "Unable to confirm email.",
     detail: "The confirmation request is invalid or has expired.",
     type: "https://httpstatuses.com/400");
+
+  private static IResult InvalidPasswordReset() => Results.Problem(
+    statusCode: StatusCodes.Status400BadRequest,
+    title: "Unable to reset password.",
+    detail: "The password reset request is invalid or has expired.",
+    type: "https://httpstatuses.com/400");
+
+  private static void SetNoStore(HttpResponse response)
+  {
+    response.Headers.CacheControl = "no-store";
+    response.Headers.Pragma = "no-cache";
+  }
 }

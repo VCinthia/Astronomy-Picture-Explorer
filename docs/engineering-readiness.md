@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
-Date: 2026-07-22
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 external gate pending; W15 password recovery planned
+Date: 2026-08-05
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W15 implemented locally and awaiting integration; W14 external gate pending
 
 ## Verdict
 
@@ -31,8 +31,9 @@ W14 preparó el 2026-07-22 la configuración de proveedor sin mutar cuentas: el 
 acepta secretos del dashboard/puerto Render, Netlify tiene rewrites firmadas con límites
 por IP y la API rechaza rutas de aplicación directas o `X-Forwarded-For` falsificado. El
 seed Neon, la configuración de dashboards, el correo real y el smoke siguen pendientes.
-W15 debe cerrar recuperación de contraseña con enlace Identity de un solo uso, revocación
-de refresh sessions y prueba LocalLog antes de la ejecución externa W14.
+W15 cerró localmente recuperación de contraseña con enlace Identity de un solo uso,
+revocación de refresh sessions y prueba LocalLog. Debe integrarse antes de la ejecución
+externa W14.
 
 ## Closed gates
 
@@ -290,16 +291,16 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - Este gate no reemplaza R3.14: no hay proveedores configurados, seed real, correo real
   ni smoke productivo aún.
 
-## P3-W15 planning gate
+## P3-W15 local implementation evidence
 
 - El contrato no enumera cuentas: request de reset es `202` genérico y solo usuarios
   confirmados reciben correo.
 - El link conserva `userId + code` Base64URL únicamente hasta el POST; Angular limpia la
   URL y no auto-inicia sesión ni persiste el código.
-- Un éxito debe revocar todas las refresh sessions, mantener el JWT existente como máximo
-  hasta su expiración corta y permitir sólo la contraseña nueva en un login posterior.
-- No hay migración, secreto, proveedor ni recurso pago nuevo. W14 suma límites edge y
-  smoke real después de que esta evidencia local sea PASS.
+- Un éxito revoca todas las refresh sessions, mantiene el JWT existente como máximo hasta
+  su expiración corta y permite sólo la contraseña nueva en un login posterior.
+- No hubo migración, secreto, proveedor ni recurso pago nuevo. Los límites edge ya están
+  preparados; W14 conserva el smoke real tras integrar esta evidencia local.
 
 Antes de cada wave restante:
 

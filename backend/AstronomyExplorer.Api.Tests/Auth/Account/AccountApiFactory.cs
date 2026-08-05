@@ -1,4 +1,5 @@
 using System.Collections.Concurrent;
+using AstronomyExplorer.Api.Auth;
 using AstronomyExplorer.Api.Email;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Identity;
@@ -13,15 +14,18 @@ public sealed class AccountApiFactory : WebApplicationFactory<Program>
   private readonly string _connectionString;
   private readonly IReadOnlyDictionary<string, string?> _settings;
   private readonly TimeSpan? _confirmationTokenLifespan;
+  private readonly IUserSessionLock? _userSessionLock;
 
   public AccountApiFactory(
     string connectionString,
     IReadOnlyDictionary<string, string?>? settings = null,
-    TimeSpan? confirmationTokenLifespan = null)
+    TimeSpan? confirmationTokenLifespan = null,
+    IUserSessionLock? userSessionLock = null)
   {
     _connectionString = connectionString;
     _settings = settings ?? new Dictionary<string, string?>();
     _confirmationTokenLifespan = confirmationTokenLifespan;
+    _userSessionLock = userSessionLock;
   }
 
   public FakeEmailSender EmailSender { get; } = new();
@@ -46,12 +50,45 @@ public sealed class AccountApiFactory : WebApplicationFactory<Program>
       services.RemoveAll<IEmailSender>();
       services.AddSingleton<IEmailSender>(EmailSender);
 
+      if (_userSessionLock is not null)
+      {
+        services.RemoveAll<IUserSessionLock>();
+        services.AddSingleton(_userSessionLock);
+      }
+
       if (_confirmationTokenLifespan is { } tokenLifespan)
       {
         services.Configure<DataProtectionTokenProviderOptions>(options =>
           options.TokenLifespan = tokenLifespan);
       }
     });
+  }
+}
+
+public sealed class GatedUserSessionLock : IUserSessionLock
+{
+  private readonly TaskCompletionSource _firstAcquisition = new(
+    TaskCreationOptions.RunContinuationsAsynchronously);
+  private readonly TaskCompletionSource _releaseFirstAcquisition = new(
+    TaskCreationOptions.RunContinuationsAsynchronously);
+  private int _armed;
+  private int _acquisitionCount;
+
+  public void Arm() => Volatile.Write(ref _armed, 1);
+
+  public Task WaitForFirstAcquisitionAsync() => _firstAcquisition.Task;
+
+  public void ReleaseFirstAcquisition() => _releaseFirstAcquisition.TrySetResult();
+
+  public Task AcquireAsync(Guid userId, CancellationToken cancellationToken)
+  {
+    if (Volatile.Read(ref _armed) == 0 || Interlocked.Increment(ref _acquisitionCount) != 1)
+    {
+      return Task.CompletedTask;
+    }
+
+    _firstAcquisition.TrySetResult();
+    return _releaseFirstAcquisition.Task.WaitAsync(cancellationToken);
   }
 }
 

@@ -20,6 +20,12 @@ public sealed class AccountRateLimitOptions
 
   public int ResendConfirmationEmailPermitLimit { get; init; } = 3;
 
+  public int ForgotPasswordIpPermitLimit { get; init; } = 5;
+
+  public int ForgotPasswordEmailPermitLimit { get; init; } = 3;
+
+  public int ResetPasswordIpPermitLimit { get; init; } = 5;
+
   public int LoginIpPermitLimit { get; init; } = 10;
 
   public TimeSpan Window { get; init; } = TimeSpan.FromMinutes(15);
@@ -31,6 +37,8 @@ public static class AccountRateLimitPolicies
 {
   public const string RegisterByIp = "register-by-ip";
   public const string ResendConfirmationByIp = "resend-confirmation-by-ip";
+  public const string ForgotPasswordByIp = "forgot-password-by-ip";
+  public const string ResetPasswordByIp = "reset-password-by-ip";
   public const string LoginByIp = "login-by-ip";
 
   public static FixedWindowRateLimiterOptions CreateFixedWindowOptions(
@@ -79,6 +87,8 @@ public interface IAccountEmailRateLimiter
   bool TryAcquireRegistration(string normalizedEmail);
 
   bool TryAcquireConfirmationResend(string normalizedEmail);
+
+  bool TryAcquirePasswordRecovery(string normalizedEmail);
 }
 
 public sealed class AccountEmailRateLimiter : IAccountEmailRateLimiter, IDisposable
@@ -109,6 +119,11 @@ public sealed class AccountEmailRateLimiter : IAccountEmailRateLimiter, IDisposa
     "resend",
     normalizedEmail,
     _options.ResendConfirmationEmailPermitLimit);
+
+  public bool TryAcquirePasswordRecovery(string normalizedEmail) => TryAcquire(
+    "forgot-password",
+    normalizedEmail,
+    _options.ForgotPasswordEmailPermitLimit);
 
   public void Dispose() => _partitions.Dispose();
 

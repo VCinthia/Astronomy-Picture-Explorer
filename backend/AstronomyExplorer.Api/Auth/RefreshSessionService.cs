@@ -15,14 +15,30 @@ namespace AstronomyExplorer.Api.Auth;
 public sealed class RefreshSessionService(
   AppDbContext dbContext,
   IOptions<AuthSessionOptions> options,
-  TimeProvider timeProvider)
+  TimeProvider timeProvider,
+  IUserSessionLock userSessionLock)
 {
   private readonly AuthSessionOptions _options = options.Value;
 
-  public async Task<CreatedRefreshSession> CreateAsync(
+  public async Task<CreatedRefreshSession?> CreateAsync(
     ApplicationUser user,
     CancellationToken cancellationToken)
   {
+    await using var transaction = await dbContext.Database.BeginTransactionAsync(
+      IsolationLevel.ReadCommitted,
+      cancellationToken);
+    await userSessionLock.AcquireAsync(user.Id, cancellationToken);
+    var securityStampMatches = await dbContext.Users
+      .AsNoTracking()
+      .AnyAsync(
+        candidate => candidate.Id == user.Id && candidate.SecurityStamp == user.SecurityStamp,
+        cancellationToken);
+    if (!securityStampMatches)
+    {
+      await transaction.RollbackAsync(cancellationToken);
+      return null;
+    }
+
     var token = CreateRawToken();
     var now = timeProvider.GetUtcNow();
     var session = new RefreshSession
@@ -36,6 +52,7 @@ public sealed class RefreshSessionService(
     };
     dbContext.RefreshSessions.Add(session);
     await dbContext.SaveChangesAsync(cancellationToken);
+    await transaction.CommitAsync(cancellationToken);
     return new CreatedRefreshSession(token, session.ExpiresAt);
   }
 
@@ -50,7 +67,7 @@ public sealed class RefreshSessionService(
     var familyId = await dbContext.RefreshSessions
       .AsNoTracking()
       .Where(candidate => candidate.TokenHash == tokenHash)
-      .Select(candidate => (Guid?)candidate.FamilyId)
+      .Select(candidate => new RefreshSessionIdentity(candidate.UserId, candidate.FamilyId))
       .SingleOrDefaultAsync(cancellationToken);
     if (familyId is null)
     {
@@ -58,7 +75,19 @@ public sealed class RefreshSessionService(
       return RotateRefreshResult.Invalid;
     }
 
-    await AcquireFamilyLockAsync(familyId.Value, cancellationToken);
+    await userSessionLock.AcquireAsync(familyId.UserId, cancellationToken);
+    var lockedIdentity = await dbContext.RefreshSessions
+      .AsNoTracking()
+      .Where(candidate => candidate.TokenHash == tokenHash)
+      .Select(candidate => new RefreshSessionIdentity(candidate.UserId, candidate.FamilyId))
+      .SingleOrDefaultAsync(cancellationToken);
+    if (lockedIdentity is null || lockedIdentity.UserId != familyId.UserId)
+    {
+      await transaction.RollbackAsync(cancellationToken);
+      return RotateRefreshResult.Invalid;
+    }
+
+    await AcquireFamilyLockAsync(lockedIdentity.FamilyId, cancellationToken);
     var session = await dbContext.RefreshSessions
       .Include(candidate => candidate.User)
       .SingleOrDefaultAsync(candidate => candidate.TokenHash == tokenHash, cancellationToken);
@@ -174,6 +203,8 @@ public sealed class RefreshSessionService(
 }
 
 public sealed record CreatedRefreshSession(string RawToken, DateTimeOffset ExpiresAt);
+
+internal sealed record RefreshSessionIdentity(Guid UserId, Guid FamilyId);
 
 public sealed record RotateRefreshResult(
   bool Succeeded,

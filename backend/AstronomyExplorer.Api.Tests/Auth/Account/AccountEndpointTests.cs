@@ -2,10 +2,12 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using AstronomyExplorer.Api.Auth;
 using AstronomyExplorer.Api.Data;
 using AstronomyExplorer.Api.Tests.Infrastructure;
 using Microsoft.AspNetCore.WebUtilities;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.DependencyInjection;
 
 namespace AstronomyExplorer.Api.Tests.Auth.Account;
 
@@ -299,6 +301,322 @@ public sealed partial class AccountEndpointTests(PostgreSqlFixture database)
   }
 
   [Fact]
+  public async Task ForgotPassword_ConfirmedMissingUnconfirmedAndInvalidRequests_AreIndistinguishable()
+  {
+    await using var factory = new AccountApiFactory(database.ConnectionString);
+    using var client = factory.CreateClient();
+    using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var confirmedEmail = UniqueEmail("password-reset-confirmed");
+    var unconfirmedEmail = UniqueEmail("password-reset-unconfirmed");
+
+    using var confirmedRegistration = await RegisterAsync(
+      client,
+      confirmedEmail,
+      ValidPassword,
+      cancellation.Token);
+    var confirmationUri = ExtractConfirmationUri(Assert.Single(factory.EmailSender.Messages).HtmlBody);
+    var confirmationQuery = QueryHelpers.ParseQuery(confirmationUri.Query);
+    using var confirmation = await client.PostAsJsonAsync(
+      "/auth/confirm-email",
+      new
+      {
+        userId = confirmationQuery["userId"].ToString(),
+        code = confirmationQuery["code"].ToString()
+      },
+      cancellation.Token);
+    Assert.Equal(HttpStatusCode.NoContent, confirmation.StatusCode);
+    using var unconfirmedRegistration = await RegisterAsync(
+      client,
+      unconfirmedEmail,
+      ValidPassword,
+      cancellation.Token);
+    factory.EmailSender.Clear();
+
+    using var confirmed = await client.PostAsJsonAsync(
+      "/auth/forgot-password",
+      new { email = confirmedEmail },
+      cancellation.Token);
+    var confirmedBody = await confirmed.Content.ReadAsStringAsync(cancellation.Token);
+    using var missing = await client.PostAsJsonAsync(
+      "/auth/forgot-password",
+      new { email = UniqueEmail("password-reset-missing") },
+      cancellation.Token);
+    using var unconfirmed = await client.PostAsJsonAsync(
+      "/auth/forgot-password",
+      new { email = unconfirmedEmail },
+      cancellation.Token);
+    using var invalid = await client.PostAsJsonAsync(
+      "/auth/forgot-password",
+      new { email = string.Empty },
+      cancellation.Token);
+
+    Assert.All(
+      new[] { confirmed, missing, unconfirmed, invalid },
+      response =>
+      {
+        Assert.Equal(HttpStatusCode.Accepted, response.StatusCode);
+        Assert.Contains("no-store", response.Headers.CacheControl?.ToString());
+      });
+    Assert.Equal(confirmedBody, await missing.Content.ReadAsStringAsync(cancellation.Token));
+    Assert.Equal(confirmedBody, await unconfirmed.Content.ReadAsStringAsync(cancellation.Token));
+    Assert.Equal(confirmedBody, await invalid.Content.ReadAsStringAsync(cancellation.Token));
+
+    var resetEmail = Assert.Single(factory.EmailSender.Messages);
+    Assert.Equal(confirmedEmail, resetEmail.Recipient);
+    var resetUri = ExtractPasswordResetUri(resetEmail.HtmlBody);
+    var resetQuery = QueryHelpers.ParseQuery(resetUri.Query);
+    Assert.Equal("/reset-password", resetUri.AbsolutePath);
+    Assert.Matches("^[A-Za-z0-9_-]+$", resetQuery["code"].ToString());
+  }
+
+  [Fact]
+  public async Task ResetPassword_ValidOneShotToken_RevokesEveryRefreshSessionAndExpiresSuppliedCookie()
+  {
+    await using var factory = new AccountApiFactory(database.ConnectionString);
+    using var client = factory.CreateClient(new() { HandleCookies = false });
+    using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var email = UniqueEmail("reset-sessions");
+    using var registration = await RegisterAsync(client, email, ValidPassword, cancellation.Token);
+    var confirmationUri = ExtractConfirmationUri(Assert.Single(factory.EmailSender.Messages).HtmlBody);
+    var confirmationQuery = QueryHelpers.ParseQuery(confirmationUri.Query);
+    using var confirmation = await client.PostAsJsonAsync(
+      "/auth/confirm-email",
+      new
+      {
+        userId = confirmationQuery["userId"].ToString(),
+        code = confirmationQuery["code"].ToString()
+      },
+      cancellation.Token);
+    Assert.Equal(HttpStatusCode.NoContent, confirmation.StatusCode);
+    factory.EmailSender.Clear();
+    using var staleLoginScope = factory.Services.CreateScope();
+    var staleUser = await staleLoginScope.ServiceProvider
+      .GetRequiredService<Microsoft.AspNetCore.Identity.UserManager<AstronomyExplorer.Api.Domain.ApplicationUser>>()
+      .FindByEmailAsync(email);
+    Assert.NotNull(staleUser);
+
+    using var firstLogin = await client.PostAsJsonAsync(
+      "/auth/login",
+      new { email, password = ValidPassword },
+      cancellation.Token);
+    using var secondLogin = await client.PostAsJsonAsync(
+      "/auth/login",
+      new { email, password = ValidPassword },
+      cancellation.Token);
+    var firstToken = ExtractCookieValue(Assert.Single(firstLogin.Headers.GetValues("Set-Cookie")));
+    var secondToken = ExtractCookieValue(Assert.Single(secondLogin.Headers.GetValues("Set-Cookie")));
+    Assert.NotEqual(firstToken, secondToken);
+
+    using var forgot = await client.PostAsJsonAsync(
+      "/auth/forgot-password",
+      new { email },
+      cancellation.Token);
+    Assert.Equal(HttpStatusCode.Accepted, forgot.StatusCode);
+    var resetUri = ExtractPasswordResetUri(Assert.Single(factory.EmailSender.Messages).HtmlBody);
+    var resetQuery = QueryHelpers.ParseQuery(resetUri.Query);
+    using var resetRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/reset-password")
+    {
+      Content = JsonContent.Create(new
+      {
+        userId = resetQuery["userId"].ToString(),
+        code = resetQuery["code"].ToString(),
+        password = "New2!Password"
+      })
+    };
+    resetRequest.Headers.Add("Cookie", $"ape.refresh={firstToken}");
+    using var reset = await client.SendAsync(resetRequest, cancellation.Token);
+
+    Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+    Assert.Contains("no-store", reset.Headers.CacheControl?.ToString());
+    Assert.Contains(
+      "max-age=0",
+      Assert.Single(reset.Headers.GetValues("Set-Cookie")),
+      StringComparison.OrdinalIgnoreCase);
+    await using (var context = database.CreateDbContext())
+    {
+      Assert.False(await context.RefreshSessions.AnyAsync(
+        session => session.User.Email == email && session.RevokedAt == null,
+        cancellation.Token));
+    }
+    var staleSession = await staleLoginScope.ServiceProvider
+      .GetRequiredService<RefreshSessionService>()
+      .CreateAsync(staleUser!, cancellation.Token);
+    Assert.Null(staleSession);
+
+    using var oldPassword = await client.PostAsJsonAsync(
+      "/auth/login",
+      new { email, password = ValidPassword },
+      cancellation.Token);
+    using var refreshRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/refresh");
+    refreshRequest.Headers.Add("Origin", "https://portfolio.example");
+    refreshRequest.Headers.Add("Cookie", $"ape.refresh={secondToken}");
+    using var refresh = await client.SendAsync(refreshRequest, cancellation.Token);
+    using var newPassword = await client.PostAsJsonAsync(
+      "/auth/login",
+      new { email, password = "New2!Password" },
+      cancellation.Token);
+
+    Assert.Equal(HttpStatusCode.Unauthorized, oldPassword.StatusCode);
+    Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
+    Assert.Equal(HttpStatusCode.OK, newPassword.StatusCode);
+  }
+
+  [Fact]
+  public async Task ResetPassword_RotationAlreadyInFlight_CannotLeaveAnActiveReplacementSession()
+  {
+    var userSessionLock = new GatedUserSessionLock();
+    await using var factory = new AccountApiFactory(
+      database.ConnectionString,
+      userSessionLock: userSessionLock);
+    using var client = factory.CreateClient(new() { HandleCookies = false });
+    using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var email = UniqueEmail("reset-rotation-race");
+    using var registration = await RegisterAsync(client, email, ValidPassword, cancellation.Token);
+    var confirmationUri = ExtractConfirmationUri(Assert.Single(factory.EmailSender.Messages).HtmlBody);
+    var confirmationQuery = QueryHelpers.ParseQuery(confirmationUri.Query);
+    using var confirmation = await client.PostAsJsonAsync(
+      "/auth/confirm-email",
+      new
+      {
+        userId = confirmationQuery["userId"].ToString(),
+        code = confirmationQuery["code"].ToString()
+      },
+      cancellation.Token);
+    Assert.Equal(HttpStatusCode.NoContent, confirmation.StatusCode);
+    factory.EmailSender.Clear();
+
+    using var login = await client.PostAsJsonAsync(
+      "/auth/login",
+      new { email, password = ValidPassword },
+      cancellation.Token);
+    var refreshToken = ExtractCookieValue(Assert.Single(login.Headers.GetValues("Set-Cookie")));
+    using var forgot = await client.PostAsJsonAsync(
+      "/auth/forgot-password",
+      new { email },
+      cancellation.Token);
+    var resetUri = ExtractPasswordResetUri(Assert.Single(factory.EmailSender.Messages).HtmlBody);
+    var resetQuery = QueryHelpers.ParseQuery(resetUri.Query);
+
+    userSessionLock.Arm();
+    using var refreshRequest = new HttpRequestMessage(HttpMethod.Post, "/auth/refresh");
+    refreshRequest.Headers.Add("Origin", "https://portfolio.example");
+    refreshRequest.Headers.Add("Cookie", $"ape.refresh={refreshToken}");
+    var refreshTask = client.SendAsync(refreshRequest, cancellation.Token);
+    await userSessionLock.WaitForFirstAcquisitionAsync().WaitAsync(
+      TimeSpan.FromSeconds(5),
+      cancellation.Token);
+
+    using var reset = await client.PostAsJsonAsync(
+      "/auth/reset-password",
+      new
+      {
+        userId = resetQuery["userId"].ToString(),
+        code = resetQuery["code"].ToString(),
+        password = "New2!Password"
+      },
+      cancellation.Token);
+    Assert.Equal(HttpStatusCode.NoContent, reset.StatusCode);
+    userSessionLock.ReleaseFirstAcquisition();
+    using var refresh = await refreshTask;
+
+    Assert.Equal(HttpStatusCode.Unauthorized, refresh.StatusCode);
+    await using var context = database.CreateDbContext();
+    Assert.False(await context.RefreshSessions.AnyAsync(
+      session => session.User.Email == email && session.RevokedAt == null,
+      cancellation.Token));
+  }
+
+  [Fact]
+  public async Task ResetPassword_InvalidReusedMissingAndPasswordFailure_ReturnSameControlledProblem()
+  {
+    await using var factory = new AccountApiFactory(database.ConnectionString);
+    using var client = factory.CreateClient();
+    using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+    var email = UniqueEmail("reset-invalid");
+    using var registration = await RegisterAsync(client, email, ValidPassword, cancellation.Token);
+    var confirmationUri = ExtractConfirmationUri(Assert.Single(factory.EmailSender.Messages).HtmlBody);
+    var confirmationQuery = QueryHelpers.ParseQuery(confirmationUri.Query);
+    using var confirmation = await client.PostAsJsonAsync(
+      "/auth/confirm-email",
+      new
+      {
+        userId = confirmationQuery["userId"].ToString(),
+        code = confirmationQuery["code"].ToString()
+      },
+      cancellation.Token);
+    factory.EmailSender.Clear();
+    using var forgot = await client.PostAsJsonAsync("/auth/forgot-password", new { email }, cancellation.Token);
+    var resetUri = ExtractPasswordResetUri(Assert.Single(factory.EmailSender.Messages).HtmlBody);
+    var resetQuery = QueryHelpers.ParseQuery(resetUri.Query);
+    var validRequest = new
+    {
+      userId = resetQuery["userId"].ToString(),
+      code = resetQuery["code"].ToString(),
+      password = "New2!Password"
+    };
+    using var weakPassword = await client.PostAsJsonAsync(
+      "/auth/reset-password",
+      new { validRequest.userId, validRequest.code, password = "short" },
+      cancellation.Token);
+    using var success = await client.PostAsJsonAsync("/auth/reset-password", validRequest, cancellation.Token);
+    Assert.Equal(HttpStatusCode.NoContent, success.StatusCode);
+
+    using var reused = await client.PostAsJsonAsync("/auth/reset-password", validRequest, cancellation.Token);
+    using var invalid = await client.PostAsJsonAsync(
+      "/auth/reset-password",
+      new { userId = "not-a-guid", code = "not+base64", password = "New2!Password" },
+      cancellation.Token);
+    using var missing = await client.PostAsJsonAsync(
+      "/auth/reset-password",
+      new { userId = Guid.NewGuid().ToString(), code = validRequest.code, password = "New2!Password" },
+      cancellation.Token);
+
+    var reusedProblem = await ReadProblemAsync(reused, cancellation.Token);
+    Assert.Equal(HttpStatusCode.BadRequest, reused.StatusCode);
+    Assert.Equal(reusedProblem, await ReadProblemAsync(weakPassword, cancellation.Token));
+    Assert.Equal(reusedProblem, await ReadProblemAsync(invalid, cancellation.Token));
+    Assert.Equal(reusedProblem, await ReadProblemAsync(missing, cancellation.Token));
+  }
+
+  [Fact]
+  public async Task ForgotAndResetPassword_IpLimits_ReturnNoStoreProblemDetails()
+  {
+    var settings = new Dictionary<string, string?>
+    {
+      ["AccountRateLimits:ForgotPasswordIpPermitLimit"] = "1",
+      ["AccountRateLimits:ForgotPasswordEmailPermitLimit"] = "100",
+      ["AccountRateLimits:ResetPasswordIpPermitLimit"] = "1"
+    };
+    await using var factory = new AccountApiFactory(database.ConnectionString, settings);
+    using var client = factory.CreateClient();
+    using var cancellation = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+    using var forgot = await client.PostAsJsonAsync(
+      "/auth/forgot-password",
+      new { email = UniqueEmail("forgot-limit") },
+      cancellation.Token);
+    using var forgotLimited = await client.PostAsJsonAsync(
+      "/auth/forgot-password",
+      new { email = UniqueEmail("forgot-limit-other") },
+      cancellation.Token);
+    using var reset = await client.PostAsJsonAsync(
+      "/auth/reset-password",
+      new { userId = "not-a-guid", code = "invalid", password = "New2!Password" },
+      cancellation.Token);
+    using var resetLimited = await client.PostAsJsonAsync(
+      "/auth/reset-password",
+      new { userId = "not-a-guid", code = "invalid", password = "New2!Password" },
+      cancellation.Token);
+
+    Assert.Equal(HttpStatusCode.Accepted, forgot.StatusCode);
+    Assert.Equal(HttpStatusCode.BadRequest, reset.StatusCode);
+    await AssertRateLimitProblemAsync(forgotLimited, cancellation.Token);
+    await AssertRateLimitProblemAsync(resetLimited, cancellation.Token);
+    Assert.Contains("no-store", forgotLimited.Headers.CacheControl?.ToString());
+    Assert.Contains("no-store", resetLimited.Headers.CacheControl?.ToString());
+  }
+
+  [Fact]
   public async Task Register_ClientIpLimitExceeded_Returns429ProblemDetails()
   {
     var settings = new Dictionary<string, string?>
@@ -482,6 +800,19 @@ public sealed partial class AccountEndpointTests(PostgreSqlFixture database)
     var match = ConfirmationLinkRegex().Match(htmlBody);
     Assert.True(match.Success, "The confirmation email must contain one link.");
     return new Uri(WebUtility.HtmlDecode(match.Groups[1].Value), UriKind.Absolute);
+  }
+
+  private static Uri ExtractPasswordResetUri(string htmlBody)
+  {
+    var match = ConfirmationLinkRegex().Match(htmlBody);
+    Assert.True(match.Success, "The password reset email must contain one link.");
+    return new Uri(WebUtility.HtmlDecode(match.Groups[1].Value), UriKind.Absolute);
+  }
+
+  private static string ExtractCookieValue(string setCookie)
+  {
+    var pair = setCookie.Split(';', 2)[0];
+    return pair[(pair.IndexOf('=') + 1)..];
   }
 
   private static string UniqueEmail(string prefix) =>

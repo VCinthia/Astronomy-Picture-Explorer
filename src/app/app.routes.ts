@@ -39,5 +39,17 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./auth/confirm-email/confirm-email.component').then((m) => m.ConfirmEmailComponent)
   },
+  {
+    path: 'forgot-password',
+    title: 'Reset password · Astronomy Picture Explorer',
+    loadComponent: () =>
+      import('./auth/forgot-password/forgot-password.component').then((m) => m.ForgotPasswordComponent)
+  },
+  {
+    path: 'reset-password',
+    title: 'Choose a new password · Astronomy Picture Explorer',
+    loadComponent: () =>
+      import('./auth/reset-password/reset-password.component').then((m) => m.ResetPasswordComponent)
+  },
   { path: '**', redirectTo: 'home' }
 ];

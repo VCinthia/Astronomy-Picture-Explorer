@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-05
-Status: Accepted; P3-W1-W13 implemented; W14 external gate pending; W15 planned
+Status: Accepted; P3-W1-W13 implemented; W15 implemented locally and awaiting integration; W14 external gate pending
 
 ## Context
 
@@ -459,11 +459,18 @@ ocasionales son suficientes y observables.
 - Esto no reemplaza el gate externo W14: aún se requieren la configuración de secretos,
   el deploy y la demostración con dos visitantes y un bypass/spoof rechazado.
 
-## Planned alignment - P3-W15 password recovery (2026-08-05)
+## Implementation record - P3-W15 password recovery (2026-08-05)
 
 - W15 reutiliza los token providers y key ring Identity de W2; no introduce tablas ni
   tokens propios. El contrato genérico de `IEmailSender` permite un segundo tipo de correo
   sin exponer la API key de Resend.
 - La revocación masiva complementa la rotación/replay de W3: un password reset no deja
   refresh tokens renovables en otros dispositivos. El flujo debe completar su reset y la
-  revocación antes de responder éxito.
+  revocación antes de responder éxito. La implementación abre una única transacción del
+  mismo `AppDbContext`: `UserManager.ResetPasswordAsync` debe completar antes del update
+  masivo de sesiones y ambos cambios se confirman antes de `204`.
+- Account tests cubren request anti-enumeración, token Base64URL, fallo genérico,
+  revocación de dos sesiones/cookie previa y límites; Angular cubre scrub, descarte tras
+  intento, no-storage y navegación Login sin auto-login. La evidencia local 2026-08-05
+  es 177/177 backend, 128/128 frontend y Compose/LocalLog healthy; aún requiere merge
+  antes de la ejecución externa W14.

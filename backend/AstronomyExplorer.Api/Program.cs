@@ -102,6 +102,22 @@ builder.Services.AddRateLimiter(options =>
         _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
           accountRateLimitOptions.ResendConfirmationIpPermitLimit,
           accountRateLimitOptions.Window)));
+  options.AddPolicy(AccountRateLimitPolicies.ForgotPasswordByIp, httpContext =>
+    useNetlifyEdgeRateLimits
+      ? RateLimitPartition.GetNoLimiter("netlify-edge")
+      : RateLimitPartition.GetFixedWindowLimiter(
+        AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
+        _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
+          accountRateLimitOptions.ForgotPasswordIpPermitLimit,
+          accountRateLimitOptions.Window)));
+  options.AddPolicy(AccountRateLimitPolicies.ResetPasswordByIp, httpContext =>
+    useNetlifyEdgeRateLimits
+      ? RateLimitPartition.GetNoLimiter("netlify-edge")
+      : RateLimitPartition.GetFixedWindowLimiter(
+        AccountRateLimitPartitionKeys.FromRemoteIp(httpContext),
+        _ => AccountRateLimitPolicies.CreateFixedWindowOptions(
+          accountRateLimitOptions.ResetPasswordIpPermitLimit,
+          accountRateLimitOptions.Window)));
   options.AddPolicy(AccountRateLimitPolicies.LoginByIp, httpContext =>
     useNetlifyEdgeRateLimits
       ? RateLimitPartition.GetNoLimiter("netlify-edge")
@@ -114,10 +130,13 @@ builder.Services.AddRateLimiter(options =>
 
 builder.Services.AddSingleton<IAccountEmailRateLimiter, AccountEmailRateLimiter>();
 builder.Services.AddSingleton<EmailConfirmationLinkFactory>();
+builder.Services.AddSingleton<PasswordResetLinkFactory>();
 builder.Services.AddScoped<JwtTokenService>();
 builder.Services.AddScoped<RefreshSessionService>();
 builder.Services.AddScoped<RefreshCookieService>();
 builder.Services.AddScoped<LoginPasswordVerifier>();
+builder.Services.AddScoped<IUserSessionLock, UserSessionLock>();
+builder.Services.AddScoped<PasswordResetService>();
 builder.Services.AddSingleton<ApodSingleFlight>();
 builder.Services.AddSingleton<ApodCacheService>();
 builder.Services.AddScoped<CatalogReadinessService>();

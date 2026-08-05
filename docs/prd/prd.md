@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-05
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 DONE; W14 external gate pending; W15 planned
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 DONE; W15 implemented locally and awaiting integration; W14 external gate pending
 
 ## Vision
 
@@ -186,8 +186,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 ## Success criteria
 
 - P1/P2 permanecen documentados como entregas historicas cerradas.
-- P3 W1-W13 permanecen cerradas. W15 debe sumar recuperación de contraseña verificable
-  localmente antes de que W14 ejecute el smoke con proveedores reales.
+- P3 W1-W13 permanecen cerradas. W15 implementó recuperación de contraseña verificable
+  localmente y espera integración antes de que W14 ejecute el smoke con proveedores reales.
 - Catalogo inicial listo en Neon y search FTS probado.
 - Auth/favorites/APOD funcionan E2E desde Netlify mediante proxy same-origin.
 - Cold-start UX verificada.
@@ -200,7 +200,7 @@ implementacion preparada usa redirects Netlify firmadas y límites por IP en Net
 API verifica el JWS y rechaza bypass directo/spoof. La configuración de proveedores y
 el smoke externo siguen pendientes y son condición para marcar P3 DONE.
 
-## Planificacion P3-W15 - Recuperacion de contraseña (2026-08-05)
+## Implementacion local P3-W15 - Recuperacion de contraseña (2026-08-05)
 
 P3 incorpora recuperación de contraseña antes del gate externo de W14. La solicitud
 responde `202` con el mismo mensaje para cuenta confirmada, no existente o no confirmada;

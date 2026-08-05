@@ -1,8 +1,8 @@
 # Master Plan - Astronomy Picture Explorer
 
 Date: 2026-06-25
-Last revised: 2026-07-22
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 external gate pending; W15 planned
+Last revised: 2026-08-05
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W15 implemented locally and awaiting integration; W14 external gate pending
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -205,7 +205,7 @@ W14 conserva el único alcance para seed real, proveedores, deploy y smoke produ
 su ejecución externa espera que W15 esté integrada y verificada localmente. Hasta esa
 evidencia conjunta no se promociona `main`.
 
-P3-W15 está planificada para recuperación de contraseña: solicitud genérica, enlace
+P3-W15 está implementada localmente para recuperación de contraseña: solicitud genérica, enlace
 Identity de un solo uso, reset sin auto-login y revocación masiva de refresh sessions.
 No crea recursos externos; reutiliza el correo LocalLog/Resend ya diseñado y amplía el
 smoke local antes de que W14 use un sender real.
@@ -263,7 +263,7 @@ smoke local antes de que W14 use un sender real.
 | W12 | Local containers/full stack ✅ |
 | W13 | Final UX, navigation and local account acceptance ✅ |
 | W14 | Zero-cost seed/deploy/production smoke, después de W15 (provider evidence pending) |
-| W15 | Recuperación de contraseña local completa; prerequisito del smoke W14 |
+| W15 | Recuperación de contraseña local completa; integración pendiente, prerequisito del smoke W14 |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.
 
