@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-07-22
-Status: IN PROGRESS - W1-W13 DONE; W14 deployment preparation in progress
+Status: IN PROGRESS - W1-W13 DONE; W14 external deployment pending; W15 password recovery planned
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -38,7 +38,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - Solucion .NET 10, EF Core/Npgsql, Identity, OpenAPI, health y ProblemDetails.
 - Entidades `ApplicationUser`, `RefreshSession`, `ApodEntry`, `Favorite` y
   `CatalogSyncState`.
-- Registro, reenvio, confirmacion, login, JWT, refresh rotation/reuse y logout.
+- Registro, reenvio, confirmacion, login, recuperación de contraseña, JWT, refresh rotation/reuse y logout.
 - Rate limiting de auth/email.
 - NASA APOD `today`, `date`, cache en memoria + PostgreSQL.
 - Catalog CLI con rangos NASA, checkpoint, resume, retry/backoff y status.
@@ -61,7 +61,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 
 ### Excluded
 
-- OAuth/social login, password recovery, roles/admin UI.
+- OAuth/social login, MFA, cambio de email, roles/admin UI.
 - Tags generados por NASA o por IA.
 - Blobs de imagen/video en PostgreSQL.
 - Schedulers, keepalive o servicios pagos.
@@ -72,11 +72,11 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 
 - P2 debe estar `DONE` en produccion con evidencia de smoke.
 - ADR-0003 y esta planificacion deben permanecer sincronizados.
-- W1-W13 se acumulan en `codex/p3-integration`; `main` conserva P2 productivo hasta la
-  promocion validada por W14.
+- W1-W13 se acumulan en `codex/p3-integration`; W15 se integra antes de la ejecución
+  externa W14. `main` conserva P2 productivo hasta la promoción validada por W14.
 - W1-W13 pueden implementarse con servicios locales/mocks.
 - Neon es requerido para ejecutar el seed productivo de W5 y W14.
-- Resend + dominio verificado son requeridos para smoke real de W14, no para tests W2.
+- Resend + dominio verificado son requeridos para smoke real de W14, no para tests W2/W15.
 - NASA API key propia es requerida antes del backfill W5; `DEMO_KEY` no se usa en carga.
 - Render y URLs finales son requeridos solo en W14.
 - Gate Angular previo a W8 cerrado el 2026-07-20 en la rama dedicada
@@ -101,6 +101,8 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.13** UX final y aceptación local de navegación/cuenta (W13).
 - [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14; preparación local completa,
   evidencia de proveedores pendiente).
+- [ ] **R3.15** Recuperación de contraseña segura: request genérico, reset Identity de
+  un solo uso, revocación masiva de refresh sessions y UX/local smoke (W15).
 
 W1 se cerro el 2026-07-17 con build limpio, migracion inicial reproducible y 11/11
 tests Testcontainers sobre PostgreSQL 17. La evidencia y las precisiones fisicas del
@@ -220,6 +222,13 @@ con límites por IP y la API valida el JWS Netlify antes de `/api/*`/`/auth/*`. 
 la propuesta de confiar en forwarded headers: no se interpreta `X-Forwarded-For` y un
 bypass directo/spoof recibe 403. `docs/deploy/p3-deploy-runbook.md` mantiene la evidencia
 pendiente de Neon/Render/Netlify/Resend, seed y smoke; R3.14 sigue abierto hasta entonces.
+
+W15 se inserta antes de la ejecución externa W14. Reutiliza el correo de cuenta sin un
+nuevo secreto ni esquema: `forgot-password` responde genéricamente y solo entrega correo
+a usuarios confirmados; `reset-password` usa el token Identity Base64URL, no realiza
+auto-login y revoca todas las sesiones refresh. La URL se limpia en Angular antes de
+enviar el POST. Los límites IP/email y la redirect edge se extienden para proteger la
+cuota de correo y el intento de reset.
 La regresión de preparación actual pasa backend 172/172 y frontend 118/118; los conteos
 W13 anteriores permanecen como evidencia histórica antes de sus fixes posteriores.
 
@@ -236,7 +245,8 @@ P3 es `DONE` solo con evidencia de todos los puntos:
   `catalog-status` queda ready.
 - Search prueba ranking de title sobre explanation, paginacion, vacio, caracteres
   especiales y fallback trigram solo si fue habilitado.
-- Auth E2E: register -> email -> confirm POST -> login -> bootstrap/refresh -> logout.
+- Auth E2E: register -> email -> confirm POST -> login -> bootstrap/refresh -> logout;
+  password recovery -> reset -> old password/refresh rejected -> new login succeeds.
 - Confirmacion requiere `userId + code`; el codigo queda Base64URL y no persiste raw.
 - Refresh concurrente produce una sola rotacion desde Angular; replay revoca familia.
 - Requests refresh/logout con `Origin` no permitido fallan.
@@ -270,6 +280,7 @@ P3 es `DONE` solo con evidencia de todos los puntos:
 12. `astronomy-p3-w12-local-containers-wave.md`
 13. `astronomy-p3-w13-final-ux-local-acceptance-wave.md`
 14. `astronomy-p3-w14-zero-cost-deploy-wave.md`
+15. `astronomy-p3-w15-password-recovery-wave.md`
 
 All files live under `docs/plans/waves/`.
 
@@ -294,15 +305,23 @@ flowchart LR
     W11 --> W12
     W11 --> W13
     W12 --> W13
+    W2 --> W15["W15 Password recovery"]
+    W3 --> W15
+    W8 --> W15
+    W9 --> W15
+    W12 --> W15
+    W13 --> W15
     W5 --> W14
     W12 --> W14
     W13 --> W14
+    W15 --> W14
 ```
 
 - W2 y W4 pueden ejecutarse en paralelo despues de W1 si el scope de `Program.cs` se
   coordina o se integran secuencialmente en `main`.
 - No se paralelizan waves que compartan servicios Angular centrales.
-- W14 es la unica wave autorizada a mutar proveedores productivos.
+- W14 es la unica wave autorizada a mutar proveedores productivos y espera W15 para su
+  smoke final.
 
 ## 9. Phase verification
 

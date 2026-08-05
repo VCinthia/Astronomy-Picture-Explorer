@@ -101,3 +101,9 @@ Render no acepta `X-Forwarded-For` como IP pública. Producción usa redirects N
 firmadas y límites de borde por IP; la API conserva el límite por email normalizado y
 rechaza bypass directo/spoof antes de llegar a estos endpoints. La evidencia real de
 proveedores sigue pendiente en W14.
+
+## Design clarification - P3-W15 (2026-08-05)
+
+W15 reutiliza el token provider, key ring e `IEmailSender` ya cerrados por W2 para un
+segundo correo de cuenta: password reset. No modifica la evidencia de confirmación; el
+nuevo request es genérico y solo usuarios confirmados reciben el nuevo enlace.

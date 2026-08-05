@@ -92,3 +92,9 @@ docker compose down
 - W13 de UX y aceptación local se inserta antes de la promoción de proveedor, que pasa a
   W14. W12 sigue siendo la fuente del stack local y de `LocalLog`; no se habilita un
   proveedor, no se expone un código de confirmación en la SPA y no cambia su evidencia.
+
+## Design clarification - P3-W15 (2026-08-05)
+
+W15 reutiliza el mismo sink `LocalLog` Development-only para el enlace de recuperación.
+El runbook local añade una extracción de URL que evita copiar líneas PowerShell envueltas;
+no se toca el proveedor real ni se convierte el log en una fuente de credenciales pública.

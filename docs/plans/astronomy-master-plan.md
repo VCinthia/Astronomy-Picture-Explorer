@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-07-22
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 preparation in progress
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 external gate pending; W15 planned
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -201,8 +201,14 @@ P3-W13 quedo DONE el 2026-07-22:
 - 117/117 pruebas frontend, build, backend, Compose Windows/Linux y smoke LocalLog de
   registro -> confirmación -> sesión -> favoritos -> logout PASS, sin proveedor externo.
 
-W14 permanece como el unico alcance para seed real, proveedores, deploy y smoke
-productivo.
+W14 conserva el único alcance para seed real, proveedores, deploy y smoke productivo;
+su ejecución externa espera que W15 esté integrada y verificada localmente. Hasta esa
+evidencia conjunta no se promociona `main`.
+
+P3-W15 está planificada para recuperación de contraseña: solicitud genérica, enlace
+Identity de un solo uso, reset sin auto-login y revocación masiva de refresh sessions.
+No crea recursos externos; reutiliza el correo LocalLog/Resend ya diseñado y amplía el
+smoke local antes de que W14 use un sender real.
 
 ## 4. Execution contract
 
@@ -212,7 +218,8 @@ productivo.
 - Implementar -> verificar -> review -> aprobacion -> commit/merge -> sincronizar docs.
 - Una wave solo se cierra con evidencia de sus acceptance criteria.
 - No avanzar si una decision cambia ADR/phase/dependency graph sin actualizar docs primero.
-- P3-W14 es la unica wave que despliega/muta produccion; waves previas usan local/fakes.
+- P3-W14 es la unica wave que despliega/muta produccion y solo puede cerrarse después de
+  W15; las demás waves usan local/fakes.
 - Ningun agente habilita recursos pagos, overages, keepalive o upgrades automaticos.
 
 ## 5. Non-negotiable engineering rules
@@ -255,7 +262,8 @@ productivo.
 | W11 | Frontend favorites API migration |
 | W12 | Local containers/full stack ✅ |
 | W13 | Final UX, navigation and local account acceptance ✅ |
-| W14 | Zero-cost seed/deploy/production smoke (provider evidence pending) |
+| W14 | Zero-cost seed/deploy/production smoke, después de W15 (provider evidence pending) |
+| W15 | Recuperación de contraseña local completa; prerequisito del smoke W14 |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.
 

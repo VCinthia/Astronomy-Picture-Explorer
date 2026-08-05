@@ -81,3 +81,9 @@ rg -n "localStorage.*token|sessionStorage.*token|BehaviorSubject|NgModule|enviro
 ## Parent sync
 
 - [x] Actualizar `R3.8`, master/readiness, ADR, flow, PRD y estado con evidencia.
+
+## Design clarification - P3-W15 (2026-08-05)
+
+W15 amplía la cuenta con `forgot-password` y `reset-password` lazy. Replica el patrón
+W8 de validar GUID/Base64URL y limpiar el código antes del POST, pero no cambia los
+contratos ni la evidencia de registro, confirmación y login originales.

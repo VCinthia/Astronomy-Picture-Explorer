@@ -1,11 +1,11 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
-Date: 2026-07-22
-Status: P3 IN PROGRESS - W1-W13 implemented; W14 pending production release
+Date: 2026-08-05
+Status: P3 IN PROGRESS - W1-W13 implemented; W14 external release pending; W15 password recovery planned
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
-viven en ADR-0003; las unidades de ejecucion viven en las waves W1-W14.
+viven en ADR-0003; las unidades de ejecucion viven en las waves W1-W15.
 
 ## 1. Contexto del sistema
 
@@ -44,6 +44,8 @@ flowchart TD
     PUBLIC --> LOGIN["/login"]
     PUBLIC --> REG["/register"]
     PUBLIC --> CONF["/confirm-email?userId&code"]
+    PUBLIC --> FORGOT["/forgot-password"]
+    PUBLIC --> RESET["/reset-password?userId&code"]
     PRIVATE --> FAV["/favorites - AuthGuard"]
     FAV -. "sin sesión" .-> LOGIN
 ```
@@ -58,6 +60,8 @@ flowchart TD
 | Reenvio | Login/Register | `POST /auth/resend-confirmation` | No |
 | Confirmacion | `/confirm-email` | `POST /auth/confirm-email` | No |
 | Login | `/login` | `POST /auth/login` | No |
+| Solicitar recuperación | `/forgot-password` | `POST /auth/forgot-password` | No |
+| Restablecer contraseña | `/reset-password` | `POST /auth/reset-password` | No |
 | Refresh | bootstrap/interceptor | `POST /auth/refresh` | Cookie + Origin |
 | Logout | accion usuario | `POST /auth/logout` | Cookie + Origin |
 | Favoritos | cards + `/favorites` | `/api/favorites` | JWT |
@@ -95,6 +99,17 @@ ProblemDetails tipados y conserva el access JWT solo en signals. Login oculta el
 de 401 y expone reenvio solo para `403 email_unconfirmed`. Antes del POST de
 confirmacion, Angular exige un GUID y un Base64URL y limpia el codigo de la historia;
 esto tambien ocurre ante un error. Luego lleva a login sin crear una sesion automatica.
+
+### W15 password recovery alignment
+
+Login enlaza a `/forgot-password`. La solicitud siempre muestra el mismo éxito genérico;
+una cuenta confirmada recibe un enlace `/reset-password?userId&code` generado por Identity.
+La página valida ambos parámetros, los elimina de la historia y conserva el código sólo
+en memoria hasta el POST. Un resultado exitoso no emite cookie/JWT: navega a Login con un
+aviso breve, expira la cookie presente y limpia la sesión Angular; el backend revoca todas
+las refresh sessions para que ningún dispositivo pueda renovar acceso con la contraseña
+anterior. Request/reset son anónimos: el código Identity es la capacidad y no consumen la
+cookie ni el filtro Origin reservado a refresh/logout.
 
 ### W9 frontend session alignment
 
@@ -436,9 +451,16 @@ flowchart LR
     W11 --> W12
     W11 --> W13["W13 UX final/local acceptance"]
     W12 --> W13
+    W2 --> W15["W15 Password recovery"]
+    W3 --> W15
+    W8 --> W15
+    W9 --> W15
+    W12 --> W15
+    W13 --> W15
     W5 --> W14["W14 Seed/deploy/smoke"]
     W12 --> W14
     W13 --> W14
+    W15 --> W14
 ```
 
 ### W12 local container alignment

@@ -77,3 +77,10 @@ npm test -- --watch=false --browsers=ChromeHeadless
 ## Parent sync
 
 - [x] Actualizar `R3.9`, master/readiness y estado con evidencia.
+
+## Design clarification - P3-W15 (2026-08-05)
+
+Después de un reset exitoso no se crea una sesión; las cookies refresh de otros
+dispositivos fallan y el comportamiento ya implementado de W9 limpia memoria y los lleva
+a Login. El endpoint reset sigue excluido del interceptor/Bearer igual que el resto de
+`/auth/*`.

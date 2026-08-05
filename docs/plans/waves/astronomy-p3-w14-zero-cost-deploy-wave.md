@@ -3,7 +3,7 @@
 Date: 2026-07-22
 Status: IN PROGRESS - deployment preparation complete; provider execution pending
 Wave ID: `P3-W14`
-Depends On: P3-W5 + P3-W12 + P3-W13 DONE and merged
+Depends On: P3-W5 + P3-W12 + P3-W13 + P3-W15 DONE and merged before external execution
 Suggested Branch: `wave/p3-w14-zero-cost-deploy`
 
 ## Goal
@@ -42,7 +42,7 @@ desplegar y ejecutar el smoke que cierra P3.
 - [ ] W14.7 Verificar cookie host-only/Lax, Origin, HTTPS y que browser no llame Render
   directamente.
 - [ ] W14.8 Smoke: cold start/retry, today, fecha, search, register, email, confirm POST,
-  login, refresh/reload, favorite/list/delete, aislamiento y logout.
+  login, refresh/reload, recuperación de contraseña, favorite/list/delete, aislamiento y logout.
 - [ ] W14.9 Registrar fecha/URLs/cuenta de prueba/resultados y limpiar datos de prueba.
 - [x] W14.10 Sustituir la hipótesis de Forwarded Headers: Render Free no ofrece una cadena
   de ingress verificable para interpretar `X-Forwarded-For` sin spoofing. La API rechaza
@@ -65,6 +65,8 @@ desplegar y ejecutar el smoke que cierra P3.
   la URL directa de Render no sirve rutas de aplicación; links de email
   sobreviven restart/cold start y el key ring cumple el gate en reposo.
 - Todos los exit criteria P3 tienen evidencia y docs sincronizados.
+- W15 está integrado: reset real no auto-login, invalida refresh sessions y el correo llega
+  al mailbox temporal sin exponer el enlace en evidencia.
 
 ## Verification
 

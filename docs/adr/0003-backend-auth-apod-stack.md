@@ -1,8 +1,8 @@
 # ADR-0003 - Backend, autenticacion, catalogo APOD y despliegue P3
 
 Date: 2026-07-08
-Last revised: 2026-07-20
-Status: Accepted; P3-W1-W12 implemented
+Last revised: 2026-08-05
+Status: Accepted; P3-W1-W13 implemented; W14 external gate pending; W15 planned
 
 ## Context
 
@@ -109,6 +109,31 @@ ocasionales son suficientes y observables.
 - Codigo invalido, vencido o reutilizado produce error controlado sin revelar estado
   interno. No se persisten tokens de confirmacion raw.
 
+### Recuperacion de contraseña
+
+- `POST /auth/forgot-password` recibe solo `{ email }`, aplica límites independientes por
+  IP y hash de email normalizado, y responde siempre `202` con el mismo mensaje para no
+  enumerar cuentas. Solo una cuenta existente y confirmada recibe correo.
+- ASP.NET Core Identity genera el password-reset token; el backend lo codifica Base64URL
+  y el email enlaza a `/reset-password?userId=<guid>&code=<base64url>` en Angular.
+  El token raw no se persiste ni aparece en logs de aplicación fuera del sink local de
+  Development.
+- Angular valida GUID/Base64URL, elimina los parámetros de la historia antes de mostrar el
+  formulario y conserva el código únicamente en memoria. El único mutador es
+  `POST /auth/reset-password` con `{ userId, code, password }`; no hay auto-login ni
+  token/código en Web Storage.
+- Token inválido, vencido, reutilizado, usuario inexistente y fallo de reset reciben el
+  mismo `400` controlado. Un reset exitoso responde `204`, no crea cookie ni JWT, y revoca
+  todas las refresh sessions del usuario en la misma operación de persistencia. Si el
+  navegador aportó una refresh cookie, la respuesta la expira; Angular limpia también su
+  JWT/usuario en memoria antes de navegar a Login.
+- Request/reset son anónimos y no leen ni requieren una cookie: el código Identity de
+  alta entropía es la capacidad que autoriza la mutación. Por eso no aplican el filtro
+  Origin reservado a refresh/logout, pero sí `no-store`, los límites y el JWS productivo.
+- El correo reutiliza `IEmailSender`/Resend y los enlaces se HTML-encodan. W14 añade los
+  límites edge y el smoke real de este flujo; no requiere un proveedor, secreto ni
+  migración nuevos para el smoke local.
+
 ### Access token y refresh sessions
 
 - Access JWT corto (objetivo: 10 minutos) en memoria Angular, nunca Web Storage.
@@ -117,6 +142,8 @@ ocasionales son suficientes y observables.
   `replaced_by_token_id`.
 - Reuso de un token revocado invalida la familia completa.
 - Logout revoca la sesion actual y elimina la cookie.
+- Un reset de contraseña exitoso revoca todas las refresh sessions del usuario. Los JWT
+  de acceso existentes conservan únicamente su vida corta, no se renuevan después del reset.
 - Rotacion y revocacion son transacciones atomicas; una constraint/lock evita que dos
   requests consuman el mismo refresh token correctamente.
 
@@ -431,3 +458,12 @@ ocasionales son suficientes y observables.
   transporte queda sin cuota para no agrupar visitantes detrás del proxy autenticado.
 - Esto no reemplaza el gate externo W14: aún se requieren la configuración de secretos,
   el deploy y la demostración con dos visitantes y un bypass/spoof rechazado.
+
+## Planned alignment - P3-W15 password recovery (2026-08-05)
+
+- W15 reutiliza los token providers y key ring Identity de W2; no introduce tablas ni
+  tokens propios. El contrato genérico de `IEmailSender` permite un segundo tipo de correo
+  sin exponer la API key de Resend.
+- La revocación masiva complementa la rotación/replay de W3: un password reset no deja
+  refresh tokens renovables en otros dispositivos. El flujo debe completar su reset y la
+  revocación antes de responder éxito.

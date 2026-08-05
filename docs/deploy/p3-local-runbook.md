@@ -1,7 +1,7 @@
 # P3 local container runbook
 
 Date: 2026-07-20
-Scope: P3-W12 local verification only; it does not deploy or mutate a provider.
+Scope: P3-W12/W15 local verification only; it does not deploy or mutate a provider.
 
 ## What the stack provides
 
@@ -97,13 +97,28 @@ traffic must use the frontend on port `8080`.
 
    Open that URL locally to complete the normal confirmation POST flow. The URL is a
    local testing credential; do not paste it into an issue, commit or external service.
-3. Sign in, open Explorer and request `2020-01-01`; then search for `astronomy`.
-4. Toggle the resulting entry as a favorite and confirm it appears at `/favorites`.
-5. Sign out. The refresh cookie is cleared and the frontend forgets the favorite state
+3. Sign in, then open `http://localhost:8080/forgot-password` and request a reset for the
+   confirmed local account. Retrieve the most recent reset link without manually joining
+   PowerShell-wrapped lines:
+
+   ```powershell
+   $log = docker compose logs --no-log-prefix --tail=200 api | Out-String
+   $match = [regex]::Matches($log, 'href="([^"]+/reset-password\?[^\"]+)"') | Select-Object -Last 1
+   $resetLink = [System.Net.WebUtility]::HtmlDecode($match.Groups[1].Value)
+   $resetLink
+   Start-Process $resetLink
+   ```
+
+   Choose a new password. The page returns to Login without auto-login; verify that the
+   old password fails and the new password signs in. The reset link is a local testing
+   credential: do not paste it into an issue, commit or external service.
+4. Open Explorer and request `2020-01-01`; then search for `astronomy`.
+5. Toggle the resulting entry as a favorite and confirm it appears at `/favorites`.
+6. Sign out. The refresh cookie is cleared and the frontend forgets the favorite state
    for that session; the database row remains isolated to the test account.
 
-This demonstrates account confirmation, login/cookie, APOD today/date, ready catalog
-search and protected favorites with no NASA or Resend network request. It is not a
+This demonstrates account confirmation, login/cookie, password recovery, APOD today/date,
+ready catalog search and protected favorites with no NASA or Resend network request. It is not a
 substitute for W14's real-provider and production smoke; W13 adds final UX/local
 acceptance only and still does not authorize a provider.
 

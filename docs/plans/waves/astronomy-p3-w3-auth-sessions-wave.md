@@ -82,3 +82,9 @@ para no agrupar usuarios tras el proxy. Refresh/logout y su validación Origin n
 ## Parent sync
 
 - [x] Actualizar `R3.3`, master/readiness y estado con evidencia.
+
+## Design clarification - P3-W15 (2026-08-05)
+
+W15 agrega una revocación masiva por usuario después de un reset de contraseña exitoso.
+Complementa, sin reescribir, la rotación/replay/logout de W3: todas las refresh sessions
+existentes dejan de renovar; un access JWT ya emitido conserva solo su expiración corta.

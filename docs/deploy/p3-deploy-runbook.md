@@ -1,4 +1,4 @@
-# P3-W14 production deploy and smoke runbook
+# P3 production deploy and smoke runbook
 
 Date: 2026-07-22
 Status: PREPARED — external execution is intentionally pending owner credentials and
@@ -20,7 +20,7 @@ password manager or deployment ticket — never in this repository:
 4. The fixed initial catalog range. For a portfolio, the recommended starting target is
    the latest 30 completed UTC days, not the full APOD archive. The approved `from` and
    `to` values must be reused verbatim in the Neon seed and Render variables.
-5. A temporary test mailbox that can receive the confirmation email.
+5. A temporary test mailbox that can receive the confirmation and password-reset emails.
 
 Without all five, stop before provider mutation; local W12/W13 remains the supported
 demonstration environment.
@@ -121,7 +121,9 @@ sanitized observation for every item:
 4. `GET https://<render-service>/api/apod/catalog-status` without the Netlify signature
    returns `403 invalid_proxy_request`; the same browser operation via Netlify succeeds.
 5. Register, receive Resend email, open the frontend confirmation link, confirm by POST,
-   sign in, reload (refresh), add/list/delete a favorite, then log out.
+   sign in, reload (refresh), request password recovery, open its frontend reset link,
+   set a new password, confirm the old password/refresh session no longer works, sign in
+   with the new password, add/list/delete a favorite, then log out.
 6. Re-run the direct Render check with a fabricated `X-Forwarded-For`; it remains 403.
    Use two normal browser/network clients to demonstrate the edge limit is per visitor,
    without generating abusive traffic.
@@ -142,7 +144,7 @@ sanitized observation for every item:
 | Resend sender status / daily limit | Pending |
 | Approved catalog range / count / ready result | Pending |
 | Netlify/Render/Neon/Resend zero-cost settings | Pending |
-| Cold start, proxy, auth and favorites smoke result | Pending |
+| Cold start, proxy, auth, password recovery and favorites smoke result | Pending |
 | Cleanup result | Pending |
 
 Only after every row is filled with PASS evidence may P3-W14, R3.14 and P3 be marked

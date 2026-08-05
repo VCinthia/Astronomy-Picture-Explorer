@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-07-22
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 deployment preparation in progress
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W14 external gate pending; W15 password recovery planned
 
 ## Verdict
 
@@ -31,6 +31,8 @@ W14 preparó el 2026-07-22 la configuración de proveedor sin mutar cuentas: el 
 acepta secretos del dashboard/puerto Render, Netlify tiene rewrites firmadas con límites
 por IP y la API rechaza rutas de aplicación directas o `X-Forwarded-For` falsificado. El
 seed Neon, la configuración de dashboards, el correo real y el smoke siguen pendientes.
+W15 debe cerrar recuperación de contraseña con enlace Identity de un solo uso, revocación
+de refresh sessions y prueba LocalLog antes de la ejecución externa W14.
 
 ## Closed gates
 
@@ -288,6 +290,17 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - Este gate no reemplaza R3.14: no hay proveedores configurados, seed real, correo real
   ni smoke productivo aún.
 
+## P3-W15 planning gate
+
+- El contrato no enumera cuentas: request de reset es `202` genérico y solo usuarios
+  confirmados reciben correo.
+- El link conserva `userId + code` Base64URL únicamente hasta el POST; Angular limpia la
+  URL y no auto-inicia sesión ni persiste el código.
+- Un éxito debe revocar todas las refresh sessions, mantener el JWT existente como máximo
+  hasta su expiración corta y permitir sólo la contraseña nueva en un login posterior.
+- No hay migración, secreto, proveedor ni recurso pago nuevo. W14 suma límites edge y
+  smoke real después de que esta evidencia local sea PASS.
+
 Antes de cada wave restante:
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
@@ -340,6 +353,7 @@ docker compose down
 | 401 simultaneos consumen refresh dos veces | Angular single-flight + backend rotation atomica |
 | Token de confirmacion ambiguo/filtrado | userId+code Base64URL; Angular POST; no mutacion GET |
 | Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; revisar cifrado en reposo en W14 |
+| Abuso o replay de reset | 202 anti-enumeración, límites IP/hash-email, token Identity one-shot, URL scrub y revocación masiva de refresh |
 | IP real oculta por Netlify/Render | Netlify firmado limita por dominio+IP; API rechaza URL directa/spoof y no acepta forwarded headers |
 | Render cold start confunde primera visita | Estado connecting + timeout + Retry accesible |
 | Search costoso | tsvector + GIN; q max 200, page max 1000, pageSize max 30; sin trigram |
@@ -349,7 +363,7 @@ docker compose down
 
 ## Recommended next step
 
-Para completar P3-W14 aún hace falta la autorización y acceso de la dueña para revalidar
+Para completar P3-W14 aún hace falta que W15 esté integrada y la autorización/acceso de la dueña para revalidar
 precios/cuotas, configurar Neon/Render/Netlify/Resend, confirmar dominio y NASA key,
 ejecutar el seed y obtener evidencia del smoke. El procedimiento exacto está en
 [`docs/deploy/p3-deploy-runbook.md`](deploy/p3-deploy-runbook.md); nada de eso se infiere

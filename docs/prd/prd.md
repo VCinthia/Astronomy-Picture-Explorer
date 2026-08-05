@@ -1,8 +1,8 @@
 # PRD - Astronomy Picture Explorer
 
 Date: 2026-07-08
-Last revised: 2026-07-22
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 DONE
+Last revised: 2026-08-05
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 DONE; W14 external gate pending; W15 planned
 
 ## Vision
 
@@ -101,6 +101,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 - Login anti-enumeracion, access JWT corto en memoria y refresh opaco rotado.
 - Login exitoso oculta el formulario, confirma el éxito de forma transitoria y navega al
   destino interno solicitado o a Home.
+- Recuperacion de contraseña para cuentas confirmadas: solicitud anti-enumeración, enlace
+  Identity de un solo uso, nueva contraseña y revocación de todas las refresh sessions.
 - Replay revoca familia; logout revoca sesion.
 - Bootstrap, guard e interceptor single-flight en Angular.
 
@@ -139,7 +141,7 @@ hdurl|null, thumbnail_url|null, copyright|null
 
 ## P3 non-goals
 
-- OAuth/social login, password recovery, roles/admin UI.
+- OAuth/social login, MFA, cambio de email, roles/admin UI.
 - Busqueda semantica/IA o tags externos.
 - Guardar archivos multimedia en DB.
 - Always-on gratuito o cero cold-start.
@@ -166,10 +168,12 @@ hdurl|null, thumbnail_url|null, copyright|null
     favoritos sin proveedor externo ni exponer códigos de confirmación en la SPA.
 15. Login exitoso no deja controles que inviten a reautenticarse: muestra un éxito breve
     y conserva un `returnUrl` interno válido o navega a Home.
+16. Recuperación de contraseña responde genéricamente, nunca persiste ni expone el código
+    en la SPA, y al completarse invalida todas las refresh sessions del usuario.
 
 ## Non-functional requirements P3
 
-- Security: Identity, no raw tokens, secrets por env, Origin validation, rate limits y
+- Security: Identity, no raw tokens ni códigos de recuperación persistidos, secrets por env, Origin validation, rate limits y
   proxy Netlify firmado; la IP de visitante se limita en el borde sin confiar en
   `X-Forwarded-For` de Render.
 - Reliability: cache controlada, retries acotados, ingestion resumible, errores tipados.
@@ -182,8 +186,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 ## Success criteria
 
 - P1/P2 permanecen documentados como entregas historicas cerradas.
-- P3 W1-W14 completadas con build/tests en verde; W12-W13 deben permitir UX y E2E local
-  sin proveedor externo, y W14 conserva exclusivamente el smoke con proveedores reales.
+- P3 W1-W13 permanecen cerradas. W15 debe sumar recuperación de contraseña verificable
+  localmente antes de que W14 ejecute el smoke con proveedores reales.
 - Catalogo inicial listo en Neon y search FTS probado.
 - Auth/favorites/APOD funcionan E2E desde Netlify mediante proxy same-origin.
 - Cold-start UX verificada.
@@ -195,6 +199,18 @@ El requisito de IP real no se resuelve aceptando forwarded headers en Render Fre
 implementacion preparada usa redirects Netlify firmadas y límites por IP en Netlify; la
 API verifica el JWS y rechaza bypass directo/spoof. La configuración de proveedores y
 el smoke externo siguen pendientes y son condición para marcar P3 DONE.
+
+## Planificacion P3-W15 - Recuperacion de contraseña (2026-08-05)
+
+P3 incorpora recuperación de contraseña antes del gate externo de W14. La solicitud
+responde `202` con el mismo mensaje para cuenta confirmada, no existente o no confirmada;
+solo una cuenta confirmada recibe el enlace. El enlace Angular lleva `userId + code`
+Base64URL, la página limpia esos parámetros de la historia antes de enviar el único
+`POST /auth/reset-password`, y no crea una sesión. Al éxito, Identity actualiza la
+contraseña y la API revoca todas las refresh sessions del usuario, expira la cookie
+aportada y Angular limpia su sesión en memoria; un JWT ya emitido en otro navegador solo
+puede sobrevivir hasta su vida corta normal. W14 no puede cerrar producción hasta incluir
+este flujo en su smoke real.
 
 ## Clarificaciones posteriores sobre P1/P2
 
