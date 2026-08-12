@@ -49,15 +49,7 @@ public static class CatalogProgram
       }
 
       var settings = CatalogPreflight.ValidateLive(command, readEnvironment);
-      using var httpClient = new HttpClient(new HttpClientHandler
-      {
-        AllowAutoRedirect = false
-      })
-      {
-        BaseAddress = new Uri("https://api.nasa.gov/"),
-        Timeout = TimeSpan.FromSeconds(8)
-      };
-      httpClient.DefaultRequestHeaders.UserAgent.ParseAdd("AstronomyExplorer.Catalog/1.0");
+      using var httpClient = CatalogNasaHttpClientFactory.Create();
 
       var dbOptions = new DbContextOptionsBuilder<AppDbContext>()
         .UseNpgsql(settings.ConnectionString)

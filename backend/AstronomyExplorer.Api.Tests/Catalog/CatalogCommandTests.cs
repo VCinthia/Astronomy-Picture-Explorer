@@ -7,6 +7,15 @@ public sealed class CatalogCommandTests
   private static readonly DateOnly TodayUtc = new(2026, 7, 17);
 
   [Fact]
+  public void NasaClientFactory_UsesBatchAppropriateTimeout()
+  {
+    using var client = CatalogNasaHttpClientFactory.Create();
+
+    Assert.Equal(TimeSpan.FromSeconds(30), client.Timeout);
+    Assert.Equal(new Uri("https://api.nasa.gov/"), client.BaseAddress);
+  }
+
+  [Fact]
   public async Task DryRun_PrintsEstimateWithoutReadingEnvironmentOrOpeningDependencies()
   {
     var output = new StringWriter();

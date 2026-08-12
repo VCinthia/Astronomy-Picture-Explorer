@@ -90,3 +90,10 @@ dotnet run --project backend/AstronomyExplorer.Catalog -- catalog sync --from 20
 
 - La wave de proveedor/seed/deploy se renumera de W13 a W14 al insertar W13 de UX y
   aceptación local. La seguridad, límites y evidencia implementada de W5 no cambian.
+
+## Design clarification (2026-08-12)
+
+- La ejecución real W14 verificó que una respuesta NASA APOD de 30 fechas puede superar
+  los 8 segundos (10,8 s en la validación). El CLI conserva dos intentos acotados y el
+  comportamiento resumible, pero su timeout por request pasa a 30 segundos. No afecta
+  los endpoints interactivos ni habilita jobs, cron o consumo de Render.
