@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 functional production smoke PASS, cleanup and promotion pending
+Status: P1 DONE; P2 DONE in production; P3 READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -263,7 +263,7 @@ smoke local antes de que W14 use un sender real.
 | W11 | Frontend favorites API migration |
 | W12 | Local containers/full stack ✅ |
 | W13 | Final UX, navigation and local account acceptance ✅ |
-| W14 | Seed $0, deploy y smoke funcional PASS; limpieza de datos de prueba y promoción pendientes |
+| W14 | Seed $0, deploy, smoke y cleanup PASS ✅; pendiente solo la promoción de fase |
 | W15 | Recuperación de contraseña integrada; prerequisito del smoke W14 cumplido |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.

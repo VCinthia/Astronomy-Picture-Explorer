@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-08-12
-Status: P3 IN PROGRESS - W1-W13 and W15 integrated; W14 external functional smoke PASS, cleanup and promotion pending
+Status: P3 READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -515,4 +515,5 @@ flowchart LR
 - El 2026-08-12 el origen público y Render demostraron el flujo: Netlify llegó al catálogo
   `ready`, mientras que el acceso Render directo y un `X-Forwarded-For` falsificado fueron
   rechazados con `403`. El correo real, recovery y un enlace confirmado después de restart
-  completaron el smoke funcional. Solo quedan cleanup autorizado y promoción a `main`.
+  completaron el smoke funcional. Cleanup autorizado PASS; solo queda la promoción a
+  `main` y el cutover de proveedores.

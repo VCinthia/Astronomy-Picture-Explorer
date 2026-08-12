@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 functional production smoke PASS, cleanup and promotion pending
+Status: P1 DONE; P2 DONE; P3 READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
 
 ## Vision
 
@@ -187,7 +187,7 @@ hdurl|null, thumbnail_url|null, copyright|null
 
 - P1/P2 permanecen documentados como entregas historicas cerradas.
 - P3 W1-W13 y W15 permanecen cerradas e integradas. W14 completó el smoke funcional con
-  proveedores reales; falta solo la disposición autorizada de cuentas de prueba y la
+  proveedores reales; la limpieza de cuentas de prueba fue completada y falta solo la
   promoción de la rama validada.
 - El catálogo inicial de 30 APOD está persistido en Neon y el origen público confirmó
   `catalog-status ready: true` para el rango objetivo.

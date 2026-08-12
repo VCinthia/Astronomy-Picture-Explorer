@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: Accepted; P3-W1-W13 and W15 integrated; W14 functional production smoke PASS, cleanup and promotion pending
+Status: Accepted; P3-W1-W15 and W14 acceptance complete; main/provider branch cutover pending
 
 ## Context
 
@@ -475,6 +475,9 @@ ocasionales son suficientes y observables.
   de `healthy`, confirmando que la protección de datos depende del key ring PostgreSQL.
   Neon documenta AES-256 en reposo y rotación administrada de claves; no se requiere una
   capa paga extra para este portfolio. Fuente: <https://neon.com/docs/security/security-overview>.
+- La dueña decidió retener una única cuenta real y eliminar la cuenta secundaria de prueba
+  junto con sus datos asociados. Ese cleanup fue verificado fuera del repositorio y no
+  incorpora identificadores personales en esta ADR.
 
 ## Implementation record - P3-W15 password recovery (2026-08-05)
 

@@ -85,8 +85,8 @@ OAuth, MFA, cambio de email ni auto-login.
   visitante compatible con Netlify Free.
 - Backend, frontend, Compose y smoke local cubren registro -> confirmación -> login ->
   forgot -> reset -> nuevo login -> favoritos -> logout sin proveedor externo.
-- W14 ejecutó este flujo contra Resend/Netlify/Render el 2026-08-12 y pasó. `main` sigue
-  sin promoción hasta completar la disposición autorizada de datos de prueba de W14.
+- W14 ejecutó este flujo contra Resend/Netlify/Render el 2026-08-12 y pasó. El cleanup W14
+  está completo; la fase espera exclusivamente la promoción controlada a `main`.
 
 ## Verification
 

@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-08-12
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 external functional smoke PASS, cleanup and promotion pending
+Status: P2 DONE in production; P3 READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
 
 ## Verdict
 
@@ -32,8 +32,9 @@ acepta secretos del dashboard/puerto Render, Netlify tiene rewrites firmadas con
 por IP y la API rechaza rutas de aplicación directas o `X-Forwarded-For` falsificado.
 El 2026-08-12 la ejecución externa completó Neon, Resend, Render y Netlify; el catálogo
 quedó `ready`, el correo real y recovery pasaron, y un enlace emitido antes de reiniciar
-Render confirmó la persistencia del key ring en Neon. Solo falta resolver la limpieza o
-retención autorizada de las cuentas de prueba y promover el candidato a `main`.
+Render confirmó la persistencia del key ring en Neon. La dueña retuvo una sola cuenta
+real y eliminó la secundaria de prueba. Solo falta promover el candidato a `main` y
+actualizar las ramas de los proveedores.
 
 ## Closed gates
 
@@ -293,8 +294,8 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   confirmación, login/reload, recovery, favorito y logout. Un link emitido antes de
   reiniciar Render siguió funcionando después del restart, validando el key ring Neon.
 - Neon declara AES-256 en reposo y rotación de claves administrada; no se necesita una
-  capa paga adicional. Falta únicamente la disposición autorizada de los datos de prueba
-  y la promoción controlada a `main`.
+  capa paga adicional. La limpieza fue confirmada; falta únicamente la promoción
+  controlada a `main` y el cutover de los proveedores.
 
 ## P3-W15 local implementation evidence
 
@@ -369,7 +370,7 @@ docker compose down
 
 ## Recommended next step
 
-Para completar P3-W14 falta decidir y ejecutar, si corresponde, la limpieza de datos de
-prueba; después se promueve el candidato validado a `main` y se actualizan los providers
-a esa rama. La evidencia sanitizada y el procedimiento están en
+P3-W14 está cerrada. Para cerrar P3 se promueve el candidato validado a `main`, se
+actualizan los providers a esa rama y se repite health + catálogo público. La evidencia
+sanitizada y el procedimiento están en
 [`docs/deploy/p3-deploy-runbook.md`](deploy/p3-deploy-runbook.md).

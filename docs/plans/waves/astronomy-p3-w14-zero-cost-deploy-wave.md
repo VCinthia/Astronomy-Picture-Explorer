@@ -1,7 +1,7 @@
 # Wave P3-W14 - Seed, deploy $0 y smoke productivo
 
 Date: 2026-07-22
-Status: IN PROGRESS - external functional smoke PASS; test-data cleanup and promotion to main pending
+Status: DONE - all zero-cost deployment and smoke acceptance criteria passed; phase promotion pending
 Wave ID: `P3-W14`
 Depends On: P3-W5 + P3-W12 + P3-W13 + P3-W15 DONE and merged before external execution
 Suggested Branch: `wave/p3-w14-zero-cost-deploy`
@@ -44,7 +44,7 @@ desplegar y ejecutar el smoke que cierra P3.
   directamente.
 - [x] W14.8 Smoke: cold start/retry, today, fecha, search, register, email, confirm POST,
   login, refresh/reload, recuperación de contraseña, favorite/list/delete, aislamiento y logout.
-- [ ] W14.9 Registrar fecha/URLs/cuenta de prueba/resultados y limpiar datos de prueba.
+- [x] W14.9 Registrar fecha/URLs/cuenta de prueba/resultados y limpiar datos de prueba.
 - [x] W14.10 Sustituir la hipótesis de Forwarded Headers: Render Free no ofrece una cadena
   de ingress verificable para interpretar `X-Forwarded-For` sin spoofing. La API rechaza
   rutas de aplicación directas y valida el JWS `x-nf-sign` (issuer, sitio, deploy
@@ -137,9 +137,12 @@ node scripts/prepare-netlify-redirects.mjs
 - Neon documenta cifrado AES-256 en reposo y gestión/rotación de claves del proveedor;
   para este portfolio no se requiere una capa adicional paga sobre el XML de Data
   Protection. Fuente: <https://neon.com/docs/security/security-overview>.
+- La dueña retuvo una sola cuenta personal como cuenta real del portfolio y eliminó la
+  cuenta secundaria de prueba con sus datos asociados en Neon. La verificación posterior
+  confirmó que ya no existe; no se registran identificadores ni datos personales.
 
 ## Parent sync
 
-- [ ] Resolver explícitamente la limpieza o retención autorizada de las cuentas de prueba,
-  actualizar `R3.14`, marcar P3 DONE y registrar tag/release solo después de promover
-  `codex/p3-integration` a `main` según el execution contract.
+- [ ] Promover `codex/p3-integration` a `main`, actualizar las ramas de Netlify/Render,
+  revalidar health + catálogo público y entonces marcar P3 DONE y registrar el tag/release
+  que defina la dueña.

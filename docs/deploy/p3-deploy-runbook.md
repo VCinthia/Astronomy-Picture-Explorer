@@ -1,8 +1,8 @@
 # P3 production deploy and smoke runbook
 
 Date: 2026-08-12
-Status: IN PROGRESS — provider configuration and functional production smoke PASS;
-authorized test-data disposition and promotion to `main` remain pending.
+Status: READY FOR PROMOTION — all provider, smoke and cleanup evidence PASS; branch
+cutover to `main` and final release verification remain pending.
 
 This is the only approved runbook for mutating production P3 resources. It keeps the
 portfolio on free tiers, avoids background work and records evidence without recording
@@ -161,10 +161,11 @@ sanitized observation for every item:
 | Approved catalog range / count / ready result | Target `2026-07-13..2026-08-11`; 30 entries seeded. Public status PASS: `ready: true`; observed count 31 after a normal cache fill for the current date. |
 | Netlify/Render/Neon/Resend zero-cost settings | Free tiers verified; no payment upgrade, keepalive, scheduled worker, persistent disk or automated catalog backfill configured. |
 | Cold start, proxy, auth, password recovery and favorites smoke result | PASS. Public date/search/catalog, signed Netlify proxy, direct Render and spoofed-header `403`, account confirmation, refresh/reload, recovery/session revocation, favorites and logout passed. A pre-restart confirmation link also passed after Render restart. |
-| Cleanup result | Pending owner decision: retain the personal accounts as real portfolio accounts, or remove the temporary test accounts/favorites without recording their identities. |
+| Cleanup result | PASS. The owner retained one personal portfolio account and deleted the secondary test account and associated data in Neon; no identities are retained in this record. |
 
-Only after the cleanup row is resolved may P3-W14, R3.14 and P3 be marked DONE,
-`codex/p3-integration` be promoted to `main`, and the public release tag be made.
+All W14 evidence is PASS. Next, fast-forward `codex/p3-integration` to `main`, switch
+Netlify and Render to `main`, revalidate public health/catalog, then mark P3 DONE and
+create a release tag if the owner chooses one.
 
 ## Provider references verified for this preparation
 
