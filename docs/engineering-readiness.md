@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-08-12
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, external gate pending
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 external functional smoke PASS, cleanup and promotion pending
 
 ## Verdict
 
@@ -29,11 +29,11 @@ con entrada CRLF normalizada pasaron sin servicios externos.
 
 W14 preparó el 2026-07-22 la configuración de proveedor sin mutar cuentas: el contenedor
 acepta secretos del dashboard/puerto Render, Netlify tiene rewrites firmadas con límites
-por IP y la API rechaza rutas de aplicación directas o `X-Forwarded-For` falsificado. El
-seed Neon, la configuración de dashboards, el correo real y el smoke siguen pendientes.
-W15 cerró e integró recuperación de contraseña con enlace Identity de un solo uso,
-revocación de refresh sessions y prueba LocalLog. La ejecución externa W14 ya completó
-su migración y seed Neon, pero conserva los gates de proveedor y smoke.
+por IP y la API rechaza rutas de aplicación directas o `X-Forwarded-For` falsificado.
+El 2026-08-12 la ejecución externa completó Neon, Resend, Render y Netlify; el catálogo
+quedó `ready`, el correo real y recovery pasaron, y un enlace emitido antes de reiniciar
+Render confirmó la persistencia del key ring en Neon. Solo falta resolver la limpieza o
+retención autorizada de las cuentas de prueba y promover el candidato a `main`.
 
 ## Closed gates
 
@@ -279,7 +279,7 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   API/frontend healthy y migrator/demo-seed exit 0. W14 queda como la única wave con
   autoridad de proveedor, seed real y deploy.
 
-## P3-W14 preparation gate
+## P3-W14 production validation gate
 
 - Preparación sin proveedores PASS: Netlify proxy signed/edge-rate-limited, validación
   JWS API y runbooks de Render/Neon/Resend no contienen secrets ni URLs reales.
@@ -288,8 +288,13 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   fail-closed.
 - Frontend build y 118/118 ChromeHeadless PASS; Compose reconstruido sin volumen,
   healthy y smoke HTTP local `health`/catalog ready/search PASS.
-- Este gate no reemplaza R3.14: Neon/migración/seed ya se ejecutaron, pero Render,
-  Netlify, Resend, correo real y smoke productivo aún no tienen evidencia.
+- El 2026-08-12 se verificaron los providers reales: health Render, catálogo público
+  `ready`, proxy signed (incluido bypass y header falsificado en `403`), Resend,
+  confirmación, login/reload, recovery, favorito y logout. Un link emitido antes de
+  reiniciar Render siguió funcionando después del restart, validando el key ring Neon.
+- Neon declara AES-256 en reposo y rotación de claves administrada; no se necesita una
+  capa paga adicional. Falta únicamente la disposición autorizada de los datos de prueba
+  y la promoción controlada a `main`.
 
 ## P3-W15 local implementation evidence
 
@@ -353,7 +358,7 @@ docker compose down
 | CSRF sobre refresh/logout | SameSite=Lax + Origin exacto; CORS no se usa como defensa |
 | 401 simultaneos consumen refresh dos veces | Angular single-flight + backend rotation atomica |
 | Token de confirmacion ambiguo/filtrado | userId+code Base64URL; Angular POST; no mutacion GET |
-| Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; revisar cifrado en reposo en W14 |
+| Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; reinicio con enlace previo PASS y Neon documenta AES-256 en reposo |
 | Abuso o replay de reset | 202 anti-enumeración, límites IP/hash-email, token Identity one-shot, URL scrub y revocación masiva de refresh |
 | IP real oculta por Netlify/Render | Netlify firmado limita por dominio+IP; API rechaza URL directa/spoof y no acepta forwarded headers |
 | Render cold start confunde primera visita | Estado connecting + timeout + Retry accesible |
@@ -364,8 +369,7 @@ docker compose down
 
 ## Recommended next step
 
-Para completar P3-W14 aún hace falta que W15 esté integrada y la autorización/acceso de la dueña para revalidar
-precios/cuotas, configurar Neon/Render/Netlify/Resend, confirmar dominio y NASA key,
-ejecutar el seed y obtener evidencia del smoke. El procedimiento exacto está en
-[`docs/deploy/p3-deploy-runbook.md`](deploy/p3-deploy-runbook.md); nada de eso se infiere
-desde el gate local cerrado.
+Para completar P3-W14 falta decidir y ejecutar, si corresponde, la limpieza de datos de
+prueba; después se promueve el candidato validado a `main` y se actualizan los providers
+a esa rama. La evidencia sanitizada y el procedimiento están en
+[`docs/deploy/p3-deploy-runbook.md`](deploy/p3-deploy-runbook.md).

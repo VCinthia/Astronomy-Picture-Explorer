@@ -46,8 +46,8 @@ treated as a first-class concern rather than an afterthought.
   no third-party color libraries.
 - **TypeScript**, unit tests with **Karma + Jasmine**.
 - **ASP.NET Core + PostgreSQL** — app-owned APOD contract, catalog search and account API.
-- **Netlify** — P2 production hosting; P3 is accumulated on its integration branch until
-  the zero-cost deployment/smoke gate is complete.
+- **Netlify** — P3 is currently validated from its integration branch through a signed
+  same-origin proxy; Git `main` remains the P2 release until the controlled promotion.
 
 ## How it works
 
@@ -62,11 +62,12 @@ can't be read it falls back to a fixed brand palette.
 ## Roadmap
 
 - **Stage 1:** picture of the day, explore by date, palette, video. ✅
-- **Stage 2 — current production:** favorites (saved locally), keyword search,
+- **Stage 2 — historical production release:** favorites (saved locally), keyword search,
   responsive toolbar and mobile bottom navigation. ✅
-- **Stage 3 — in integration:** .NET 10 + Identity + PostgreSQL FTS + APOD HTTP frontend.
-  Per-user favorites, local containers and the strictly zero-cost production promotion
-  remain in the following waves.
+- **Stage 3 — production validation:** .NET 10 + Identity + PostgreSQL FTS + APOD HTTP
+  frontend, per-user favorites and local containers are validated on the zero-cost stack.
+  The only remaining release action is the controlled promotion to Git `main` after the
+  authorized test-data disposition.
 
 ## Run it locally
 
@@ -97,7 +98,8 @@ npm test         # unit tests
 ```
 
 `npm start` proxies `/api` and `/auth` to the local API at `http://localhost:5179`.
-The public Netlify demo remains the P2 release until P3-W14 promotion.
+The public Netlify origin currently serves the validated P3 integration candidate. Git
+`main` remains the P2 release until P3-W14 promotion is intentionally completed.
 
 ## Credits
 

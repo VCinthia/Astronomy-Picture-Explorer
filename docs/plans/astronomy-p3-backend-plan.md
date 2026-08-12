@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, external deployment pending
+Status: IN PROGRESS - W1-W13 and W15 integrated; W14 functional production smoke PASS, cleanup and promotion pending
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -99,11 +99,11 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.11** Frontend favorites migration (W11).
 - [x] **R3.12** Contenedores y stack local (W12).
 - [x] **R3.13** UX final y aceptación local de navegación/cuenta (W13).
-- [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14; Neon seed completo,
-  evidencia de proveedores pendiente).
+- [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14; functional smoke PASS,
+  authorized test-data disposition and promotion pending).
 - [x] **R3.15** Recuperación de contraseña segura: request genérico, reset Identity de
-  un solo uso, revocación masiva de refresh sessions y UX/local smoke (W15; integración
-  pendiente en la rama acumulativa).
+  un solo uso, revocación masiva de refresh sessions y UX/local smoke (W15 integrada y
+  validada también mediante el smoke real W14).
 
 W1 se cerro el 2026-07-17 con build limpio, migracion inicial reproducible y 11/11
 tests Testcontainers sobre PostgreSQL 17. La evidencia y las precisiones fisicas del
@@ -222,8 +222,10 @@ variables secretas de provider y respeta el puerto Render; Netlify tiene rewrite
 con límites por IP y la API valida el JWS Netlify antes de `/api/*`/`/auth/*`. Esto reemplaza
 la propuesta de confiar en forwarded headers: no se interpreta `X-Forwarded-For` y un
 bypass directo/spoof recibe 403. `docs/deploy/p3-deploy-runbook.md` registra la migración
-y seed Neon completados y mantiene la evidencia pendiente de Render/Netlify/Resend y
-smoke; R3.14 sigue abierto hasta entonces.
+  y seed Neon completados. El 2026-08-12 Render/Netlify/Resend y el smoke real pasaron,
+  incluidos catálogo `ready`, bypass/spoof `403`, recovery y un enlace previo a restart
+  válido después del reinicio. R3.14 sigue abierto exclusivamente por cleanup autorizado
+  y promoción de la rama validada.
 
 W15 se inserta antes de la ejecución externa W14. Reutiliza el correo de cuenta sin un
 nuevo secreto ni esquema: `forgot-password` responde genéricamente y solo entrega correo

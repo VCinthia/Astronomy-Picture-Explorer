@@ -1,8 +1,8 @@
 # P3 production deploy and smoke runbook
 
 Date: 2026-08-12
-Status: IN PROGRESS — Neon migration and bounded catalog seed are complete; provider
-configuration and production smoke remain pending.
+Status: IN PROGRESS — provider configuration and functional production smoke PASS;
+authorized test-data disposition and promotion to `main` remain pending.
 
 This is the only approved runbook for mutating production P3 resources. It keeps the
 portfolio on free tiers, avoids background work and records evidence without recording
@@ -141,8 +141,8 @@ sanitized observation for every item:
    set a new password, confirm the old password/refresh session no longer works, sign in
    with the new password, add/list/delete a favorite, then log out.
 6. Re-run the direct Render check with a fabricated `X-Forwarded-For`; it remains 403.
-   Use two normal browser/network clients to demonstrate the edge limit is per visitor,
-   without generating abusive traffic.
+   Confirm that the deployed Netlify rules aggregate by domain and visitor IP. Do not force
+   a public limit breach merely to exhaust the portfolio's free-tier request budget.
 7. Trigger a Render restart/redeploy and confirm a previously issued (unexpired)
    confirmation link still works, proving the Neon-backed Data Protection key ring.
 8. Remove the temporary account/favorite through the Neon console or a controlled local
@@ -153,18 +153,18 @@ sanitized observation for every item:
 
 | Field | Value |
 |---|---|
-| Date/time (UTC) | 2026-08-12; deployment time pending |
-| Netlify public URL | Pending |
-| Render health URL | Pending |
-| Neon Free / encryption evidence | Free project, PostgreSQL 17, AWS US East 2 (Ohio); at-rest confirmation pending W14.11 |
-| Resend sender status / daily limit | Pending |
-| Approved catalog range / count / ready result | `2026-07-13..2026-08-11`; 30 records seeded; public `ready` check pending |
-| Netlify/Render/Neon/Resend zero-cost settings | Neon Free confirmed; remaining providers pending |
-| Cold start, proxy, auth, password recovery and favorites smoke result | Pending |
-| Cleanup result | Pending |
+| Date/time (UTC) | 2026-08-12; exact operator timestamps and all personal data intentionally omitted |
+| Netlify public URL | <https://astronomy-picture-explorer.netlify.app> — PASS |
+| Render health URL | <https://astronomy-picture-explorer-api.onrender.com/health> — `healthy` after deployment and manual restart |
+| Neon Free / encryption evidence | Free project, PostgreSQL 17, AWS US East 2 (Ohio). Neon documents AES-256 encryption at rest and provider-managed key rotation; no additional paid protection is required for the key ring. [Source](https://neon.com/docs/security/security-overview) |
+| Resend sender status / daily limit | Verified owned sending domain; real confirmation and recovery delivery PASS. Free-only configuration retained; no paid usage enabled. |
+| Approved catalog range / count / ready result | Target `2026-07-13..2026-08-11`; 30 entries seeded. Public status PASS: `ready: true`; observed count 31 after a normal cache fill for the current date. |
+| Netlify/Render/Neon/Resend zero-cost settings | Free tiers verified; no payment upgrade, keepalive, scheduled worker, persistent disk or automated catalog backfill configured. |
+| Cold start, proxy, auth, password recovery and favorites smoke result | PASS. Public date/search/catalog, signed Netlify proxy, direct Render and spoofed-header `403`, account confirmation, refresh/reload, recovery/session revocation, favorites and logout passed. A pre-restart confirmation link also passed after Render restart. |
+| Cleanup result | Pending owner decision: retain the personal accounts as real portfolio accounts, or remove the temporary test accounts/favorites without recording their identities. |
 
-Only after every row is filled with PASS evidence may P3-W14, R3.14 and P3 be marked
-DONE, `codex/p3-integration` be promoted to `main`, and the public release tag be made.
+Only after the cleanup row is resolved may P3-W14, R3.14 and P3 be marked DONE,
+`codex/p3-integration` be promoted to `main`, and the public release tag be made.
 
 ## Provider references verified for this preparation
 

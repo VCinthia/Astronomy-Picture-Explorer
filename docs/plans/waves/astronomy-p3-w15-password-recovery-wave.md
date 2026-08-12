@@ -85,8 +85,8 @@ OAuth, MFA, cambio de email ni auto-login.
   visitante compatible con Netlify Free.
 - Backend, frontend, Compose y smoke local cubren registro -> confirmación -> login ->
   forgot -> reset -> nuevo login -> favoritos -> logout sin proveedor externo.
-- W14 queda explícitamente pendiente de ejecutar este flujo contra Resend/Netlify/Render;
-  `main` no se promociona por W15 sola.
+- W14 ejecutó este flujo contra Resend/Netlify/Render el 2026-08-12 y pasó. `main` sigue
+  sin promoción hasta completar la disposición autorizada de datos de prueba de W14.
 
 ## Verification
 
@@ -132,5 +132,5 @@ Netlify: siguen siendo autoridad exclusiva de W14.
   migrator/demo-seed exit 0; el smoke LocalLog confirmó register -> confirm -> login ->
   forgot -> reset -> password anterior rechazada -> nuevo login, sin emitir enlaces,
   correos ni contraseñas en evidencia.
-- La ejecución externa W14 sigue pendiente: no se crearon proveedores, no se usaron
-  credenciales reales y `main` no se promociona por W15 sola.
+- La ejecución externa W14 posterior validó el flujo real sin registrar secretos ni
+  enlaces. `main` no se promociona por W15 sola: depende del cierre administrativo de W14.

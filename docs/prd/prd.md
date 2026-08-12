@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, deploy/smoke pending
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 functional production smoke PASS, cleanup and promotion pending
 
 ## Vision
 
@@ -186,13 +186,15 @@ hdurl|null, thumbnail_url|null, copyright|null
 ## Success criteria
 
 - P1/P2 permanecen documentados como entregas historicas cerradas.
-- P3 W1-W13 y W15 permanecen cerradas e integradas. W14 ejecutó migración y seed Neon;
-  el smoke con proveedores reales sigue pendiente.
-- El catálogo inicial de 30 APOD está persistido en Neon; la verificación HTTP de
-  `catalog-status ready` queda pendiente del deploy.
+- P3 W1-W13 y W15 permanecen cerradas e integradas. W14 completó el smoke funcional con
+  proveedores reales; falta solo la disposición autorizada de cuentas de prueba y la
+  promoción de la rama validada.
+- El catálogo inicial de 30 APOD está persistido en Neon y el origen público confirmó
+  `catalog-status ready: true` para el rango objetivo.
 - Auth/favorites/APOD funcionan E2E desde Netlify mediante proxy same-origin.
 - Cold-start UX verificada.
-- Produccion y quotas documentadas sin secretos ni riesgo de cargo.
+- Produccion y quotas documentadas sin secretos ni riesgo de cargo; el enlace previo a un
+  restart de Render confirmó la persistencia del key ring en Neon.
 
 ## Clarificacion de implementacion P3-W14 (2026-07-22)
 

@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, external gate pending
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 functional production smoke PASS, cleanup and promotion pending
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -202,8 +202,9 @@ P3-W13 quedo DONE el 2026-07-22:
   registro -> confirmación -> sesión -> favoritos -> logout PASS, sin proveedor externo.
 
 W14 conserva el único alcance para proveedores, deploy y smoke productivo. W15 ya está
-integrada y el seed real de Neon completó su primer gate; hasta la evidencia productiva
-conjunta no se promociona `main`.
+integrada y el 2026-08-12 W14 completó la evidencia productiva funcional: catálogo
+`ready`, proxy firmado, correo real, recovery, favoritos y key ring persistente tras un
+restart de Render. Hasta que la dueña disponga los datos de prueba no se promociona `main`.
 
 P3-W15 está implementada localmente para recuperación de contraseña: solicitud genérica, enlace
 Identity de un solo uso, reset sin auto-login y revocación masiva de refresh sessions.
@@ -262,7 +263,7 @@ smoke local antes de que W14 use un sender real.
 | W11 | Frontend favorites API migration |
 | W12 | Local containers/full stack ✅ |
 | W13 | Final UX, navigation and local account acceptance ✅ |
-| W14 | Neon seed $0 completo; deploy/production smoke después de W15 (provider evidence pending) |
+| W14 | Seed $0, deploy y smoke funcional PASS; limpieza de datos de prueba y promoción pendientes |
 | W15 | Recuperación de contraseña integrada; prerequisito del smoke W14 cumplido |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.

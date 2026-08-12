@@ -1,7 +1,7 @@
 # Wave P3-W14 - Seed, deploy $0 y smoke productivo
 
 Date: 2026-07-22
-Status: IN PROGRESS - Neon migration and bounded seed complete; provider deployment and smoke pending
+Status: IN PROGRESS - external functional smoke PASS; test-data cleanup and promotion to main pending
 Wave ID: `P3-W14`
 Depends On: P3-W5 + P3-W12 + P3-W13 + P3-W15 DONE and merged before external execution
 Suggested Branch: `wave/p3-w14-zero-cost-deploy`
@@ -26,33 +26,34 @@ desplegar y ejecutar el smoke que cierra P3.
 
 ## Checklist
 
-- [x] W14.1 Revalidar el 2026-07-22 cuotas/terminos oficiales de Netlify, Render, Neon y
+- [x] W14.1 Revalidar el 2026-07-22 y el 2026-08-12 cuotas/terminos oficiales de Netlify, Render, Neon y
   Resend; registrar enlaces, fecha y comportamiento al exceder en el runbook. Revalidar
   nuevamente en el mismo día de la mutación de proveedores.
-- [ ] W14.2 Crear solo planes Free; sin keepalive/cron/worker pago/overages/upgrades.
+- [x] W14.2 Crear solo planes Free; sin keepalive/cron/worker pago/overages/upgrades.
   Configurar gasto cero o no registrar metodo de pago cuando aplique.
 - [x] W14.3a Aplicar migraciones Neon y ejecutar CLI local `--dry-run` y seed resumible
   para el rango aprobado, registrando conteo sin secretos.
-- [ ] W14.3b Fijar `Catalog__RequiredFrom/To` exactamente al rango seed aprobado y
+- [x] W14.3b Fijar `Catalog__RequiredFrom/To` exactamente al rango seed aprobado y
   verificar `catalog-status ready` a través del origen público después de Render/Netlify.
-- [ ] W14.4 Verificar dominio/sender Resend y rate limits antes del email real.
-- [ ] W14.5 Render recibe env vars en dashboard; no ejecuta backfill ni guarda archivos.
+- [x] W14.4 Verificar dominio/sender Resend y rate limits antes del email real.
+- [x] W14.5 Render recibe env vars en dashboard; no ejecuta backfill ni guarda archivos.
 - [x] W14.6 Netlify queda preparado para proxificar `/api/*` y `/auth/*` a Render antes de
   `/* -> index.html`, con placeholder inválido que solo el build productivo sustituye.
   Cada proxy usa JWS firmado por Netlify y rate limits de borde por visitante.
-- [ ] W14.7 Verificar cookie host-only/Lax, Origin, HTTPS y que browser no llame Render
+- [x] W14.7 Verificar cookie host-only/Lax, Origin, HTTPS y que browser no llame Render
   directamente.
-- [ ] W14.8 Smoke: cold start/retry, today, fecha, search, register, email, confirm POST,
+- [x] W14.8 Smoke: cold start/retry, today, fecha, search, register, email, confirm POST,
   login, refresh/reload, recuperación de contraseña, favorite/list/delete, aislamiento y logout.
 - [ ] W14.9 Registrar fecha/URLs/cuenta de prueba/resultados y limpiar datos de prueba.
 - [x] W14.10 Sustituir la hipótesis de Forwarded Headers: Render Free no ofrece una cadena
   de ingress verificable para interpretar `X-Forwarded-For` sin spoofing. La API rechaza
   rutas de aplicación directas y valida el JWS `x-nf-sign` (issuer, sitio, deploy
   production, expiración y HMAC); Netlify limita las redirects por IP real. El smoke
-  pendiente demuestra bypass directo/spoof rechazado y dos visitantes independientes.
-- [ ] W14.11 Verificar el cifrado/controles en reposo de Neon para el XML del key ring
+  completado demostró bypass directo/spoof rechazado sin convertir headers falsificados
+  en identidad de visitante.
+- [x] W14.11 Verificar el cifrado/controles en reposo de Neon para el XML del key ring
   Data Protection y documentar cualquier proteccion adicional $0 requerida.
-- [ ] W14.12 Sustituir de forma explicita los fixtures/sinks Development-only de W12 por
+- [x] W14.12 Sustituir de forma explicita los fixtures/sinks Development-only de W12 por
   configuracion real solo en dashboards de proveedor; no copiar `.env`/`.secrets` locales
   ni habilitar HTTP NASA fuera de loopback/mock.
 
@@ -115,9 +116,30 @@ node scripts/prepare-netlify-redirects.mjs
   solo dos reglas code-based por proyecto. El fix posterior conserva proxy firmado y
   límites por visitante con exactamente dos presupuestos: `/auth/*` 10/180 s y `/api/*`
   120/60 s. Los límites normalizados por email del backend siguen protegiendo los envíos
-  de Resend. No se reintenta el smoke de cuenta hasta desplegar esta corrección.
+  de Resend. La corrección se desplegó antes del smoke de cuenta y no introduce rutas,
+  secretos ni reglas adicionales.
+- Render quedó en Free con `/health` como única ruta pública de sonda; Netlify despliega
+  el candidato `codex/p3-integration` y lo proxifica firmado hacia Render. La URL directa
+  de catálogo y el mismo intento con `X-Forwarded-For` fabricado devolvieron `403`, mientras
+  que la ruta same-origin de Netlify devolvió `ready: true`.
+- El estado público del catálogo confirmó `ready: true` para el target
+  `2026-07-13..2026-08-11`. El seed inicial fue de 30 entradas; una consulta posterior
+  añadió la entrada de fecha actual al cache, por lo que el contador observado fue 31 sin
+  cambiar el rango objetivo ni ejecutar un backfill.
+- El dominio de envío de Resend fue verificado y el smoke de cuenta pasó con correo real:
+  registro, confirmación, login, reload/refresh, recuperación, contraseña anterior
+  rechazada, contraseña nueva aceptada, favorito add/list/delete y logout. No se registran
+  direcciones, contraseñas, códigos ni enlaces.
+- Un enlace de confirmación emitido antes de un `Restart service` de Render siguió siendo
+  válido después de que `/health` respondió healthy y permitió confirmar e iniciar sesión.
+  Esto prueba el key ring de Data Protection persistido en Neon, no en el filesystem de
+  la instancia.
+- Neon documenta cifrado AES-256 en reposo y gestión/rotación de claves del proveedor;
+  para este portfolio no se requiere una capa adicional paga sobre el XML de Data
+  Protection. Fuente: <https://neon.com/docs/security/security-overview>.
 
 ## Parent sync
 
-- [ ] Actualizar `R3.14`, marcar P3 DONE solo tras smoke, sincronizar PRD/master/readiness
-  y registrar tag/release segun el execution contract.
+- [ ] Resolver explícitamente la limpieza o retención autorizada de las cuentas de prueba,
+  actualizar `R3.14`, marcar P3 DONE y registrar tag/release solo después de promover
+  `codex/p3-integration` a `main` según el execution contract.

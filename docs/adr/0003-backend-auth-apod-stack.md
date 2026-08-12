@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: Accepted; P3-W1-W13 and W15 integrated; W14 Neon seed complete, external gate pending
+Status: Accepted; P3-W1-W13 and W15 integrated; W14 functional production smoke PASS, cleanup and promotion pending
 
 ## Context
 
@@ -458,8 +458,23 @@ ocasionales son suficientes y observables.
   `/api/*` (120/60 segundos); no se intenta definir una regla por endpoint. La API
   conserva límites por email normalizado; en Production su policy por IP de transporte
   queda sin cuota para no agrupar visitantes detrás del proxy autenticado.
-- Esto no reemplaza el gate externo W14: aún se requieren la configuración de secretos,
-  el deploy y la demostración con dos visitantes y un bypass/spoof rechazado.
+- Esta preparación no sustituyó el gate externo W14; su evidencia de ejecución se registra
+  a continuación. La promoción permanece bloqueada hasta la limpieza o retención
+  autorizada de los datos de prueba.
+
+## Execution record - P3-W14 production validation (2026-08-12)
+
+- Neon Free (PostgreSQL 17, AWS Ohio), Resend, Render Free y Netlify fueron configurados
+  sin recursos pagos, keepalive, cron ni backfill en la API. El catálogo público quedó
+  `ready` para el rango inicial y las rutas Render directas, incluso con forwarded header
+  falsificado, devolvieron `403`.
+- Registro, confirmación, login/reload, reset con revocación de refresh, favoritos y logout
+  pasaron mediante el origen Netlify y correo Resend. No se conservaron datos personales,
+  códigos ni enlaces en el repositorio.
+- Un enlace de confirmación emitido antes de `Restart service` de Render funcionó después
+  de `healthy`, confirmando que la protección de datos depende del key ring PostgreSQL.
+  Neon documenta AES-256 en reposo y rotación administrada de claves; no se requiere una
+  capa paga extra para este portfolio. Fuente: <https://neon.com/docs/security/security-overview>.
 
 ## Implementation record - P3-W15 password recovery (2026-08-05)
 
