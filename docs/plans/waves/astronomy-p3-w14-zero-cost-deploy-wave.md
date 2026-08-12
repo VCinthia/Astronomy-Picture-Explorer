@@ -106,6 +106,11 @@ node scripts/prepare-netlify-redirects.mjs
   externa mostró una respuesta válida de NASA de 10,8 segundos; el fix
   `c8fdbb4` elevó únicamente el timeout del CLI a 30 segundos y `--resume` completó el
   batch. Sigue pendiente comprobar `catalog-status ready` mediante el deploy público.
+- El primer build de Netlify alcanzó correctamente la preparación de redirects, pero falló
+  antes de Angular porque la configuración histórica fijaba Node 20. El fix operativo
+  posterior eleva el pin de Netlify a Node 22.22.3, mínimo compatible con Angular 22, y
+  adapta seis aliases/templates y cuatro fixtures de test a su sintaxis pública. No
+  modifica rutas, secretos, UX, ni el contrato del proxy firmado.
 
 ## Parent sync
 

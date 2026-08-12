@@ -9,7 +9,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { ConfirmEmailComponent } from './confirm-email.component';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: ''
 })
 class LoginRouteComponent {}

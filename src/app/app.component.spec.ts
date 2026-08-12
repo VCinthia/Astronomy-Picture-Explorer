@@ -8,7 +8,7 @@ import { AppComponent } from './app.component';
 import { AuthService } from './services/auth.service';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: '',
 })
 class TestPageComponent {}

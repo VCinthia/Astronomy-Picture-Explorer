@@ -23,58 +23,64 @@ import { AstronomyService } from '../../services/astronomy.service';
           <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
             <p class="text-body font-semibold text-content-primary">Searching the astronomy catalog...</p>
           </section>
-        } @else if (searchError(); as requestError) {
-          <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
-            @if (requestError.code === 'catalog_not_ready') {
-              <h1 class="text-title font-semibold text-content-primary">The catalog is still being prepared.</h1>
-              <p class="mt-2 text-body text-content-secondary">Try again later. Pictures by date are still available.</p>
-            } @else {
-              <h1 class="text-title font-semibold text-content-primary">Search is temporarily unavailable.</h1>
-              <p class="mt-2 text-body text-content-secondary">{{ requestError.message }}</p>
-            }
-            <button
-              type="button"
-              (click)="retrySearch()"
-              class="mt-6 rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-            >
-              Retry search
-            </button>
-          </section>
-        } @else if (searchResults().length > 0) {
-          <section aria-labelledby="search-results-heading">
-            <h1 id="search-results-heading" class="sr-only">
-              Search results for {{ normalizedSearchQuery() }}
-            </h1>
-            <app-picture-grid [entries]="searchResults()" />
-          </section>
         } @else {
-          <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
-            <h1 class="text-title font-semibold text-content-primary">No pictures found.</h1>
-            <p class="mt-2 text-body text-content-secondary">Try a different title or description.</p>
-          </section>
+          @if (searchError(); as requestError) {
+            <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
+              @if (requestError.code === 'catalog_not_ready') {
+                <h1 class="text-title font-semibold text-content-primary">The catalog is still being prepared.</h1>
+                <p class="mt-2 text-body text-content-secondary">Try again later. Pictures by date are still available.</p>
+              } @else {
+                <h1 class="text-title font-semibold text-content-primary">Search is temporarily unavailable.</h1>
+                <p class="mt-2 text-body text-content-secondary">{{ requestError.message }}</p>
+              }
+              <button
+                type="button"
+                (click)="retrySearch()"
+                class="mt-6 rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              >
+                Retry search
+              </button>
+            </section>
+          } @else if (searchResults().length > 0) {
+            <section aria-labelledby="search-results-heading">
+              <h1 id="search-results-heading" class="sr-only">
+                Search results for {{ normalizedSearchQuery() }}
+              </h1>
+              <app-picture-grid [entries]="searchResults()" />
+            </section>
+          } @else {
+            <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
+              <h1 class="text-title font-semibold text-content-primary">No pictures found.</h1>
+              <p class="mt-2 text-body text-content-secondary">Try a different title or description.</p>
+            </section>
+          }
         }
       } @else if (loading()) {
         <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
           <p class="text-body font-semibold text-content-primary">Loading this picture...</p>
         </section>
-      } @else if (error(); as requestError) {
-        <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
-          <h1 class="text-title font-semibold text-content-primary">This picture is unavailable.</h1>
-          <p class="mt-2 text-body text-content-secondary">{{ requestError.message }}</p>
-          <button
-            type="button"
-            (click)="retryDate()"
-            class="mt-6 rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            Retry
-          </button>
-        </section>
-      } @else if (picture(); as entry) {
-        <app-picture-card [entry]="entry" />
       } @else {
-        <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
-          <p class="text-body text-content-secondary">Choose a date to load its astronomy picture.</p>
-        </section>
+        @if (error(); as requestError) {
+          <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
+            <h1 class="text-title font-semibold text-content-primary">This picture is unavailable.</h1>
+            <p class="mt-2 text-body text-content-secondary">{{ requestError.message }}</p>
+            <button
+              type="button"
+              (click)="retryDate()"
+              class="mt-6 rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Retry
+            </button>
+          </section>
+        } @else {
+          @if (picture(); as entry) {
+            <app-picture-card [entry]="entry" />
+          } @else {
+            <section role="status" aria-live="polite" class="rounded-card border border-space-border bg-space-surface px-6 py-10 text-center">
+              <p class="text-body text-content-secondary">Choose a date to load its astronomy picture.</p>
+            </section>
+          }
+        }
       }
     </div>
   `

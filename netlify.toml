@@ -8,7 +8,9 @@
   publish = "dist/astronomy-picture-explorer/browser"
 
 [build.environment]
-  NODE_VERSION = "20"
+  # Angular 22 requires Node 22.22.3 or later. Pin the minimum supported
+  # runtime so Netlify does not silently select its older Node 20 default.
+  NODE_VERSION = "22.22.3"
 
 # These are signed, same-origin proxy rewrites to Render. Netlify injects the key named
 # by `signed` at request time as an HMAC JWS header; its secret value never enters Git

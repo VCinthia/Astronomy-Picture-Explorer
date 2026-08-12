@@ -108,7 +108,9 @@ The public `catalog-status ready` verification remains a Render/Netlify smoke st
    session signing key. The build script replaces only the committed invalid placeholder
    in `netlify.toml`; the proxy key is injected by Netlify at request time and is not
    written into the frontend.
-4. Deploy the `codex/p3-integration` release candidate to Netlify. Review the deploy log
+4. `netlify.toml` pins `NODE_VERSION = "22.22.3"`, the minimum Node runtime supported by
+   Angular 22. Do not override it with an older dashboard variable.
+5. Deploy the `codex/p3-integration` release candidate to Netlify. Review the deploy log
    after post-processing: the redirect rate-limit rules must be shown as valid. The
    proxy uses Netlify's per-domain-and-IP limits (Free availability) with account-specific
    limits before generic auth/API rules.

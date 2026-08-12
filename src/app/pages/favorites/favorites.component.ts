@@ -26,38 +26,40 @@ import { FavoritesService } from '../../services/favorites.service';
         >
           <p class="text-body font-semibold text-content-primary">Loading your favorites...</p>
         </section>
-      } @else if (error(); as requestError) {
-        <section
-          role="alert"
-          class="rounded-card border border-red-400/60 bg-red-400/10 px-6 py-12 text-center"
-        >
-          <p class="text-body font-semibold text-content-primary">Your favorites are unavailable.</p>
-          <p class="mt-2 text-meta text-content-secondary">{{ requestError.message }}</p>
-          <button
-            type="button"
-            (click)="retry()"
-            class="mt-6 rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
-            Retry
-          </button>
-        </section>
-      } @else if (entries().length > 0) {
-        <app-picture-grid [entries]="entries()" />
       } @else {
-        <div
-          class="rounded-card border border-space-border bg-space-surface px-6 py-12 text-center"
-        >
-          <p class="text-body font-semibold text-content-primary">No favorites saved yet.</p>
-          <p class="mt-2 text-meta text-content-secondary">
-            Explore the archive and use the heart button to save pictures here.
-          </p>
-          <a
-            routerLink="/explorer"
-            class="mt-6 inline-flex rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        @if (error(); as requestError) {
+          <section
+            role="alert"
+            class="rounded-card border border-red-400/60 bg-red-400/10 px-6 py-12 text-center"
           >
-            Explore pictures
-          </a>
-        </div>
+            <p class="text-body font-semibold text-content-primary">Your favorites are unavailable.</p>
+            <p class="mt-2 text-meta text-content-secondary">{{ requestError.message }}</p>
+            <button
+              type="button"
+              (click)="retry()"
+              class="mt-6 rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Retry
+            </button>
+          </section>
+        } @else if (entries().length > 0) {
+          <app-picture-grid [entries]="entries()" />
+        } @else {
+          <div
+            class="rounded-card border border-space-border bg-space-surface px-6 py-12 text-center"
+          >
+            <p class="text-body font-semibold text-content-primary">No favorites saved yet.</p>
+            <p class="mt-2 text-meta text-content-secondary">
+              Explore the archive and use the heart button to save pictures here.
+            </p>
+            <a
+              routerLink="/explorer"
+              class="mt-6 inline-flex rounded-button bg-accent px-5 py-2.5 text-meta font-semibold text-space-base transition hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              Explore pictures
+            </a>
+          </div>
+        }
       }
     </section>
   `

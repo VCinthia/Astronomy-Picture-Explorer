@@ -89,3 +89,9 @@ La publicacion P2 permanece sin cambios hasta la promocion autorizada por W14.
 
 - La promoción productiva pasa de W13 a W14 para insertar W13 de UX y aceptación local.
   No modifica la evidencia de accesibilidad ni deploy histórico de P1.
+
+## Post-implementation clarification (2026-08-12)
+
+- El `NODE_VERSION 20` que acompañaba al deploy histórico P1/P2 deja de ser compatible
+  con Angular 22. P3-W14 lo eleva a `22.22.3`, sin alterar la evidencia funcional o de
+  accesibilidad de esta wave.

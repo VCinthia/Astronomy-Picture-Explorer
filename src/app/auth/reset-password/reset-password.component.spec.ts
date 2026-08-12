@@ -9,7 +9,7 @@ import { ActivatedRoute, convertToParamMap, provideRouter } from '@angular/route
 import { ResetPasswordComponent } from './reset-password.component';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: ''
 })
 class LoginRouteComponent {}

@@ -5,7 +5,7 @@ import { Router, provideRouter } from '@angular/router';
 import { BottomNavComponent } from './bottom-nav.component';
 
 @Component({
-  changeDetection: ChangeDetectionStrategy.Eager,
+  changeDetection: ChangeDetectionStrategy.Default,
   template: '',
 })
 class TestPageComponent {}
