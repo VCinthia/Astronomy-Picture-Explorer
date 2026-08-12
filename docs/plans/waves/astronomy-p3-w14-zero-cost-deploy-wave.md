@@ -1,7 +1,7 @@
 # Wave P3-W14 - Seed, deploy $0 y smoke productivo
 
 Date: 2026-07-22
-Status: IN PROGRESS - deployment preparation complete; provider execution pending
+Status: IN PROGRESS - Neon migration and bounded seed complete; provider deployment and smoke pending
 Wave ID: `P3-W14`
 Depends On: P3-W5 + P3-W12 + P3-W13 + P3-W15 DONE and merged before external execution
 Suggested Branch: `wave/p3-w14-zero-cost-deploy`
@@ -31,9 +31,10 @@ desplegar y ejecutar el smoke que cierra P3.
   nuevamente en el mismo día de la mutación de proveedores.
 - [ ] W14.2 Crear solo planes Free; sin keepalive/cron/worker pago/overages/upgrades.
   Configurar gasto cero o no registrar metodo de pago cuando aplique.
-- [ ] W14.3 Aplicar migraciones Neon y ejecutar CLI local `--dry-run`, seed resumible y
-  verificacion `catalog-status ready`; fijar `Catalog__RequiredFrom/To` exactamente al
-  rango seed aprobado y registrar conteo/tamaño sin secrets.
+- [x] W14.3a Aplicar migraciones Neon y ejecutar CLI local `--dry-run` y seed resumible
+  para el rango aprobado, registrando conteo sin secretos.
+- [ ] W14.3b Fijar `Catalog__RequiredFrom/To` exactamente al rango seed aprobado y
+  verificar `catalog-status ready` a través del origen público después de Render/Netlify.
 - [ ] W14.4 Verificar dominio/sender Resend y rate limits antes del email real.
 - [ ] W14.5 Render recibe env vars en dashboard; no ejecuta backfill ni guarda archivos.
 - [x] W14.6 Netlify queda preparado para proxificar `/api/*` y `/auth/*` a Render antes de
@@ -92,6 +93,19 @@ node scripts/prepare-netlify-redirects.mjs
   sustituyó/validó un origen HTTPS de prueba sin persistirlo.
 - La promoción, creación de recursos, seed real, correo real y toda evidencia externa
   permanecen pendientes de las decisiones de dueña enumeradas en el runbook.
+
+## External execution record (2026-08-12)
+
+- Neon Free fue creado en AWS US East 2 (Ohio), con PostgreSQL 17 y Neon Auth desactivado.
+- Las migraciones se aplicaron desde la consola local contra la conexión directa de Neon.
+  La dueña confirmó las tablas en la consola de Neon.
+- El dry-run del rango aprobado `2026-07-13..2026-08-11` pasó sin abrir Neon ni NASA. El
+  seed real de 30 fechas se reanudó y completó correctamente; la dueña confirmó los 30
+  registros APOD en Neon.
+- El primer intento se pausó sin checkpoint por un timeout de 8 segundos. La medición
+  externa mostró una respuesta válida de NASA de 10,8 segundos; el fix
+  `c8fdbb4` elevó únicamente el timeout del CLI a 30 segundos y `--resume` completó el
+  batch. Sigue pendiente comprobar `catalog-status ready` mediante el deploy público.
 
 ## Parent sync
 

@@ -1,8 +1,8 @@
 # Phase Plan P3 - Backend real, autenticacion y persistencia
 
 Date: 2026-07-08
-Last revised: 2026-08-05
-Status: IN PROGRESS - W1-W13 DONE; W15 implemented locally and awaiting integration; W14 external deployment pending
+Last revised: 2026-08-12
+Status: IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, external deployment pending
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -99,7 +99,7 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 - [x] **R3.11** Frontend favorites migration (W11).
 - [x] **R3.12** Contenedores y stack local (W12).
 - [x] **R3.13** UX final y aceptación local de navegación/cuenta (W13).
-- [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14; preparación local completa,
+- [ ] **R3.14** Seed, deploy $0 y smoke productivo (W14; Neon seed completo,
   evidencia de proveedores pendiente).
 - [x] **R3.15** Recuperación de contraseña segura: request genérico, reset Identity de
   un solo uso, revocación masiva de refresh sessions y UX/local smoke (W15; integración
@@ -221,8 +221,9 @@ W14 inició preparación el 2026-07-22: el contenedor diferencia secretos Docker
 variables secretas de provider y respeta el puerto Render; Netlify tiene rewrites firmadas
 con límites por IP y la API valida el JWS Netlify antes de `/api/*`/`/auth/*`. Esto reemplaza
 la propuesta de confiar en forwarded headers: no se interpreta `X-Forwarded-For` y un
-bypass directo/spoof recibe 403. `docs/deploy/p3-deploy-runbook.md` mantiene la evidencia
-pendiente de Neon/Render/Netlify/Resend, seed y smoke; R3.14 sigue abierto hasta entonces.
+bypass directo/spoof recibe 403. `docs/deploy/p3-deploy-runbook.md` registra la migración
+y seed Neon completados y mantiene la evidencia pendiente de Render/Netlify/Resend y
+smoke; R3.14 sigue abierto hasta entonces.
 
 W15 se inserta antes de la ejecución externa W14. Reutiliza el correo de cuenta sin un
 nuevo secreto ni esquema: `forgot-password` responde genéricamente y solo entrega correo
@@ -230,8 +231,8 @@ a usuarios confirmados; `reset-password` usa el token Identity Base64URL, no rea
 auto-login y revoca todas las sesiones refresh. La URL se limpia en Angular antes de
 enviar el POST. Los límites IP/email y la redirect edge se extienden para proteger la
 cuota de correo y el intento de reset. La implementación local del 2026-08-05 verificó
-177/177 backend, 128/128 frontend y el smoke Compose/LocalLog; W14 permanece bloqueada
-solamente por la integración y su autoridad externa.
+177/177 backend, 128/128 frontend y el smoke Compose/LocalLog; W15 fue integrada y W14
+permanece abierta solamente por su ejecución externa restante.
 La regresión de preparación actual pasa backend 172/172 y frontend 118/118; los conteos
 W13 anteriores permanecen como evidencia histórica antes de sus fixes posteriores.
 

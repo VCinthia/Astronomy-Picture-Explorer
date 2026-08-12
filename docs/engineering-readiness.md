@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
-Date: 2026-08-05
-Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W15 implemented locally and awaiting integration; W14 external gate pending
+Date: 2026-08-12
+Status: P2 DONE in production; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, external gate pending
 
 ## Verdict
 
@@ -31,9 +31,9 @@ W14 preparó el 2026-07-22 la configuración de proveedor sin mutar cuentas: el 
 acepta secretos del dashboard/puerto Render, Netlify tiene rewrites firmadas con límites
 por IP y la API rechaza rutas de aplicación directas o `X-Forwarded-For` falsificado. El
 seed Neon, la configuración de dashboards, el correo real y el smoke siguen pendientes.
-W15 cerró localmente recuperación de contraseña con enlace Identity de un solo uso,
-revocación de refresh sessions y prueba LocalLog. Debe integrarse antes de la ejecución
-externa W14.
+W15 cerró e integró recuperación de contraseña con enlace Identity de un solo uso,
+revocación de refresh sessions y prueba LocalLog. La ejecución externa W14 ya completó
+su migración y seed Neon, pero conserva los gates de proveedor y smoke.
 
 ## Closed gates
 
@@ -288,8 +288,8 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   fail-closed.
 - Frontend build y 118/118 ChromeHeadless PASS; Compose reconstruido sin volumen,
   healthy y smoke HTTP local `health`/catalog ready/search PASS.
-- Este gate no reemplaza R3.14: no hay proveedores configurados, seed real, correo real
-  ni smoke productivo aún.
+- Este gate no reemplaza R3.14: Neon/migración/seed ya se ejecutaron, pero Render,
+  Netlify, Resend, correo real y smoke productivo aún no tienen evidencia.
 
 ## P3-W15 local implementation evidence
 
@@ -299,8 +299,8 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   URL y no auto-inicia sesión ni persiste el código.
 - Un éxito revoca todas las refresh sessions, mantiene el JWT existente como máximo hasta
   su expiración corta y permite sólo la contraseña nueva en un login posterior.
-- No hubo migración, secreto, proveedor ni recurso pago nuevo. Los límites edge ya están
-  preparados; W14 conserva el smoke real tras integrar esta evidencia local.
+- No hubo migración, secreto, proveedor ni recurso pago nuevo en W15. Los límites edge
+  ya están preparados; W15 fue integrado y W14 conserva el smoke real restante.
 
 Antes de cada wave restante:
 

@@ -1,8 +1,8 @@
 # Master Plan - Astronomy Picture Explorer
 
 Date: 2026-06-25
-Last revised: 2026-08-05
-Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 DONE; W15 implemented locally and awaiting integration; W14 external gate pending
+Last revised: 2026-08-12
+Status: P1 DONE; P2 DONE in production; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, external gate pending
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -201,9 +201,9 @@ P3-W13 quedo DONE el 2026-07-22:
 - 117/117 pruebas frontend, build, backend, Compose Windows/Linux y smoke LocalLog de
   registro -> confirmación -> sesión -> favoritos -> logout PASS, sin proveedor externo.
 
-W14 conserva el único alcance para seed real, proveedores, deploy y smoke productivo;
-su ejecución externa espera que W15 esté integrada y verificada localmente. Hasta esa
-evidencia conjunta no se promociona `main`.
+W14 conserva el único alcance para proveedores, deploy y smoke productivo. W15 ya está
+integrada y el seed real de Neon completó su primer gate; hasta la evidencia productiva
+conjunta no se promociona `main`.
 
 P3-W15 está implementada localmente para recuperación de contraseña: solicitud genérica, enlace
 Identity de un solo uso, reset sin auto-login y revocación masiva de refresh sessions.
@@ -262,8 +262,8 @@ smoke local antes de que W14 use un sender real.
 | W11 | Frontend favorites API migration |
 | W12 | Local containers/full stack ✅ |
 | W13 | Final UX, navigation and local account acceptance ✅ |
-| W14 | Zero-cost seed/deploy/production smoke, después de W15 (provider evidence pending) |
-| W15 | Recuperación de contraseña local completa; integración pendiente, prerequisito del smoke W14 |
+| W14 | Neon seed $0 completo; deploy/production smoke después de W15 (provider evidence pending) |
+| W15 | Recuperación de contraseña integrada; prerequisito del smoke W14 cumplido |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.
 
@@ -301,5 +301,6 @@ Los comandos .NET/Docker aplican desde las waves que crean esos artefactos.
   que Render asigna.
 - La regresión de preparación actual es backend 172/172 y frontend 118/118; las cifras
   históricas W13 permanecen como evidencia de su cierre previo a los fixes posteriores.
-- El plan sigue abierto: no se ha creado, pagado ni configurado un proveedor; seed,
-  despliegue y evidencia externa son exclusivamente el gate restante de W14.
+- El plan sigue abierto: Neon Free, migración y seed inicial ya están ejecutados; el
+  despliegue, la evidencia de Render/Netlify/Resend y el smoke externo son el gate
+  restante de W14.

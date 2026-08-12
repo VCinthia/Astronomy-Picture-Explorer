@@ -1,8 +1,8 @@
 # PRD - Astronomy Picture Explorer
 
 Date: 2026-07-08
-Last revised: 2026-08-05
-Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 DONE; W15 implemented locally and awaiting integration; W14 external gate pending
+Last revised: 2026-08-12
+Status: P1 DONE; P2 DONE; P3 IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, deploy/smoke pending
 
 ## Vision
 
@@ -186,9 +186,10 @@ hdurl|null, thumbnail_url|null, copyright|null
 ## Success criteria
 
 - P1/P2 permanecen documentados como entregas historicas cerradas.
-- P3 W1-W13 permanecen cerradas. W15 implementó recuperación de contraseña verificable
-  localmente y espera integración antes de que W14 ejecute el smoke con proveedores reales.
-- Catalogo inicial listo en Neon y search FTS probado.
+- P3 W1-W13 y W15 permanecen cerradas e integradas. W14 ejecutó migración y seed Neon;
+  el smoke con proveedores reales sigue pendiente.
+- El catálogo inicial de 30 APOD está persistido en Neon; la verificación HTTP de
+  `catalog-status ready` queda pendiente del deploy.
 - Auth/favorites/APOD funcionan E2E desde Netlify mediante proxy same-origin.
 - Cold-start UX verificada.
 - Produccion y quotas documentadas sin secretos ni riesgo de cargo.

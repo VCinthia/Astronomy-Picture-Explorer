@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
-Date: 2026-08-05
-Status: P3 IN PROGRESS - W1-W13 implemented; W15 implemented locally and awaiting integration; W14 external release pending
+Date: 2026-08-12
+Status: P3 IN PROGRESS - W1-W13 and W15 integrated; W14 Neon seed complete, external release pending
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos

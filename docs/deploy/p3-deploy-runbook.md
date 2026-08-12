@@ -1,8 +1,8 @@
 # P3 production deploy and smoke runbook
 
-Date: 2026-07-22
-Status: PREPARED — external execution is intentionally pending owner credentials and
-provider access.
+Date: 2026-08-12
+Status: IN PROGRESS — Neon migration and bounded catalog seed are complete; provider
+configuration and production smoke remain pending.
 
 This is the only approved runbook for mutating production P3 resources. It keeps the
 portfolio on free tiers, avoids background work and records evidence without recording
@@ -83,6 +83,12 @@ database size without exposing the connection string. The seed is acceptable onl
 the persisted target becomes `completed` and the later API `catalog-status` reports
 `ready: true`.
 
+Execution record, 2026-08-12: the approved range `2026-07-13..2026-08-11` passed its
+dry-run, then completed through `--resume` after a safe timeout pause. Neon contains 30
+APOD records verified by the owner. The CLI request timeout is 30 seconds after a valid
+NASA response was observed at 10.8 seconds; this does not alter interactive API timeouts.
+The public `catalog-status ready` verification remains a Render/Netlify smoke step.
+
 ## 4. Configure Resend, Render and Netlify
 
 1. In Resend, verify the owned domain/sender and complete its DNS verification. Send no
@@ -137,13 +143,13 @@ sanitized observation for every item:
 
 | Field | Value |
 |---|---|
-| Date/time (UTC) | Pending |
+| Date/time (UTC) | 2026-08-12; deployment time pending |
 | Netlify public URL | Pending |
 | Render health URL | Pending |
-| Neon Free / encryption evidence | Pending |
+| Neon Free / encryption evidence | Free project, PostgreSQL 17, AWS US East 2 (Ohio); at-rest confirmation pending W14.11 |
 | Resend sender status / daily limit | Pending |
-| Approved catalog range / count / ready result | Pending |
-| Netlify/Render/Neon/Resend zero-cost settings | Pending |
+| Approved catalog range / count / ready result | `2026-07-13..2026-08-11`; 30 records seeded; public `ready` check pending |
+| Netlify/Render/Neon/Resend zero-cost settings | Neon Free confirmed; remaining providers pending |
 | Cold start, proxy, auth, password recovery and favorites smoke result | Pending |
 | Cleanup result | Pending |
 

@@ -1,8 +1,8 @@
 # ADR-0003 - Backend, autenticacion, catalogo APOD y despliegue P3
 
 Date: 2026-07-08
-Last revised: 2026-08-05
-Status: Accepted; P3-W1-W13 implemented; W15 implemented locally and awaiting integration; W14 external gate pending
+Last revised: 2026-08-12
+Status: Accepted; P3-W1-W13 and W15 integrated; W14 Neon seed complete, external gate pending
 
 ## Context
 
