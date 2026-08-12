@@ -506,7 +506,9 @@ flowchart LR
 ```
 
 - Netlify owns the production visitor-IP limit with redirect rules that aggregate by
-  domain and IP. This is the only component that observes the browser IP safely.
+  domain and IP. This is the only component that observes the browser IP safely. On the
+  Free plan its two rule slots are deliberately allocated to `/auth/*` (10/180 s) and
+  `/api/*` (120/60 s); endpoint-specific email controls remain in the API.
 - The API validates issuer, public `site_url`, `deploy_context=production`, expiration
   and HMAC in constant time before it considers application routing. It intentionally
   does not enable generic forwarded-header processing.

@@ -80,8 +80,9 @@ OAuth, MFA, cambio de email ni auto-login.
   puede login; el password nuevo sí.
 - Login enlaza al request; la SPA no conserva código, contraseña, JWT ni refresh token en
   localStorage/sessionStorage y no muestra información de existencia de cuenta.
-- Los límites request/reset producen `429` ProblemDetails locales y sus redirects firmadas
-  quedan antes de `/auth/*` genérico.
+- Los límites request/reset producen `429` ProblemDetails locales. En producción ambos
+  atraviesan la única redirect firmada `/auth/*`; W14 concentra allí el límite de
+  visitante compatible con Netlify Free.
 - Backend, frontend, Compose y smoke local cubren registro -> confirmación -> login ->
   forgot -> reset -> nuevo login -> favoritos -> logout sin proveedor externo.
 - W14 queda explícitamente pendiente de ejecutar este flujo contra Resend/Netlify/Render;
@@ -117,9 +118,10 @@ Netlify: siguen siendo autoridad exclusiva de W14.
 - Un advisory lock por usuario serializa login/session-create, refresh rotation y reset.
   Rotate vuelve a leer el token/familia después del lock, por lo que una rotación que ya
   había comenzado no puede insertar un reemplazo activo después de la revocación del reset.
-- Netlify tiene límites firmados específicos para request/reset antes del comodín
-  `/auth/*`. En local, ambos endpoints tienen límites IP independientes y forgot además
-  limita el hash del email normalizado; no se interpreta ningún forwarded header.
+- Netlify Free concentra el límite firmado de visitante en `/auth/*`, sin reglas
+  específicas para request/reset. En local, ambos endpoints tienen límites IP
+  independientes y forgot además limita el hash del email normalizado; no se interpreta
+  ningún forwarded header.
 - Las rutas Angular son lazy. El código se valida y se elimina de history antes de mostrar
   el formulario, se descarta luego de un intento y nunca entra en Web Storage. Un reset
   exitoso limpia la sesión en memoria y redirige a Login con estado transitorio, sin

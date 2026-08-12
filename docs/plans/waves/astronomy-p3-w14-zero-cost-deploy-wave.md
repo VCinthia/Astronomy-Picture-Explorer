@@ -111,6 +111,11 @@ node scripts/prepare-netlify-redirects.mjs
   posterior eleva el pin de Netlify a Node 22.22.3, mínimo compatible con Angular 22, y
   adapta seis aliases/templates y cuatro fixtures de test a su sintaxis pública. No
   modifica rutas, secretos, UX, ni el contrato del proxy firmado.
+- La configuración inicial declaraba siete límites por redirect, pero Netlify Free admite
+  solo dos reglas code-based por proyecto. El fix posterior conserva proxy firmado y
+  límites por visitante con exactamente dos presupuestos: `/auth/*` 10/180 s y `/api/*`
+  120/60 s. Los límites normalizados por email del backend siguen protegiendo los envíos
+  de Resend. No se reintenta el smoke de cuenta hasta desplegar esta corrección.
 
 ## Parent sync
 

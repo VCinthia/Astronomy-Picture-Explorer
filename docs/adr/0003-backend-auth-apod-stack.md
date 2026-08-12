@@ -454,8 +454,10 @@ ocasionales son suficientes y observables.
   cubre todas las rutas `/api/*` y `/auth/*`, por lo que la URL Render solo conserva
   `/health` para su sonda.
 - Los límites por IP productivos se trasladan a redirects Netlify por dominio+IP real.
-  La API conserva límites por email normalizado; en Production su policy por IP de
-  transporte queda sin cuota para no agrupar visitantes detrás del proxy autenticado.
+  En Free solo existen dos reglas code-based, asignadas a `/auth/*` (10/180 segundos) y
+  `/api/*` (120/60 segundos); no se intenta definir una regla por endpoint. La API
+  conserva límites por email normalizado; en Production su policy por IP de transporte
+  queda sin cuota para no agrupar visitantes detrás del proxy autenticado.
 - Esto no reemplaza el gate externo W14: aún se requieren la configuración de secretos,
   el deploy y la demostración con dos visitantes y un bypass/spoof rechazado.
 

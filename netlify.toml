@@ -14,62 +14,9 @@
 
 # These are signed, same-origin proxy rewrites to Render. Netlify injects the key named
 # by `signed` at request time as an HMAC JWS header; its secret value never enters Git
-# or the built frontend. Specific account protections precede the generic auth proxy.
-[[redirects]]
-  from = "/auth/register"
-  to = "https://render-api-origin.invalid/auth/register"
-  status = 200
-  force = true
-  signed = "NETLIFY_PROXY_SIGNING_KEY"
-  [redirects.rate_limit]
-    window_limit = 5
-    window_size = 180
-    aggregate_by = ["ip", "domain"]
-
-[[redirects]]
-  from = "/auth/resend-confirmation"
-  to = "https://render-api-origin.invalid/auth/resend-confirmation"
-  status = 200
-  force = true
-  signed = "NETLIFY_PROXY_SIGNING_KEY"
-  [redirects.rate_limit]
-    window_limit = 5
-    window_size = 180
-    aggregate_by = ["ip", "domain"]
-
-[[redirects]]
-  from = "/auth/login"
-  to = "https://render-api-origin.invalid/auth/login"
-  status = 200
-  force = true
-  signed = "NETLIFY_PROXY_SIGNING_KEY"
-  [redirects.rate_limit]
-    window_limit = 10
-    window_size = 180
-    aggregate_by = ["ip", "domain"]
-
-[[redirects]]
-  from = "/auth/forgot-password"
-  to = "https://render-api-origin.invalid/auth/forgot-password"
-  status = 200
-  force = true
-  signed = "NETLIFY_PROXY_SIGNING_KEY"
-  [redirects.rate_limit]
-    window_limit = 5
-    window_size = 180
-    aggregate_by = ["ip", "domain"]
-
-[[redirects]]
-  from = "/auth/reset-password"
-  to = "https://render-api-origin.invalid/auth/reset-password"
-  status = 200
-  force = true
-  signed = "NETLIFY_PROXY_SIGNING_KEY"
-  [redirects.rate_limit]
-    window_limit = 5
-    window_size = 180
-    aggregate_by = ["ip", "domain"]
-
+# or the built frontend. Netlify Free permits at most two code-based rate-limit rules,
+# so one visitor-IP budget covers the complete auth surface and a second covers the API.
+# Email-specific account limits remain enforced by the API before Resend is called.
 [[redirects]]
   from = "/auth/*"
   to = "https://render-api-origin.invalid/auth/:splat"
@@ -77,8 +24,8 @@
   force = true
   signed = "NETLIFY_PROXY_SIGNING_KEY"
   [redirects.rate_limit]
-    window_limit = 60
-    window_size = 60
+    window_limit = 10
+    window_size = 180
     aggregate_by = ["ip", "domain"]
 
 [[redirects]]

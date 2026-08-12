@@ -110,10 +110,18 @@ The public `catalog-status ready` verification remains a Render/Netlify smoke st
    written into the frontend.
 4. `netlify.toml` pins `NODE_VERSION = "22.22.3"`, the minimum Node runtime supported by
    Angular 22. Do not override it with an older dashboard variable.
-5. Deploy the `codex/p3-integration` release candidate to Netlify. Review the deploy log
-   after post-processing: the redirect rate-limit rules must be shown as valid. The
-   proxy uses Netlify's per-domain-and-IP limits (Free availability) with account-specific
-   limits before generic auth/API rules.
+5. Netlify Free permits only two code-based rate-limit rules. The deployed configuration
+   therefore has exactly these two signed proxy budgets, both per domain and visitor IP:
+
+   | Path | Limit | Rationale |
+   |---|---:|---|
+   | `/auth/*` | 10 requests / 180 seconds | Covers registration, confirmation, login and recovery without blocking a normal account flow. The API retains normalized-email limits before it sends Resend mail. |
+   | `/api/*` | 120 requests / 60 seconds | Bounds normal catalog and favorites traffic. |
+
+   Do not add endpoint-specific Netlify rules on Free: they would exceed the provider
+   limit and make the edge configuration invalid/unreliable.
+6. Deploy the `codex/p3-integration` release candidate to Netlify. Review the deploy log
+   after post-processing: both redirect rate-limit rules must be shown as valid.
 
 ## 5. Production smoke
 
