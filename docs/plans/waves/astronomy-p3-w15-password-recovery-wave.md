@@ -49,10 +49,10 @@ OAuth, MFA, cambio de email ni auto-login.
 5. Angular valida el link y hace `Location.replaceState('/reset-password')` antes de
    mostrar el formulario; el código permanece en memoria y se descarta tras un intento.
    Tras éxito navega a Login con estado transitorio, sin auto-login.
-6. W14 extiende las rewrites firmadas con límites específicos para request/reset y prueba
-   el flujo con Resend. La URL Render directa sigue bloqueada por la firma Netlify.
-   Request/reset son anónimos, `no-store` y no usan el filtro Origin de refresh/logout:
-   el token Identity es la capacidad de un solo uso que autoriza el reset.
+6. En producción request/reset atraviesan el grupo global `/auth/*`, y W14 prueba el flujo
+   real con correo transaccional. Request/reset son anónimos, `no-store` y no usan el
+   filtro Origin de refresh/logout: el token Identity es la capacidad de un solo uso que
+   autoriza el reset.
 
 ## Implementation checklist
 
@@ -140,3 +140,12 @@ Netlify: siguen siendo autoridad exclusiva de W14.
 La dependencia administrativa indicada arriba quedó satisfecha: W14 completó su smoke y
 P4-W1 confirmó el cutover posterior a `main`, con health y catálogo same-origin PASS.
 W15 queda `DONE`; esta aclaración no modifica la evidencia local ni externa anterior.
+
+## Aclaración terminal P4-W3 - límite de borde consolidado (2026-08-12)
+
+La redacción de planificación original de la decisión 6 preveía granularidad adicional
+para request/reset. No fue la configuración desplegada: el contrato final concentra el
+tráfico de visitante en los dos grupos globales `/auth/*` y `/api/*`, sin una regla
+individual para recuperación. Los controles de cuenta siguen aplicándose en la API. Esta
+aclaración preserva la intención histórica de proteger recovery sin reescribirla como si
+hubiera sido una regla individualizada.

@@ -1,13 +1,10 @@
 # Astronomy Explorer backend
 
-ASP.NET Core 10 API for Astronomy Picture Explorer. P3-W1 established the host,
-PostgreSQL schema and Identity persistence. P3-W2 adds registration, confirmation,
-resend, rate limiting and the Resend adapter. P3-W3 adds Identity login, short JWTs,
-rotating PostgreSQL refresh sessions and Origin-protected logout/refresh.
-P3-W4 adds the app-owned APOD contract, public today/date endpoints and layered cache.
-P3-W5 adds the local resumable catalog CLI and public catalog status. P3-W6 adds
-bounded PostgreSQL full-text search with shared catalog readiness. P3-W7 adds protected,
-per-user favorites with idempotent writes and hydrated cards.
+ASP.NET Core 10 API for Astronomy Picture Explorer. P3 delivered PostgreSQL persistence,
+Identity accounts with confirmation and password recovery, short-lived sessions, an
+app-owned APOD contract, layered caching, a manually operated catalog loader, PostgreSQL
+full-text search and protected per-user favorites. P4 keeps this technical guide aligned
+with the released application without publishing operational production configuration.
 
 ## Prerequisites
 
@@ -21,60 +18,22 @@ Restore the repository-local EF Core tool from the repository root:
 dotnet tool restore
 ```
 
-## Configuration
+## Configuration boundaries
 
-No connection string or credential is committed. For local development, store the
-PostgreSQL connection string in user secrets:
+No connection string, API key, signing material, sender identity or production origin is
+committed. Local Compose setup, including ignored local secret files and deterministic
+fixtures, is documented in
+[`docs/deploy/p3-local-runbook.md`](../docs/deploy/p3-local-runbook.md).
 
-```powershell
-dotnet user-secrets set `
-  "ConnectionStrings:Postgres" `
-  "Host=localhost;Port=5432;Database=astronomy_explorer;Username=<user>;Password=<password>" `
-  --project backend/AstronomyExplorer.Api
-```
+For a non-Compose local API run, configure the database and other required services with
+your own user-secrets or local environment. Deployed configuration is supplied only by
+the provider dashboard. Do not copy values from a deployed environment into repository
+files, screenshots, terminal transcripts or documentation.
 
-CI and deployed environments must use the equivalent environment variable:
-
-```text
-ConnectionStrings__Postgres
-```
-
-Account email links use `Frontend:PublicBaseUrl` (local default
-`http://localhost:4200`). Real delivery is deferred to W14; when enabled, secrets and
-sender configuration are supplied only through user-secrets/provider environment:
-
-```text
-Frontend__PublicBaseUrl
-Resend__ApiKey
-Resend__FromAddress
-Session__Issuer
-Session__Audience
-Session__SigningKey
-Session__AccessTokenLifetime
-Session__RefreshTokenLifetime
-Session__RefreshCookieName
-NasaApod__ApiKey
-NasaApod__BaseUrl
-Catalog__RequiredFrom
-Catalog__RequiredTo
-Email__Provider
-LocalFixtures__Enabled
-NetlifyProxy__SigningKey
-NetlifyProxy__UseEdgeRateLimits
-```
-
-`Session__SigningKey` must contain at least 32 UTF-8 bytes and must never be committed,
-printed or copied into documentation. Session and frontend options validate on startup;
-production fails closed when issuer, audience, key or HTTPS public origin are invalid.
-
-The application fails at startup when this setting is absent. Do not add connection
-strings, API keys or passwords to either `appsettings.json` file.
-
-`NasaApod__BaseUrl` defaults to `https://api.nasa.gov/`. HTTP is accepted only in
-Development for `nasa-mock`, `localhost` or a loopback address, preventing an API key
-from being routed to an arbitrary insecure host. `Email__Provider` defaults to `Resend`;
-`LocalLog` is rejected outside Development and writes confirmation messages only to the
-local API container log. `LocalFixtures__Enabled` is also rejected outside Development.
+The application validates required session, frontend and provider configuration at
+startup. Development-only fixtures and the local email log sink are rejected outside the
+Development environment. The released application uses a verified transactional email
+provider; local verification remains deterministic and does not contact that provider.
 
 ## Schema decisions
 
@@ -92,9 +51,9 @@ local API container log. `LocalFixtures__Enabled` is also rejected outside Devel
   is stored as a constrained string, not as a PostgreSQL enum.
 - All persisted instants use PostgreSQL `timestamp with time zone`. Application values
   must use `DateTimeOffset.UtcNow`; Npgsql rejects non-zero offsets for this type.
-- Identity Data Protection keys use application name `AstronomyExplorer` and persist in
-  PostgreSQL so confirmation links survive host restart/cold start. W14 revalidates
-  provider encryption at rest before production.
+- Identity Data Protection keys persist in PostgreSQL so confirmation links survive host
+  restart/cold start. The P3 production smoke verified that behavior with the managed
+  database's standard at-rest protections.
 
 The initial migration creates the Identity tables plus `refresh_sessions`,
 `apod_entries`, `favorites` and `catalog_sync_state`. The W2 migration
@@ -135,35 +94,23 @@ Account endpoints are:
 - `POST /auth/register`
 - `POST /auth/resend-confirmation`
 - `POST /auth/confirm-email`
+- `POST /auth/forgot-password`
+- `POST /auth/reset-password`
 - `POST /auth/login`
 - `POST /auth/refresh`
 - `POST /auth/logout`
 
-Register/resend are generic to avoid direct account enumeration. Confirmation accepts
-`userId + code` and mutates state only through POST. In local/Test environments,
-register/resend have independent limits by transport IP and normalized email. In
-Production, signed Netlify proxy redirects enforce the visitor-IP limits at the edge and
-the API retains the normalized-email limit; it deliberately does not trust a forwarded
-client-IP header received by Render.
+Register, resend and password-recovery requests use generic responses where exposing
+account existence would be unsafe. Confirmation and reset mutate state only through POST.
+A successful password reset revokes renewable sessions before the new password can be
+used.
 
-Login returns a ten-minute HS256 access JWT plus a host-only refresh cookie. Unknown
-emails verify a dummy hash using the configured Identity hasher to reduce timing
-enumeration. Refresh/logout
-require the exact configured Origin in Production; logout needs the cookie rather than a
-valid Bearer token. Cookie attributes are HttpOnly, SameSite=Lax, Path `/auth`, explicit
-Max-Age/Expires and Secure, with an HTTP exception only for loopback Development.
-
-Login uses an IP-only fixed-window limit (default 10 attempts per 15 minutes, no queue)
-outside Production. Production uses the signed Netlify edge rate limit for the real
-visitor IP, and never derives that identity from `X-Forwarded-For`; there is deliberately
-no email partition or account lockout, avoiding targeted denial of service.
-
-Production requires `NetlifyProxy__SigningKey` with at least 32 UTF-8 bytes and
-`NetlifyProxy__UseEdgeRateLimits=true`. Every `/api/*` and `/auth/*` request must carry a
-valid Netlify `x-nf-sign` HS256 JWS for the exact public frontend origin and a production
-deploy context. Direct Render application requests, preview signatures and spoofed
-forwarded headers fail with `403 invalid_proxy_request`; `/health` remains available for
-the Render probe. See [`docs/deploy/render-setup.md`](../docs/deploy/render-setup.md).
+The browser uses relative, same-origin application routes. In production, the hosting
+boundary accepts application traffic only through the configured frontend proxy, while
+the platform health check remains separate. Session credentials are not stored in Web
+Storage; refresh/logout use the configured production origin protections and a host-only,
+secure cookie. Local and production controls also bound account and application traffic
+without publishing operational thresholds.
 
 Public APOD endpoints are:
 
@@ -250,10 +197,10 @@ cancels the active provider/persistence operation, leaves the current batch chec
 unchanged and records `Paused`; the operator can then resume safely.
 
 Render execution is always blocked, including when an override flag is present. If a
-local shell intentionally uses `DOTNET_ENVIRONMENT=Production`, it additionally
-requires `--allow-local-production`. That flag never bypasses Render detection. W14 is
-the only wave authorized to point this command at the production Neon database, after
-revalidating free-plan quotas and zero-overage controls.
+local shell intentionally uses a Production environment, it requires an explicit local
+override; that override never bypasses host detection. The approved initial catalog seed
+completed during P3. Any future change to a deployed catalog target requires a separately
+authorized operation that preserves the same cost and safety boundaries.
 
 ## Tests
 

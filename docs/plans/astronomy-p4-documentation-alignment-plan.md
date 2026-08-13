@@ -1,7 +1,7 @@
 # Phase Plan P4 - Documentación pública y alineación de release
 
 Date: 2026-08-12
-Status: IN PROGRESS - P4-W1 AND P4-W2 DONE
+Status: IN PROGRESS - P4-W1 THROUGH P4-W3 DONE
 Phase: `P4`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Documentation boundary: `docs/adr/0004-public-documentation-boundaries.md`
@@ -65,7 +65,7 @@ operación o seguridad.
 
 - [x] **R4.1** Registrar cutover P3, estado canónico e inventario documental (W1).
 - [x] **R4.2** Reescribir README público y reemplazar la captura obsoleta (W2).
-- [ ] **R4.3** Alinear documentación técnica y operacional P3 sin exponer datos sensibles
+- [x] **R4.3** Alinear documentación técnica y operacional P3 sin exponer datos sensibles
   (W3).
 - [ ] **R4.4** Añadir aclaraciones históricas y corroborar los flujos documentados (W4).
 - [ ] **R4.5** Ejecutar auditoría final, smoke y promoción documental controlada (W5).
@@ -99,7 +99,7 @@ configuración de la aplicación.
 |---|---|---|
 | P4-W1 | P3 cutover | Evidencia post-cutover + estados P3 sincronizados + inventario ✅ |
 | P4-W2 | W1 | README público actual, captura anónima y guía local segura ✅ |
-| P4-W3 | W1 | Contratos y runbooks P3 alineados y sanitizados |
+| P4-W3 | W1 | Contratos y runbooks P3 alineados y sanitizados ✅ |
 | P4-W4 | W1 + W3 | Aclaraciones P1/P2 y revisión de flujos documentados |
 | P4-W5 | W2 + W3 + W4 | Auditoría final, gates y promoción P4 |
 

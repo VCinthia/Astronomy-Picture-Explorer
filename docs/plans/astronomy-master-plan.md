@@ -32,7 +32,7 @@ implementar.
 
 - Angular 19 standalone/signals, Tailwind v4 tokens, Home/Explorer mock, image/video,
   Canvas palette y WCAG AA base.
-- Deploy publico: `https://astronomy-picture-explorer.netlify.app/`.
+- Deploy público: aplicación publicada en su origen público configurado.
 - Tag `v1.0.0`; polish posterior integrado.
 
 ### Framework maintenance - DONE (2026-07-20)
@@ -53,9 +53,10 @@ implementar.
 - Smoke productivo 2026-07-16 PASS: rutas, search Hydra, favorito persistido entre
   Home/Favorites y navegacion responsive 390x844. Evidencia detallada en readiness y P2.
 
-### P3 - IN PROGRESS
+### P3 - DONE in production
 
-La revision del 2026-07-22 establece 14 waves ejecutables:
+La ejecución P3 completó 15 waves y su smoke productivo antes del cutover verificado por
+P4-W1:
 
 - Identity y sesiones rotadas.
 - Confirmacion POST con `userId + code` Base64URL.
@@ -82,14 +83,14 @@ P3-W2 quedo DONE el 2026-07-17:
 
 P3-W3 quedo DONE el 2026-07-17:
 
-- Login Identity, JWT HMAC 10 minutos y refresh cookie host-only segura.
+- Login Identity, token de acceso de vida corta y refresh cookie host-only segura.
 - Rotacion PostgreSQL atomica, deteccion de replay y revocacion de familia.
 - Logout cookie-only idempotente, CSRF por Origin exacto y limiter login IP-only.
 - 23/23 tests Sessions y 47/47 backend PASS.
 
 P3-W4 quedo DONE el 2026-07-17:
 
-- Typed NASA client con key en header redacted, redirects deshabilitados y retry acotado.
+- Typed NASA client con credential protegido, redirects deshabilitados y retry acotado.
 - DTO app-owned exacto; metadata provider-only se valida pero no se expone ni persiste.
 - Endpoints UTC today/date con ProblemDetails y cache memoria -> PostgreSQL -> NASA.
 - Single-flight removible y `ON CONFLICT` evitan duplicados; 31/31 tests W4 y 78/78
@@ -276,8 +277,8 @@ El grafo normativo esta en P3 y `p3-flow-overview.md`.
 | Wave | Resultado |
 |---|---|
 | W1 | Verificación post-cutover P3, estados e inventario documental ✅ |
-| W2 | README público actual y captura anónima |
-| W3 | Documentación técnica/operativa P3 alineada |
+| W2 | README público actual y captura anónima ✅ |
+| W3 | Documentación técnica/operativa P3 alineada ✅ |
 | W4 | Aclaraciones P1/P2 y revisión de flujos documentados |
 | W5 | Auditoría documental, gates y promoción P4 |
 
@@ -306,20 +307,17 @@ docker compose config
 
 Los comandos .NET/Docker aplican desde las waves que crean esos artefactos.
 
-## Implementation clarification - P3-W14 preparation (2026-07-22)
+## Historical implementation clarification - P3-W14 preparation (2026-07-22)
 
-- La promoción P3 deja de depender de forwarded headers en Render. El borde Netlify
-  firma los proxy redirects y limita por IP de visitante; la API valida el JWS y rechaza
-  acceso Render directo o `X-Forwarded-For` falsificado antes de ejecutar `/api/*` o
-  `/auth/*`.
-- Docker Compose continúa usando secretos file-backed. La imagen de producción, en
-  cambio, exige connection string/session key desde el dashboard y respeta el puerto
-  que Render asigna.
-- La regresión de preparación actual es backend 172/172 y frontend 118/118; las cifras
-  históricas W13 permanecen como evidencia de su cierre previo a los fixes posteriores.
-- El plan sigue abierto: Neon Free, migración y seed inicial ya están ejecutados; el
-  despliegue, la evidencia de Render/Netlify/Resend y el smoke externo son el gate
-  restante de W14.
+- La promoción P3 no depende de aceptar headers reenviados como identidad de visitante. La
+  aplicación usa una frontera same-origin validada y controles de tráfico en el borde para
+  las rutas públicas.
+- Docker Compose continúa usando secretos file-backed. La imagen de producción recibe su
+  configuración mediante el proveedor y respeta el puerto que la plataforma asigna.
+- La regresión de preparación fue backend 172/172 y frontend 118/118; las cifras históricas
+  W13 permanecen como evidencia de su cierre previo a los fixes posteriores.
+- En ese momento, despliegue, evidencia de proveedores y smoke externo eran el gate
+  restante de W14. W14 los completó y P4-W1 verificó el cutover a `main`.
 
 ## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
 

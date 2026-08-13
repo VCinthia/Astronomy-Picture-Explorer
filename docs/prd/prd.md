@@ -175,9 +175,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 
 ## Non-functional requirements P3
 
-- Security: Identity, no raw tokens ni códigos de recuperación persistidos, secrets por env, Origin validation, rate limits y
-  proxy Netlify firmado; la IP de visitante se limita en el borde sin confiar en
-  `X-Forwarded-For` de Render.
+- Security: Identity, no raw tokens ni códigos de recuperación persistidos, secretos fuera
+  de Git, validación de origen, controles de tráfico y una frontera same-origin pública.
 - Reliability: cache controlada, retries acotados, ingestion resumible, errores tipados.
 - Performance: FTS indexado, page max 1000, pageSize max 30, no N+1, lazy routes.
 - Accessibility: WCAG AA, teclado, foco, aria-live para estados async.
@@ -197,12 +196,13 @@ hdurl|null, thumbnail_url|null, copyright|null
 - Produccion y quotas documentadas sin secretos ni riesgo de cargo; el enlace previo a un
   restart de Render confirmó la persistencia del key ring en Neon.
 
-## Clarificacion de implementacion P3-W14 (2026-07-22)
+## Clarificacion historica de implementacion P3-W14 (2026-07-22)
 
-El requisito de IP real no se resuelve aceptando forwarded headers en Render Free. La
-implementacion preparada usa redirects Netlify firmadas y límites por IP en Netlify; la
-API verifica el JWS y rechaza bypass directo/spoof. La configuración de proveedores y
-el smoke externo siguen pendientes y son condición para marcar P3 DONE.
+El requisito de identidad de visitante no se resolvió aceptando headers reenviados de una
+infraestructura de hosting. La implementación preparada estableció una frontera same-origin
+validada por la aplicación y controles de tráfico en el borde público. La configuración de
+proveedores y el smoke externo seguían pendientes en ese momento; W14 los completó y
+P4-W1 verificó el cutover posterior a `main`.
 
 ## Implementacion local P3-W15 - Recuperacion de contraseña (2026-08-05)
 
@@ -261,3 +261,10 @@ las dos superficies de producción despliegan desde esa rama. La comprobación p
 de salud y de catálogo same-origin pasó, con catálogo `ready`. Por lo tanto P3 queda
 `DONE` y P4 continúa con la alineación documental; no se registran URLs operativas,
 credenciales ni datos de prueba en esta evidencia.
+
+## Aclaración terminal P4-W3 - documentación técnica (2026-08-12)
+
+P4-W3 alineó los contratos y runbooks P3 con las rutas y pruebas finales, incluida la
+recuperación de contraseña. La evidencia histórica conserva su fecha y resultado, pero la
+documentación activa usa descripciones de arquitectura y resultados sanitizados en lugar de
+configuración de proveedor, orígenes directos o mecanismos de protección operativa.

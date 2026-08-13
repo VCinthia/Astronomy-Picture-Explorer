@@ -28,13 +28,12 @@ durante 650 ms antes de navegar a retorno interno o Home. El smoke LocalLog y Co
 con entrada CRLF normalizada pasaron sin servicios externos.
 
 W14 preparó el 2026-07-22 la configuración de proveedor sin mutar cuentas: el contenedor
-acepta secretos del dashboard/puerto Render, Netlify tiene rewrites firmadas con límites
-por IP y la API rechaza rutas de aplicación directas o `X-Forwarded-For` falsificado.
-El 2026-08-12 la ejecución externa completó Neon, Resend, Render y Netlify; el catálogo
-quedó `ready`, el correo real y recovery pasaron, y un enlace emitido antes de reiniciar
-Render confirmó la persistencia del key ring en Neon. La dueña retuvo una sola cuenta
-real y eliminó la secundaria de prueba. Solo falta promover el candidato a `main` y
-actualizar las ramas de los proveedores.
+acepta configuración gestionada por dashboard y la aplicación usa una frontera same-origin
+para el tráfico público. El 2026-08-12 la ejecución externa completó base de datos, email y
+hosting; el catálogo quedó `ready`, correo real y recovery pasaron, y un enlace emitido
+antes de reiniciar el servicio confirmó la persistencia del key ring. La dueña retuvo una
+sola cuenta real y eliminó la secundaria de prueba. P4-W1 verificó después la promoción a
+`main` y las ramas de ambas superficies de producción.
 
 ## Closed gates
 
@@ -81,16 +80,15 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 
 - Build backend PASS con 0 warnings y 0 errors.
 - 23/23 tests Sessions y 47/47 backend PASS con PostgreSQL Testcontainers.
-- JWT valida HMAC/issuer/audience/lifetime sin clock skew y expone claims requeridos.
+- La sesión valida token de acceso de vida corta y configuración requerida al iniciar.
 - Cookie refresh es host-only, HttpOnly, SameSite=Lax, Path `/auth`, expiracion explicita
   y Secure salvo HTTP loopback exclusivamente en Development.
 - Advisory lock transaccional por familia serializa rotate/logout; carreras de replay o
   logout contra rotation terminan sin sesiones activas en esa familia y no afectan otra.
 - Refresh/logout validan Origin exacto en Production antes de mutar DB/cookie; logout no
   depende de un Bearer vigente.
-- Login se limita por IP sin particion email para no habilitar DoS dirigido. En
-  producción W14 traslada esa partición a Netlify firmado y no interpreta forwarded
-  headers en Render.
+- Login combina controles de tráfico y cuenta sin habilitar lockout dirigido. En
+  producción, la frontera pública no interpreta headers no verificados como identidad.
 
 ## P3-W4 completion gate
 
@@ -277,25 +275,24 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   refresh 200, favorite 204/GET una entrada y logout 204. Los enlaces/códigos efímeros
   no quedaron registrados como evidencia.
 - Compose reconstruyó correctamente en Windows tras normalizar CRLF dentro de la imagen;
-  API/frontend healthy y migrator/demo-seed exit 0. W14 queda como la única wave con
-  autoridad de proveedor, seed real y deploy.
+  API/frontend healthy y migrator/demo-seed exit 0. En el orden histórico, W14 fue la wave
+  autorizada para proveedor, seed real y deploy; ese cierre ya está completo.
 
 ## P3-W14 production validation gate
 
-- Preparación sin proveedores PASS: Netlify proxy signed/edge-rate-limited, validación
-  JWS API y runbooks de Render/Neon/Resend no contienen secrets ni URLs reales.
-- Backend build sin warnings y 172/172 tests PASS; las pruebas nuevas cubren firma
-  válida, directa/spoof, claims, expiración, HMAC, health y configuración Production
-  fail-closed.
+- Preparación sin proveedores PASS: frontera same-origin, controles de tráfico y runbooks
+  sin secretos ni URLs operativas.
+- Backend build sin warnings y 172/172 tests PASS; las pruebas nuevas cubren la frontera
+  de aplicación, health y configuración Production fail-closed.
 - Frontend build y 118/118 ChromeHeadless PASS; Compose reconstruido sin volumen,
   healthy y smoke HTTP local `health`/catalog ready/search PASS.
-- El 2026-08-12 se verificaron los providers reales: health Render, catálogo público
-  `ready`, proxy signed (incluido bypass y header falsificado en `403`), Resend,
-  confirmación, login/reload, recovery, favorito y logout. Un link emitido antes de
-  reiniciar Render siguió funcionando después del restart, validando el key ring Neon.
-- Neon declara AES-256 en reposo y rotación de claves administrada; no se necesita una
-  capa paga adicional. La limpieza fue confirmada; falta únicamente la promoción
-  controlada a `main` y el cutover de los proveedores.
+- El 2026-08-12 se verificaron los proveedores reales: health, catálogo público `ready`,
+  frontera de aplicación, correo transaccional, confirmación, login/reload, recovery,
+  favorito y logout. Un link emitido antes de reiniciar el servicio siguió funcionando
+  después del restart, validando el key ring PostgreSQL.
+- El proveedor de base de datos documenta protección en reposo administrada; no se necesita
+  una capa paga adicional. La limpieza fue confirmada y P4-W1 verificó posteriormente la
+  promoción controlada a `main` y el cutover de proveedores.
 
 ## P3-W15 local implementation evidence
 
@@ -305,17 +302,17 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
   URL y no auto-inicia sesión ni persiste el código.
 - Un éxito revoca todas las refresh sessions, mantiene el JWT existente como máximo hasta
   su expiración corta y permite sólo la contraseña nueva en un login posterior.
-- No hubo migración, secreto, proveedor ni recurso pago nuevo en W15. Los límites edge
-  ya están preparados; W15 fue integrado y W14 conserva el smoke real restante.
+- No hubo migración, secreto, proveedor ni recurso pago nuevo en W15. W15 fue integrado y
+  el smoke real posterior de W14 pasó.
 
-Antes de cada wave restante:
+### Prerrequisitos históricos de ejecución P3
 
 - Confirmar que ADR-0003, P3 y wave siguen sincronizados.
-- Crear branch desde `codex/p3-integration` limpio y sincronizado.
+- Crear una subrama limpia desde la rama de integración P3 de ese momento.
 - Mantener secrets fuera del repo.
 - Ejecutar los comandos de verification de la wave.
 
-Recursos externos se habilitan just-in-time:
+Los recursos externos se habilitaron just-in-time durante P3:
 
 - Resend/dominio: necesario para smoke real W14; W2 usa fake en tests.
 - NASA key propia: necesaria para el seed real autorizado en W14; W5 usa mocks/dry-run.
@@ -361,7 +358,7 @@ docker compose down
 | Token de confirmacion ambiguo/filtrado | userId+code Base64URL; Angular POST; no mutacion GET |
 | Key ring perdido en filesystem efimero | Data Protection keys en PostgreSQL; reinicio con enlace previo PASS y Neon documenta AES-256 en reposo |
 | Abuso o replay de reset | 202 anti-enumeración, límites IP/hash-email, token Identity one-shot, URL scrub y revocación masiva de refresh |
-| IP real oculta por Netlify/Render | Netlify firmado limita por dominio+IP; API rechaza URL directa/spoof y no acepta forwarded headers |
+| IP real oculta por hosting/proxy | La frontera pública aplica controles de tráfico; la API no acepta identidad desde headers no verificados |
 | Render cold start confunde primera visita | Estado connecting + timeout + Retry accesible |
 | Search costoso | tsvector + GIN; q max 200, page max 1000, pageSize max 30; sin trigram |
 | Cuota/cargo inesperado | Free-only, no keepalive/cron/overages; fail closed y revalidar en W14 |
@@ -375,8 +372,15 @@ despliegan desde `main`, que contiene `48ac901`, y el smoke posterior confirmó 
 saludable y catálogo same-origin `ready`. P3 queda `DONE`; se conserva la evidencia de
 validación W14/W15 anterior sin registrar datos personales, URLs operativas ni secretos.
 
+## Aclaración terminal P4-W3 - alineación técnica (2026-08-12)
+
+P4-W3 confirmó contratos, rutas y pruebas P3 contra la implementación final, incorporó
+recovery donde faltaba y saneó los runbooks/documentos técnicos conforme ADR-0004. La
+evidencia histórica conserva sus fechas y resultados, pero no funciona como una guía para
+recrear configuración productiva.
+
 ## Recommended next step
 
-P4-W2 debe actualizar el README y la captura pública; P4-W3 alineará la documentación
-técnica y operativa según ADR-0004. La fase P4 y sus dependencias viven en
+P4-W4 debe añadir las aclaraciones históricas P1/P2 y corroborar sus flujos documentados.
+La fase P4 y sus dependencias viven en
 [`docs/plans/astronomy-p4-documentation-alignment-plan.md`](plans/astronomy-p4-documentation-alignment-plan.md).

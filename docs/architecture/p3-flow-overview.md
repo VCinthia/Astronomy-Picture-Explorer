@@ -25,9 +25,8 @@ flowchart LR
 Reglas de frontera:
 
 - El navegador nunca recibe NASA/Resend/DB secrets.
-- Las llamadas de navegador se mantienen same-origin; la API Render directa rechaza
-  rutas de aplicación sin un JWS firmado por Netlify y no es el contrato público de la
-  SPA.
+- Las llamadas de navegador se mantienen same-origin; la API no expone una ruta de
+  aplicación alternativa al navegador fuera de esa frontera pública.
 - El backfill nunca atraviesa Netlify ni corre en Render.
 - Imagenes/video siguen siendo URLs remotas; PostgreSQL guarda solo metadata.
 - Ninguna pieza puede escalar automaticamente a un plan pago.
@@ -127,12 +126,10 @@ El proxy development lleva `/api` y `/auth` a `localhost:5179`. Login solo consu
 `returnUrl` interno normalizado. W10 puede migrar shell/navegacion APOD, pero debe
 mantener un control de cuenta accesible.
 
-El key ring que firma los tokens Identity vive en PostgreSQL con application name
-estable; por eso un link emitido antes de un restart/cold start sigue validando en una
-nueva instancia. Register/resend se limitan por IP real en las redirects firmadas de
-Netlify y por hash de email normalizado en la API. W14 no interpreta
-`X-Forwarded-For`: la firma del proxy bloquea la URL Render directa y evita que un
-header de cliente falsificado se convierta en identidad.
+El key ring de Identity vive en PostgreSQL con un nombre de aplicación estable; por eso un
+link emitido antes de un restart/cold start sigue validando en una nueva instancia.
+Register, resend y recuperación combinan controles de cuenta con los grupos de tráfico del
+borde público. La API no convierte headers no verificados en identidad de visitante.
 
 ### W10 frontend APOD/search alignment
 
@@ -186,8 +183,9 @@ sin romper el retorno desde Favorites.
 
 W13 cerró esta alineación el 2026-07-22 con pruebas de componente/servicio, build y
 smoke Compose LocalLog sin recursos externos. El entrypoint API se normaliza dentro de
-la imagen para aceptar checkouts CRLF de Windows. W14 sigue siendo el único punto donde
-pueden configurarse proveedores, seed histórico y producción.
+la imagen para aceptar checkouts CRLF de Windows. La configuración de proveedores, el
+seed histórico y el smoke de producción se completaron posteriormente en W14; sus
+resultados sanitizados viven en el runbook de despliegue.
 
 ## 4. Login, refresh single-flight y logout
 
@@ -220,15 +218,16 @@ sequenceDiagram
 Ante refresh fallido se limpia memoria y una sola navegacion lleva a login. Los endpoints
 de auth no se auto-reintentan. Reusar un refresh revocado invalida toda su familia.
 
-W3 materializa este flujo con JWT HMAC de 10 minutos y refresh opaco de 32 bytes. La DB
-solo recibe SHA-256; rotate/logout serializan la familia completa con un advisory lock
-transaccional y reconsultan estado despues de adquirirlo. Dos consumos concurrentes
-producen un 200 y un 401, y el replay deja toda la familia revocada. Por eso W9 mantiene
-single-flight como requisito funcional, aunque el backend tambien falla cerrado.
+W3 materializa este flujo con un access token de vida corta y refresh opaco. La base de
+datos conserva solamente una representación no reutilizable del refresh y serializa las
+mutaciones de una familia de sesión. Dos consumos concurrentes no pueden mantener dos
+sesiones renovables; por eso W9 conserva single-flight como requisito funcional y el
+backend también falla cerrado.
 
-Refresh/logout validan un unico Origin exacto en Production antes de tocar cookie o DB.
-Logout no exige Bearer: una cookie basta incluso si el access token expiro. Login tiene
-limiter IP-only para no convertir un partition key email en bloqueo dirigido de cuentas.
+Refresh y logout validan el origen configurado en Production antes de tocar cookie o base
+de datos. Logout no exige Bearer: una cookie basta incluso si el access token expiró. Los
+controles de login evitan transformar una dirección de email en un mecanismo de bloqueo
+dirigido.
 
 ## 5. APOD por fecha y DTO
 
@@ -481,7 +480,8 @@ flowchart LR
 - Local Docker-secret files supply PostgreSQL/session values at container runtime. The
   compose model exposes paths but never the values, and no secret is baked into an image.
 - Local email delivery is an API log sink and the NASA mock is internal. Both are rejected
-  outside Development; a production provider/deploy is still W14 work.
+  outside Development; the completed production provider configuration is separate and is
+  not reproduced by this local stack.
 
 ## 10. Costo cero y primera visita
 
@@ -489,34 +489,30 @@ flowchart LR
   con timeout acotado y ofrece Retry sin borrar el estado del usuario.
 - El backfill no consume horas ni trafico de Render.
 - Neon escala a cero; el seed verifica tamaño y se detiene ante limites.
-- Resend se protege con rate limits y solo se usa para confirmacion.
+- El correo transaccional se protege con controles de tráfico y se usa para confirmación y
+  recuperación de contraseña.
 - No hay keepalive, jobs pagos, cargos por exceso ni upgrade automatico.
 - El runbook W14 debe volver a verificar planes/cuotas porque son datos temporales.
 
-### W14 signed proxy preparation (2026-07-22)
+### W14 public access boundary (historical preparation, 2026-07-22)
 
 ```mermaid
 flowchart LR
-    B[Browser] -->|same-origin request| N[Netlify signed rewrite]
-    N -->|x-nf-sign HS256| R[Render API]
-    X[Direct Render or spoofed X-Forwarded-For] --> R
-    R -->|valid signature| A[/api or /auth endpoint/]
-    R -->|missing or invalid signature| F[403 invalid_proxy_request]
-    R --> H[/health only/]
+    B[Browser] -->|same-origin request| N[Public frontend proxy]
+    N --> R[Hosted API]
+    R --> A[/api or /auth application routes/]
+    R --> H[/health platform probe/]
 ```
 
-- Netlify owns the production visitor-IP limit with redirect rules that aggregate by
-  domain and IP. This is the only component that observes the browser IP safely. On the
-  Free plan its two rule slots are deliberately allocated to `/auth/*` (10/180 s) and
-  `/api/*` (120/60 s); endpoint-specific email controls remain in the API.
-- The API validates issuer, public `site_url`, `deploy_context=production`, expiration
-  and HMAC in constant time before it considers application routing. It intentionally
-  does not enable generic forwarded-header processing.
-- El 2026-08-12 el origen público y Render demostraron el flujo: Netlify llegó al catálogo
-  `ready`, mientras que el acceso Render directo y un `X-Forwarded-For` falsificado fueron
-  rechazados con `403`. El correo real, recovery y un enlace confirmado después de restart
-  completaron el smoke funcional. Cleanup autorizado PASS; solo queda la promoción a
-  `main` y el cutover de proveedores.
+- El frontend agrupa el tráfico de visitante en los dos grupos globales disponibles:
+  `/auth/*` y `/api/*`. Los controles de cuenta permanecen en la API; no se publica su
+  presupuesto operativo.
+- La API valida la frontera de proxy antes de considerar rutas de aplicación y no habilita
+  procesamiento genérico de headers reenviados.
+- El 2026-08-12 el catálogo público quedó `ready`; correo real, recuperación y un enlace
+  de confirmación emitido antes de un restart completaron el smoke funcional. El cleanup
+  autorizado pasó. P4-W1 verificó posteriormente la promoción a `main` y el uso de esa
+  rama por ambas superficies de producción.
 
 ## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
 

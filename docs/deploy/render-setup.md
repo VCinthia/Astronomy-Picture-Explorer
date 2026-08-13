@@ -1,71 +1,51 @@
-# Render setup — P3-W14
+# Render release profile — P3-W14 historical record
 
-Date: 2026-07-22
-Scope: production preparation only. Follow
-[`p3-deploy-runbook.md`](p3-deploy-runbook.md) for the ordered provider, seed and smoke
-gates. Nothing in this file authorizes a paid plan, a scheduled job or a keepalive.
+Date: 2026-08-12
+Status: COMPLETE — the P3 deployment and post-cutover validation are recorded in
+[`p3-deploy-runbook.md`](p3-deploy-runbook.md).
 
-## Service definition
+This document records the service shape used for the released portfolio. It is not a
+provider-dashboard recipe and does not disclose production values, service origins or
+secret names. The production branch is `main`; any future deployment change requires its
+own approved plan.
 
-Create one **Web Service** on Render's Free plan from this repository. In the service
-form use the following Docker settings:
+## Service shape
 
-| Setting | Value |
+| Setting category | Released choice |
 |---|---|
-| Root directory | `backend` |
-| Dockerfile path | `AstronomyExplorer.Api/Dockerfile` |
-| Runtime | Docker |
-| Health check path | `/health` |
-| Plan | Free only |
-| Background workers, cron jobs and disks | Do not create |
-| Auto-deploy | Enable only after the Netlify/Neon/Resend gates are ready |
+| Service kind | One Docker web service on the free tier |
+| Repository scope | `backend` |
+| Dockerfile | `AstronomyExplorer.Api/Dockerfile` relative to that scope |
+| Health route | `/health` |
+| Runtime work | No startup migration, catalog seed, worker, cron or persistent disk |
+| Deployment policy | Production deploys from `main`; automatic versus manual triggering remains an owner-controlled provider setting |
 
-The image is non-root and binds the `PORT` that Render assigns. It never migrates or
-seeds at startup. The API health endpoint remains direct only for Render's probe; all
-`/api/*` and `/auth/*` production requests must carry the signed Netlify proxy header.
+The image is non-root and binds the port assigned by the platform. Database migrations and
+catalog ingestion are intentionally separate, local operator actions.
 
-## Dashboard-only environment variables
+## Configuration boundary
 
-Mark secret values as secrets in Render. Do not place any of them in Git, `.env`, Docker
-build arguments or a deploy log.
+Provider-managed configuration supplies these categories outside Git:
 
-| Variable | Required value / rule |
-|---|---|
-| `ASPNETCORE_ENVIRONMENT` | `Production` |
-| `ConnectionStrings__Postgres` | Neon pooled PostgreSQL TLS connection string |
-| `Frontend__PublicBaseUrl` | Exact public Netlify HTTPS origin, no path |
-| `Session__Issuer` | Stable Render HTTPS service origin, no path |
-| `Session__Audience` | `astronomy-explorer-spa` |
-| `Session__SigningKey` | Unique random value of at least 32 UTF-8 bytes |
-| `NasaApod__ApiKey` | Personal NASA API key; never `DEMO_KEY` |
-| `NasaApod__BaseUrl` | Leave default `https://api.nasa.gov/` unless explicitly changed |
-| `Catalog__RequiredFrom` | Exact approved seed start, `YYYY-MM-DD` |
-| `Catalog__RequiredTo` | Exact approved seed end, `YYYY-MM-DD` |
-| `Email__Provider` | `Resend` |
-| `Resend__ApiKey` | Resend API key for the verified sender |
-| `Resend__FromAddress` | Verified Resend sender, e.g. `Astronomy Explorer <hello@…>` |
-| `NetlifyProxy__SigningKey` | Same random value as Netlify's `NETLIFY_PROXY_SIGNING_KEY` |
-| `NetlifyProxy__UseEdgeRateLimits` | `true` |
+- production environment designation and managed PostgreSQL access;
+- public application origin and session configuration;
+- APOD upstream credential and approved catalog target;
+- transactional email sender and credential; and
+- the shared value that authorizes the frontend proxy boundary.
 
-Do not set `LocalFixtures__Enabled`, `Email__Provider=LocalLog`, a local NASA URL or
-Docker-secret-file variables. Startup fails closed if the database/session/proxy settings
-are missing or unsafe.
+Values are stored only in the relevant provider dashboard or a local secret store. They
+are never copied to repository files, Docker build arguments, screenshots, terminal
+transcripts or this documentation. Development fixtures, local email logging and local
+mock-upstream settings are not valid production configuration.
 
-## Direct URL boundary
+## Application access boundary
 
-Render Free does not provide the network access-control feature needed to hide a web
-service URL. The application therefore enforces the boundary cryptographically:
+The public frontend serves the browser-facing application routes on one origin and proxies
+them to the API. In production, the API accepts application traffic only through that
+configured boundary. The health route remains available to the hosting platform for its
+probe. Browser traffic does not need a direct API origin or a cross-site refresh cookie.
 
-- Netlify's signed redirect emits an HS256 `x-nf-sign` request header.
-- The API validates its signature, Netlify issuer, production deploy context, expiry and
-  exact public site URL before every `/api/*` or `/auth/*` request.
-- A direct Render request, an `X-Forwarded-For` spoof or a Netlify preview signature is
-  rejected with `403 invalid_proxy_request`.
-- Browser visitor-IP protection runs on the signed Netlify redirect rules. The API keeps
-  its email-partition limiter, but intentionally does not treat an unverified forwarded
-  header as a client IP.
-
-The `NETLIFY_PROXY_SIGNING_KEY` environment value must be available to the Netlify
-**Runtime** scope. `P3_RENDER_API_ORIGIN` is a separate non-secret Netlify **Build**
-variable with this Render service's HTTPS origin. See the deploy runbook for the exact
-Netlify configuration and smoke proof.
+The implementation has automated coverage for the boundary and a completed production
+smoke result. This document deliberately omits signature mechanics, validation claims,
+rate-limit budgets and direct-request procedures; those are operational controls, not a
+public integration contract.

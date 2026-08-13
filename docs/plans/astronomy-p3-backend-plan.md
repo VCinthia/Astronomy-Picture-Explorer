@@ -72,13 +72,13 @@ costo obligatorio de $0, manteniendo una experiencia accesible en la primera vis
 
 - P2 debe estar `DONE` en produccion con evidencia de smoke.
 - ADR-0003 y esta planificacion deben permanecer sincronizados.
-- W1-W13 se acumulan en `codex/p3-integration`; W15 se integra antes de la ejecución
-  externa W14. `main` conserva P2 productivo hasta la promoción validada por W14.
-- W1-W13 pueden implementarse con servicios locales/mocks.
-- Neon es requerido para ejecutar el seed productivo de W5 y W14.
-- Resend + dominio verificado son requeridos para smoke real de W14, no para tests W2/W15.
-- NASA API key propia es requerida antes del backfill W5; `DEMO_KEY` no se usa en carga.
-- Render y URLs finales son requeridos solo en W14.
+- La ejecución histórica acumuló W1-W13 y W15 en `codex/p3-integration` antes del smoke
+  externo W14. P4-W1 verificó después su promoción fast-forward a `main`.
+- W1-W13 pudieron implementarse con servicios locales/mocks; W14 completó la configuración
+  externa y el smoke real.
+- El seed inicial se ejecutó manualmente contra el PostgreSQL gestionado; correo
+  transaccional, upstream APOD y superficies de hosting se verificaron durante W14 sin
+  registrar credenciales u orígenes operativos.
 - Gate Angular previo a W8 cerrado el 2026-07-20 en la rama dedicada
   `maintenance/angular-22-security-update`: Angular 22.0.7, TypeScript 6.0.3 y audit
   runtime sin vulnerabilidades. Los futuros majors requieren el mismo tratamiento;
@@ -115,9 +115,9 @@ key ring Identity sobrevive reinicios mediante PostgreSQL. W14 conserva los gate
 proxy firmado/edge IP y proteccion en reposo del XML de Data Protection.
 
 W3 se cerro el 2026-07-17 con 23/23 tests Sessions y 47/47 backend PASS. Login usa
-Identity con hash dummy anti-timing y JWT HS256 corto. Refresh/logout se serializan con
-advisory lock familiar; replay revoca la familia, logout es idempotente y ambos exigen
-Origin exacto en Production.
+Identity con hash dummy anti-timing y un token de acceso corto. Refresh/logout se
+serializan con advisory lock familiar; replay revoca la familia, logout es idempotente y
+ambos exigen Origin exacto en Production.
 
 W4 se cerro el 2026-07-17 con 31/31 tests W4 y 78/78 backend PASS. Los endpoints
 publicos today/date exponen solo el DTO app-owned; cache acotada y single-flight leen
@@ -218,23 +218,21 @@ El fix posterior de navegación alinea `Sign in` con las rutas de contenido y ap
 indicador exclusivamente sobre `/login`, también cuando Favorites anónimo redirige allí.
 
 W14 inició preparación el 2026-07-22: el contenedor diferencia secretos Docker locales de
-variables secretas de provider y respeta el puerto Render; Netlify tiene rewrites firmadas
-con límites por IP y la API valida el JWS Netlify antes de `/api/*`/`/auth/*`. Esto reemplaza
-la propuesta de confiar en forwarded headers: no se interpreta `X-Forwarded-For` y un
-bypass directo/spoof recibe 403. `docs/deploy/p3-deploy-runbook.md` registra la migración
-  y seed Neon completados. El 2026-08-12 Render/Netlify/Resend y el smoke real pasaron,
-  incluidos catálogo `ready`, bypass/spoof `403`, recovery y un enlace previo a restart
-  válido después del reinicio. La limpieza autorizada está completada y R3.14 se cierra;
-  la fase espera la promoción de la rama validada a `main` y el cutover de proveedores.
+configuración gestionada por proveedores y respeta el puerto asignado. La frontera
+same-origin sustituyó la alternativa de confiar en headers reenviados. El runbook de P3
+registra la migración y seed completados. El 2026-08-12 el smoke real pasó, incluidos
+catálogo `ready`, recuperación y un enlace previo a restart válido después del reinicio.
+La limpieza autorizada está completada y R3.14 se cierra; P4-W1 verificó posteriormente la
+promoción de la rama validada a `main` y el cutover de proveedores.
 
-W15 se inserta antes de la ejecución externa W14. Reutiliza el correo de cuenta sin un
+W15 se insertó antes de la ejecución externa W14. Reutiliza el correo de cuenta sin un
 nuevo secreto ni esquema: `forgot-password` responde genéricamente y solo entrega correo
 a usuarios confirmados; `reset-password` usa el token Identity Base64URL, no realiza
 auto-login y revoca todas las sesiones refresh. La URL se limpia en Angular antes de
-enviar el POST. Los límites IP/email y la redirect edge se extienden para proteger la
+enviar el POST. Los controles de cuenta y el grupo público de autenticación protegen la
 cuota de correo y el intento de reset. La implementación local del 2026-08-05 verificó
-177/177 backend, 128/128 frontend y el smoke Compose/LocalLog; W15 fue integrada y W14
-permanece abierta solamente por su ejecución externa restante.
+177/177 backend, 128/128 frontend y el smoke Compose/LocalLog; W15 fue integrada y el
+smoke externo posterior de W14 también pasó.
 La regresión de preparación actual pasa backend 172/172 y frontend 118/118; los conteos
 W13 anteriores permanecen como evidencia histórica antes de sus fixes posteriores.
 
@@ -267,7 +265,8 @@ P3 es `DONE` solo con evidencia de todos los puntos:
   llamadas de aplicación sin firma.
 - Produccion usa exclusivamente planes $0; no hay keepalive, cron u overages pagos.
 - Primera visita durante cold start muestra estado comprensible y permite retry.
-- Runbook registra fecha, URLs, cuotas, configuracion de gasto cero y smoke completo.
+- Runbook registra fecha, resultados sanitizados, configuración de gasto cero y smoke
+  completo, sin URLs operativas ni valores de proveedor.
 - PRD, ADR, readiness, master, phase, flow y waves quedan sincronizados.
 
 ## 7. Wave split
@@ -326,8 +325,9 @@ flowchart LR
 - W2 y W4 pueden ejecutarse en paralelo despues de W1 si el scope de `Program.cs` se
   coordina o se integran secuencialmente en `main`.
 - No se paralelizan waves que compartan servicios Angular centrales.
-- W14 es la unica wave autorizada a mutar proveedores productivos y espera W15 para su
-  smoke final.
+- El grafo anterior conserva el orden histórico: W14 fue la única wave autorizada a
+  ejecutar los cambios externos de P3 y esperó W15 para su smoke final. Ambos cierres y
+  la promoción posterior a `main` ya fueron verificados.
 
 ## 9. Phase verification
 

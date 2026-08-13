@@ -21,8 +21,8 @@ La revision del 2026-07-16 confirma:
   explicacion.
 - NASA permite consultas por `date` y por rango `start_date`/`end_date`, pero no una
   busqueda remota por keyword.
-- Una cookie de refresh entre dominios `netlify.app` y `onrender.com` seria third-party
-  y degradaria la accesibilidad del portfolio en navegadores que la bloquean.
+- Una cookie de refresh entre orígenes de frontend y API distintos sería third-party y
+  degradaría la accesibilidad del portfolio en navegadores que la bloquean.
 - Render Free no ofrece one-off jobs y puede limitar trafico saliente inusual; un
   backfill historico no debe ejecutarse durante el arranque del servicio web.
 
@@ -130,9 +130,9 @@ ocasionales son suficientes y observables.
 - Request/reset son anónimos y no leen ni requieren una cookie: el código Identity de
   alta entropía es la capacidad que autoriza la mutación. Por eso no aplican el filtro
   Origin reservado a refresh/logout, pero sí `no-store`, los límites y el JWS productivo.
-- El correo reutiliza `IEmailSender`/Resend y los enlaces se HTML-encodan. W14 añade los
-  límites edge y el smoke real de este flujo; no requiere un proveedor, secreto ni
-  migración nuevos para el smoke local.
+- El correo reutiliza la abstracción de email de la aplicación y los enlaces se
+  HTML-encodan. El cierre W14 verificó el flujo real; el smoke local no requiere un
+  proveedor, secreto ni migración nuevos.
 
 ### Access token y refresh sessions
 
@@ -149,25 +149,24 @@ ocasionales son suficientes y observables.
 
 ### Topologia same-origin, cookie y CSRF
 
-- El navegador llama `/api/*` y `/auth/*` sobre el origen Netlify.
-- Rewrites `200` firmados de Netlify proxifican esas rutas al backend Render antes del
-  fallback SPA. Desarrollo usa proxy Angular equivalente.
-- En Production, la API valida el JWS HS256 `x-nf-sign` de Netlify antes de cualquier
-  ruta `/api/*` o `/auth/*`: issuer `netlify`, `site_url` exacto, deploy `production`,
-  expiracion y firma. La URL Render directa no es una ruta alternativa de aplicación.
+- El navegador llama `/api/*` y `/auth/*` sobre el origen público de la aplicación.
+- El proxy del frontend entrega esas rutas a la API antes del fallback SPA. Desarrollo usa
+  un proxy Angular equivalente; la API no ofrece al navegador una ruta de aplicación
+  alternativa fuera de la frontera pública.
+- En Production, la aplicación valida esa frontera antes de procesar rutas de aplicación.
+  La sonda de salud de la plataforma permanece separada.
 - La cookie refresh es host-only, `Secure`, `HttpOnly`, `SameSite=Lax`, `Path=/auth` y
-  tiene expiracion explicita. No declara `Domain` ni atributos cross-site.
-- En produccion, refresh y logout rechazan requests cuyo encabezado `Origin` no coincide
-  exactamente con el origen publico configurado. CORS no se considera defensa CSRF.
-- El backend no habilita CORS amplio. Un acceso directo a Render o un header
-  `X-Forwarded-For` falsificado falla antes de llegar al endpoint; `/health` queda fuera
-  de ese gate únicamente para la sonda Render.
+  tiene expiración explícita. No declara `Domain` ni atributos cross-site.
+- En producción, refresh y logout rechazan requests cuyo origen no coincide con el origen
+  público configurado. CORS no se considera defensa CSRF.
+- El backend no habilita CORS amplio ni convierte headers no verificados en identidad de
+  visitante.
 - El interceptor Angular implementa single-flight: todos los 401 concurrentes esperan
-  un unico refresh y luego se reintentan una sola vez.
+  un único refresh y luego se reintentan una sola vez.
 - Login, refresh y logout quedan excluidos del auto-refresh para evitar loops.
 - Si refresh falla: se limpia token/usuario en memoria, se resuelve la cola con error y
   se redirige a login una sola vez.
-- El bootstrap de la SPA intenta refresh una vez antes de resolver el estado de sesion.
+- El bootstrap de la SPA intenta refresh una vez antes de resolver el estado de sesión.
 
 ### Favorites
 
@@ -211,49 +210,48 @@ ocasionales son suficientes y observables.
 - EF design time puede construir el modelo sin connection string para operaciones
   `--no-connect`; runtime y mutaciones de DB siguen exigiendo configuracion explicita.
 
-## Implementation clarification - P3-W2 (2026-07-17)
+## Historical implementation clarification - P3-W2 (2026-07-17)
 
 - Los endpoints account viven bajo `/auth`: register/resend responden 202 generico y
   confirmacion invalida, vencida, inexistente o reutilizada comparte un 400 controlado.
 - El maximo de email queda en 256 para coincidir con las columnas Identity; rate limit
   normaliza solo dentro de ese limite y usa hash, expiracion y capacidad acotada.
-- El adaptador Resend es un `IEmailSender` app-owned sobre `POST /emails`, Bearer y
-  `User-Agent`; tests lo sustituyen o usan handler en memoria, nunca red real.
+- El adaptador de correo es un `IEmailSender` app-owned; tests lo sustituyen o usan un
+  handler en memoria, nunca la red real.
 - Identity Data Protection usa application name `AstronomyExplorer` y persiste el key
   ring en PostgreSQL mediante una segunda migracion. Esto evita invalidar links cuando
   Render Free pierde su filesystem al dormir/reiniciar.
-- La persistencia EF guarda XML de claves sin un certificado externo. W14 debe verificar
-  cifrado/controles en reposo de Neon y decidir si exige una capa adicional compatible
-  con costo cero antes del deploy.
-- W2 usa `RemoteIpAddress` fail-closed y no confia directamente en headers reenviados.
-  W14 debe verificar la cadena Netlify -> Render, configurar solo forwarders confiables
-  y demostrar que el limiter separa visitantes sin aceptar spoofing.
+- La persistencia EF guarda XML de claves sin un certificado externo. El smoke W14 verificó
+  la protección en reposo disponible en el proveedor gestionado, sin requerir una capa paga
+  adicional para este portfolio.
+- W2 usa una identidad de transporte fail-closed y no confía directamente en headers
+  reenviados. El cierre W14/P4-W1 verificó la frontera pública sin documentar su
+  configuración operativa.
 
-## Implementation clarification - P3-W3 (2026-07-17)
+## Historical implementation clarification - P3-W3 (2026-07-17)
 
-- JWT usa HMAC SHA-256 con key de al menos 32 bytes, lifetime default 10 minutos,
-  `ClockSkew=0` y validacion completa de issuer/audience/firma/expiracion. Secrets faltantes
-  impiden arrancar mediante opciones tipadas `ValidateOnStart`.
-- Refresh genera 32 bytes criptograficos Base64URL; PostgreSQL conserva solo SHA-256
-  hexadecimal. Rotate/logout toman un advisory lock transaccional estable por `family_id`,
-  reconsultan despues del lock y serializan cualquier mutacion de la familia completa.
+- El access token tiene una vida corta y la configuración de sesión se valida al inicio.
+  Los secretos faltantes impiden arrancar mediante opciones tipadas.
+- Refresh genera un valor opaco de alta entropía; PostgreSQL conserva únicamente una
+  representación no reutilizable. Rotate/logout serializan cualquier mutación de una
+  familia completa.
 - Dos consumidores del mismo token producen un solo 200. El perdedor observa la
   revocacion como replay y revoca toda la familia; W9 previene este caso normal mediante
   single-flight, pero el backend falla cerrado si ocurre.
 - Refresh/logout requieren un unico Origin exacto en Production antes de leer o mutar
   estado. Logout usa la cookie, revoca toda su familia activa y sigue funcionando con
   Bearer ausente o vencido; otras familias del usuario permanecen vigentes.
-- Login se limita por IP de transporte, default 10 intentos/15 minutos y queue 0. No se
-  agrega particion email ni lockout por cuenta para evitar DoS dirigido; W14 conserva el
-  gate de proxies confiables para resolver la IP real.
+- Login combina controles de tráfico y de cuenta sin introducir lockout dirigido. La
+  frontera de producción validada por W14/P4-W1 no acepta identidad de visitante desde
+  headers no verificados.
 - Cookie refresh no declara Domain y usa HttpOnly, SameSite=Lax, Path `/auth`, Max-Age,
   Expires y Secure. Solo Development sobre HTTP loopback permite `Secure=false`.
 
-## Implementation clarification - P3-W4 (2026-07-17)
+## Historical implementation clarification - P3-W4 (2026-07-17)
 
-- NASA autentica mediante `X-Api-Key` redacted, no query string. Las requests APOD
-  contienen solo `date` y `thumbs=true`; redirects automaticos estan deshabilitados para
-  impedir reenviar el header a otro host.
+- NASA se autentica mediante un credential gestionado que no entra en URLs, logs ni
+  documentación. Las requests APOD contienen solo los parámetros requeridos; redirects
+  automáticos están deshabilitados para proteger ese credential.
 - `service_version` se deserializa y valida como `v1` dentro del adaptador, pero no entra
   al DTO, entidad ni JSON publico. URLs requeridas/opcionales deben ser HTTP(S) absolutas;
   strings opcionales vacios se normalizan a null.
@@ -398,7 +396,7 @@ ocasionales son suficientes y observables.
   accesible a login con `returnUrl` interno normalizado; nunca asocia estado anonimo a
   una cuenta autenticada.
 
-## Implementation clarification - P3-W12 (2026-07-20)
+## Historical implementation clarification - P3-W12 (2026-07-20)
 
 - Compose local ordena PostgreSQL healthy, un `--migrate` one-shot, un
   `--seed-local-fixtures` one-shot y despues API/frontend. La API no ejecuta migracion,
@@ -415,8 +413,9 @@ ocasionales son suficientes y observables.
   confirmacion localmente. `NasaApod:BaseUrl` conserva HTTPS por defecto; HTTP solo es
   valido para `nasa-mock` o loopback en Development. Esto permite un mock determinista
   sin habilitar que una key real llegue a un host HTTP arbitrario.
-- El Compose local no configura Resend, NASA, Neon, Render, Netlify ni una URL de
-  produccion. W14 conserva toda autoridad de provider real, seed historico y deploy.
+- El Compose local no configura proveedores ni una URL de producción. W14 completó la
+  configuración real, el seed histórico y el deploy por separado; este historial no es un
+  procedimiento para repetirlos.
 
 ## Consequences
 
@@ -444,37 +443,32 @@ ocasionales son suficientes y observables.
 - Neon plans: `https://neon.com/docs/introduction/plans`
 - Resend pricing: `https://resend.com/pricing`
 
-## Implementation clarification - P3-W14 preparation (2026-07-22)
+## Historical implementation clarification - P3-W14 preparation (2026-07-22)
 
-- La hipótesis previa de resolver IP pública con `Forwarded Headers` de la cadena
-  Netlify -> Render queda descartada: en Render Free no hay una lista de ingress
-  verificable que permita aceptar `X-Forwarded-For` sin abrir spoofing.
-- Netlify firma las proxy rewrites con un secreto de Runtime; la API valida `x-nf-sign`
-  HS256 por HMAC, issuer, URL pública exacta, deploy productivo y expiración. El gate
-  cubre todas las rutas `/api/*` y `/auth/*`, por lo que la URL Render solo conserva
-  `/health` para su sonda.
-- Los límites por IP productivos se trasladan a redirects Netlify por dominio+IP real.
-  En Free solo existen dos reglas code-based, asignadas a `/auth/*` (10/180 segundos) y
-  `/api/*` (120/60 segundos); no se intenta definir una regla por endpoint. La API
-  conserva límites por email normalizado; en Production su policy por IP de transporte
-  queda sin cuota para no agrupar visitantes detrás del proxy autenticado.
-- Esta preparación no sustituyó el gate externo W14; su evidencia de ejecución se registra
-  a continuación. La promoción permanece bloqueada hasta la limpieza o retención
-  autorizada de los datos de prueba.
+- La hipótesis previa de resolver IP pública mediante headers reenviados quedó descartada:
+  esa topología no permitía una identidad de visitante verificable sin ampliar la
+  superficie de ataque.
+- El frontend establece una frontera de proxy autenticada para `/api/*` y `/auth/*`; la
+  API la valida antes de procesar rutas de aplicación y conserva la sonda de salud para la
+  plataforma.
+- Los límites de visitante se consolidaron en los dos grupos globales de rutas públicas:
+  `/auth/*` y `/api/*`. No se desplegaron reglas de borde individualizadas para recovery;
+  la API mantiene sus controles de cuenta sin confiar en headers reenviados.
+- Esta preparación precedió al gate externo W14. La ejecución, cleanup y promoción
+  posteriores se registran a continuación y en la aclaración P4-W1.
 
 ## Execution record - P3-W14 production validation (2026-08-12)
 
-- Neon Free (PostgreSQL 17, AWS Ohio), Resend, Render Free y Netlify fueron configurados
-  sin recursos pagos, keepalive, cron ni backfill en la API. El catálogo público quedó
-  `ready` para el rango inicial y las rutas Render directas, incluso con forwarded header
-  falsificado, devolvieron `403`.
+- Los proveedores gestionados de base de datos, email y hosting fueron configurados sin
+  recursos pagos, keepalive, cron ni backfill en la API. El catálogo público quedó `ready`
+  para el rango inicial y la frontera de aplicación pasó su validación de acceso.
 - Registro, confirmación, login/reload, reset con revocación de refresh, favoritos y logout
-  pasaron mediante el origen Netlify y correo Resend. No se conservaron datos personales,
-  códigos ni enlaces en el repositorio.
-- Un enlace de confirmación emitido antes de `Restart service` de Render funcionó después
-  de `healthy`, confirmando que la protección de datos depende del key ring PostgreSQL.
-  Neon documenta AES-256 en reposo y rotación administrada de claves; no se requiere una
-  capa paga extra para este portfolio. Fuente: <https://neon.com/docs/security/security-overview>.
+  pasaron mediante el origen público y correo transaccional. No se conservaron datos
+  personales, códigos ni enlaces en el repositorio.
+- Un enlace de confirmación emitido antes de un reinicio del servicio funcionó después de
+  recuperar health, confirmando que la protección de datos depende del key ring PostgreSQL.
+  El proveedor documenta protección en reposo administrada; no se requiere una capa paga
+  extra para este portfolio. Fuente: <https://neon.com/docs/security/security-overview>.
 - La dueña decidió retener una única cuenta real y eliminar la cuenta secundaria de prueba
   junto con sus datos asociados. Ese cleanup fue verificado fuera del repositorio y no
   incorpora identificadores personales en esta ADR.
@@ -492,8 +486,8 @@ ocasionales son suficientes y observables.
 - Account tests cubren request anti-enumeración, token Base64URL, fallo genérico,
   revocación de dos sesiones/cookie previa y límites; Angular cubre scrub, descarte tras
   intento, no-storage y navegación Login sin auto-login. La evidencia local 2026-08-05
-  es 177/177 backend, 128/128 frontend y Compose/LocalLog healthy; aún requiere merge
-  antes de la ejecución externa W14.
+  es 177/177 backend, 128/128 frontend y Compose/LocalLog healthy; en ese momento aún
+  requería merge antes de la ejecución externa W14, que luego pasó.
 
 ## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
 
