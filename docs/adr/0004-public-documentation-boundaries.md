@@ -53,6 +53,11 @@ se sanea; no se agrega al `.gitignore` como mecanismo de seguridad.
 ## Verification impact
 
 P4 debe buscar secretos y referencias de infraestructura productiva antes de promover su
-rama, verificar enlaces/activos públicos y ejecutar los gates de build/test aplicables. La
-documentación no declara P3 cerrada hasta que el sitio Netlify tenga `main` como rama de
-producción y el smoke público posterior al cutover haya pasado.
+rama, verificar enlaces/activos públicos y ejecutar los gates de build/test aplicables.
+
+## P4-W1 application record (2026-08-12)
+
+P4-W1 confirmó el requisito de cierre: ambas superficies de producción despliegan desde
+`main`, que contiene `48ac901`, y el smoke posterior de health y catálogo same-origin
+pasó. P3 puede declararse `DONE`; los controles restantes de este ADR se aplican a las
+waves documentales P4-W2 a P4-W5.

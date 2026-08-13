@@ -1,7 +1,7 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
 Date: 2026-08-12
-Status: P3 READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
+Status: P3 DONE - W1 through W15 accepted; production cutover verified by P4-W1
 Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
@@ -517,3 +517,10 @@ flowchart LR
   rechazados con `403`. El correo real, recovery y un enlace confirmado después de restart
   completaron el smoke funcional. Cleanup autorizado PASS; solo queda la promoción a
   `main` y el cutover de proveedores.
+
+## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
+
+El texto inmediatamente anterior es evidencia previa al cutover. P4-W1 confirmó la
+promoción a `main` en `48ac901`, el uso de `main` por las dos superficies de producción y
+el smoke posterior PASS para health y catálogo same-origin. P3 queda `DONE`; la revisión
+de esta explicación técnica y de sus límites de documentación continúa en P4-W3.

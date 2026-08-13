@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE; P3 release cutover awaiting P4-W1 verification; P4 PLANNED
+Status: P1 DONE; P2 DONE; P3 DONE in production; P4 IN PROGRESS
 
 ## Vision
 
@@ -188,9 +188,8 @@ hdurl|null, thumbnail_url|null, copyright|null
 ## Success criteria
 
 - P1/P2 permanecen documentados como entregas historicas cerradas.
-- P3 W1-W13 y W15 permanecen cerradas e integradas. W14 completó el smoke funcional con
-  proveedores reales; la limpieza de cuentas de prueba fue completada y falta solo la
-  promoción de la rama validada.
+- P3 W1-W15 están cerradas; W14 completó el smoke funcional con proveedores reales y P4-W1
+  confirmó el cutover de ambas superficies de producción a `main`.
 - El catálogo inicial de 30 APOD está persistido en Neon y el origen público confirmó
   `catalog-status ready: true` para el rango objetivo.
 - Auth/favorites/APOD funcionan E2E desde Netlify mediante proxy same-origin.
@@ -253,3 +252,12 @@ reemplazaran contratos temporales:
   por card. Logout o cambio de cuenta limpia el estado antes de exponer otra sesion. El
   corazon anonimo lleva a login con retorno interno y no existe migracion desde
   `ape.favorites.v1`.
+
+## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
+
+Esta aclaración preserva las afirmaciones históricas de P3 anteriores al cutover. P4-W1
+confirmó que la integración validada fue promovida a `main` en el commit `48ac901` y que
+las dos superficies de producción despliegan desde esa rama. La comprobación posterior
+de salud y de catálogo same-origin pasó, con catálogo `ready`. Por lo tanto P3 queda
+`DONE` y P4 continúa con la alineación documental; no se registran URLs operativas,
+credenciales ni datos de prueba en esta evidencia.

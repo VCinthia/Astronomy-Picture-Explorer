@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
+Status: DONE - P3-W1 through P3-W15 accepted; production cutover verified by P4-W1
 Phase: `P3`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0003-backend-auth-apod-stack.md`
@@ -345,3 +345,11 @@ docker compose down
 El seed y smoke productivo usan comandos exactos documentados por W5/W14 cuando existan
 los recursos externos; no se consideran verificados mediante afirmaciones manuales sin
 fecha y resultado.
+
+## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
+
+Los párrafos históricos que indicaban una promoción pendiente describen la situación
+previa al cutover. P4-W1 verificó que `main` contiene la integración P3 (`48ac901`), que
+las dos superficies de producción despliegan desde esa rama y que health y catálogo
+same-origin pasaron después del cambio. Se cierran la fase P3 y R3.14/R3.15; P4 es ahora
+responsable de la corrección documental restante.

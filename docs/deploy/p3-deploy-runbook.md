@@ -1,8 +1,7 @@
 # P3 production deploy and smoke runbook
 
 Date: 2026-08-12
-Status: READY FOR PROMOTION — all provider, smoke and cleanup evidence PASS; branch
-cutover to `main` and final release verification remain pending.
+Status: DONE — P3 cutover to `main` and post-release verification completed by P4-W1.
 
 This is the only approved runbook for mutating production P3 resources. It keeps the
 portfolio on free tiers, avoids background work and records evidence without recording
@@ -163,9 +162,21 @@ sanitized observation for every item:
 | Cold start, proxy, auth, password recovery and favorites smoke result | PASS. Public date/search/catalog, signed Netlify proxy, direct Render and spoofed-header `403`, account confirmation, refresh/reload, recovery/session revocation, favorites and logout passed. A pre-restart confirmation link also passed after Render restart. |
 | Cleanup result | PASS. The owner retained one personal portfolio account and deleted the secondary test account and associated data in Neon; no identities are retained in this record. |
 
-All W14 evidence is PASS. Next, fast-forward `codex/p3-integration` to `main`, switch
-Netlify and Render to `main`, revalidate public health/catalog, then mark P3 DONE and
-create a release tag if the owner chooses one.
+All W14 evidence is PASS. The following P4-W1 record closes the cutover gate without
+changing the historical W14 evidence above.
+
+## 7. P4-W1 post-cutover reconciliation (2026-08-12)
+
+| Field | Sanitized result |
+|---|---|
+| Promoted commit | `48ac901` on `main` |
+| Production branch confirmation | Owner confirmed both deployed surfaces use `main`. |
+| Post-cutover health | PASS — healthy. |
+| Post-cutover catalog | PASS — same-origin catalog status returned `ready: true`. |
+| Result | P3 is `DONE`; P4 continues only with documentation alignment. |
+
+This record intentionally omits direct provider origins, dashboard details, identities,
+credentials and ephemeral links.
 
 ## Provider references verified for this preparation
 

@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-08-12
-Status: P2 DONE in production; P3 release cutover awaiting P4-W1 verification; P4 PLANNED
+Status: P2 DONE in production; P3 DONE in production; P4 IN PROGRESS
 
 ## Verdict
 
@@ -368,12 +368,15 @@ docker compose down
 | DTO diverge de NASA/frontend | DTO app-owned congelado + contract tests image/video/nulls |
 | Vulnerabilidades Angular | Runtime: gate cerrado con Angular 22.0.7 y `npm audit --omit=dev` en 0. Desarrollo: 5 advisories transitivos del builder, sin fix compatible no forzado; revalidar mensualmente o ante patch 22.0.x |
 
+## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
+
+El gate que este documento dejaba para P4-W1 pasó: la dueña confirmó que Netlify y Render
+despliegan desde `main`, que contiene `48ac901`, y el smoke posterior confirmó health
+saludable y catálogo same-origin `ready`. P3 queda `DONE`; se conserva la evidencia de
+validación W14/W15 anterior sin registrar datos personales, URLs operativas ni secretos.
+
 ## Recommended next step
 
-P3-W14 está cerrada y el candidato fue promovido a `main`. P4-W1 debe confirmar en los
-dashboards que Netlify publica `main`, que Render usa el mismo commit o un sucesor
-compatible y repetir el smoke público después del cutover. Sólo entonces puede cambiarse
-P3 a `DONE` en los documentos canónicos. La evidencia sanitizada y el procedimiento están
-en [`docs/deploy/p3-deploy-runbook.md`](deploy/p3-deploy-runbook.md); P4 usa
-[`docs/plans/astronomy-p4-documentation-alignment-plan.md`](plans/astronomy-p4-documentation-alignment-plan.md)
-para actualizar documentación sin exponer configuración de producción.
+P4-W2 debe actualizar el README y la captura pública; P4-W3 alineará la documentación
+técnica y operativa según ADR-0004. La fase P4 y sus dependencias viven en
+[`docs/plans/astronomy-p4-documentation-alignment-plan.md`](plans/astronomy-p4-documentation-alignment-plan.md).

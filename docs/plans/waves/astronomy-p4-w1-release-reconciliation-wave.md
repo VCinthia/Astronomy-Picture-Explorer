@@ -1,7 +1,7 @@
 # Wave P4-W1 - Reconciliación de release e inventario documental
 
 Date: 2026-08-12
-Status: PLANNED
+Status: DONE - 2026-08-12
 Wave ID: `P4-W1`
 Source Phase: `P4`
 Source Phase Plan: `docs/plans/astronomy-p4-documentation-alignment-plan.md`
@@ -23,15 +23,15 @@ delimita qué documentación requiere actualización, aclaración histórica o s
 
 ## Checklist
 
-- [ ] W1.1 Confirmar en Netlify que la production branch es `main` y que su deploy usa el
+- [x] W1.1 Confirmar en Netlify que la production branch es `main` y que su deploy usa el
   commit P3 promocionado; confirmar Render en `main`/mismo commit o sucesor compatible.
-- [ ] W1.2 Repetir después del cutover el smoke público same-origin de catálogo y la sonda
+- [x] W1.2 Repetir después del cutover el smoke público same-origin de catálogo y la sonda
   de salud autorizada; registrar sólo fecha, commit y resultado sanitizado.
-- [ ] W1.3 Marcar P3/W14/W15 como `DONE` en todos los documentos canónicos, únicamente si
+- [x] W1.3 Marcar P3/W14/W15 como `DONE` en todos los documentos canónicos, únicamente si
   W1.1 y W1.2 pasan; conservar aclaraciones históricas con una nota terminal P4.
-- [ ] W1.4 Clasificar cada documento relevante como público, técnico, operativo saneado o
+- [x] W1.4 Clasificar cada documento relevante como público, técnico, operativo saneado o
   local/secreto, y crear la lista exacta de correcciones W2/W3.
-- [ ] W1.5 Verificar que `.env`, `.secrets/` e `IMPLEMENTATION_NOTES.md` siguen fuera de
+- [x] W1.5 Verificar que `.env`, `.secrets/` e `IMPLEMENTATION_NOTES.md` siguen fuera de
   Git; no añadir `docs/` al ignore.
 
 ## Acceptance criteria
@@ -40,7 +40,7 @@ delimita qué documentación requiere actualización, aclaración histórica o s
 - Ningún documento canónico mantiene el estado contradictorio “ready for promotion” una
   vez que el gate pasó.
 - El inventario enumera README/captura obsoleta, backend README, planes/runbooks P3 y las
-  deudas históricas P1/P2 encontradas, con dueño W2 o W3.
+  deudas históricas P1/P2 encontradas, con dueño W2, W3 o W4 según su naturaleza.
 - La evidencia no contiene secretos, datos personales, URLs de administración ni enlaces
   de correo.
 
@@ -57,5 +57,12 @@ saneado; no copiar su configuración a la wave.
 
 ## Parent plan sync
 
-- [ ] Marcar R4.1 y P3 como DONE sólo tras la evidencia W1.
-- [ ] Actualizar master, PRD, readiness, ADR-0003, P3 flow/plan y W14/W15 de forma atómica.
+- [x] Marcar R4.1 y P3 como DONE sólo tras la evidencia W1.
+- [x] Actualizar master, PRD, readiness, ADR-0003, P3 flow/plan y W14/W15 de forma atómica.
+
+## Completion record
+
+- `main` contiene `48ac901`; la dueña confirmó las dos ramas de producción en `main`.
+- El smoke posterior registró health saludable y catálogo same-origin `ready`.
+- El inventario y los propietarios de corrección están en el plan P4. La verificación de
+  ignore confirmó que secretos locales permanecen fuera de Git y que `docs/` no se ignora.

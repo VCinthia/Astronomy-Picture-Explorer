@@ -1,7 +1,7 @@
 # Wave P3-W15 - Recuperacion de contraseña segura
 
 Date: 2026-08-05
-Status: IMPLEMENTED LOCALLY - 2026-08-05; integration review pending
+Status: DONE - integrated and production-smoke validated by P3-W14/P4-W1
 Wave ID: `P3-W15`
 Depends On: P3-W2 + P3-W3 + P3-W8 + P3-W9 + P3-W12 + P3-W13 DONE and merged
 Unblocks: external execution and production smoke of P3-W14
@@ -134,3 +134,9 @@ Netlify: siguen siendo autoridad exclusiva de W14.
   correos ni contraseñas en evidencia.
 - La ejecución externa W14 posterior validó el flujo real sin registrar secretos ni
   enlaces. `main` no se promociona por W15 sola: depende del cierre administrativo de W14.
+
+## Aclaración terminal P4-W1 - cierre de release (2026-08-12)
+
+La dependencia administrativa indicada arriba quedó satisfecha: W14 completó su smoke y
+P4-W1 confirmó el cutover posterior a `main`, con health y catálogo same-origin PASS.
+W15 queda `DONE`; esta aclaración no modifica la evidencia local ni externa anterior.

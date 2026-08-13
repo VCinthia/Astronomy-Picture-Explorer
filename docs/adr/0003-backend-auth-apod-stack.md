@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: Accepted; P3-W1-W15 and W14 acceptance complete; main/provider branch cutover pending
+Status: Accepted; P3-W1 through P3-W15 DONE; production cutover verified by P4-W1
 
 ## Context
 
@@ -494,3 +494,11 @@ ocasionales son suficientes y observables.
   intento, no-storage y navegación Login sin auto-login. La evidencia local 2026-08-05
   es 177/177 backend, 128/128 frontend y Compose/LocalLog healthy; aún requiere merge
   antes de la ejecución externa W14.
+
+## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
+
+Los registros W14/W15 preservan sus estados y evidencias históricas. Después de ellos,
+P4-W1 confirmó el fast-forward a `main` en `48ac901`, el origen de producción de ambas
+superficies en `main` y el smoke posterior saludable de health y catálogo same-origin.
+Por ello P3 queda `DONE`; esta ADR mantiene los contratos técnicos y no incorpora
+configuración operativa, valores de entorno ni datos personales.

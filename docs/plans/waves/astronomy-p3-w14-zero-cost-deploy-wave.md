@@ -1,7 +1,7 @@
 # Wave P3-W14 - Seed, deploy $0 y smoke productivo
 
 Date: 2026-07-22
-Status: DONE - all zero-cost deployment and smoke acceptance criteria passed; phase promotion pending
+Status: DONE - all zero-cost deployment, smoke and P4-W1 cutover acceptance criteria passed
 Wave ID: `P3-W14`
 Depends On: P3-W5 + P3-W12 + P3-W13 + P3-W15 DONE and merged before external execution
 Suggested Branch: `wave/p3-w14-zero-cost-deploy`
@@ -143,6 +143,6 @@ node scripts/prepare-netlify-redirects.mjs
 
 ## Parent sync
 
-- [ ] Promover `codex/p3-integration` a `main`, actualizar las ramas de Netlify/Render,
-  revalidar health + catálogo público y entonces marcar P3 DONE y registrar el tag/release
-  que defina la dueña.
+- [x] P4-W1 verificó la promoción previa de `codex/p3-integration` a `main`, confirmó ambas
+  ramas de despliegue y revalidó health + catálogo público. P3 queda `DONE`; un tag/release
+  permanece opcional y no es condición de cierre.

@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE in production; P3 release cutover awaiting P4-W1 verification; P4 PLANNED
+Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 IN PROGRESS
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -244,7 +244,7 @@ smoke local antes de que W14 use un sender real.
 
 - [x] **P1 - Frontend mock**: `docs/plans/astronomy-p1-frontend-mock-plan.md`.
 - [x] **P2 - Favorites/search local**: `docs/plans/astronomy-p2-favorites-search-plan.md`.
-- [ ] **P3 - Backend/auth/persistence/deploy** (cierre administrativo pendiente de P4-W1):
+- [x] **P3 - Backend/auth/persistence/deploy** (cutover y smoke post-release verificados):
   `docs/plans/astronomy-p3-backend-plan.md`.
 - [ ] **P4 - Documentación pública/alineación de release**:
   `docs/plans/astronomy-p4-documentation-alignment-plan.md`.
@@ -266,8 +266,8 @@ smoke local antes de que W14 use un sender real.
 | W11 | Frontend favorites API migration |
 | W12 | Local containers/full stack ✅ |
 | W13 | Final UX, navigation and local account acceptance ✅ |
-| W14 | Seed $0, deploy, smoke y cleanup PASS ✅; pendiente solo la promoción de fase |
-| W15 | Recuperación de contraseña integrada; prerequisito del smoke W14 cumplido |
+| W14 | Seed $0, deploy, smoke y cleanup DONE ✅ |
+| W15 | Recuperación de contraseña DONE ✅; validada en el smoke W14 |
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.
 
@@ -275,7 +275,7 @@ El grafo normativo esta en P3 y `p3-flow-overview.md`.
 
 | Wave | Resultado |
 |---|---|
-| W1 | Verificación post-cutover P3, estados e inventario documental |
+| W1 | Verificación post-cutover P3, estados e inventario documental ✅ |
 | W2 | README público actual y captura anónima |
 | W3 | Documentación técnica/operativa P3 alineada |
 | W4 | Aclaraciones P1/P2 y revisión de flujos documentados |
@@ -320,3 +320,11 @@ Los comandos .NET/Docker aplican desde las waves que crean esos artefactos.
 - El plan sigue abierto: Neon Free, migración y seed inicial ya están ejecutados; el
   despliegue, la evidencia de Render/Netlify/Resend y el smoke externo son el gate
   restante de W14.
+
+## Aclaración terminal P4-W1 - reconciliación de release (2026-08-12)
+
+La afirmación precedente describe el estado histórico anterior a la promoción. La rama
+`codex/p3-integration` fue promovida en fast-forward a `main` en `48ac901`; la dueña
+confirmó que las superficies de producción usan `main` y el smoke posterior de health y
+catálogo same-origin pasó. P3 queda `DONE`; P4 conserva la auditoría documental como
+fase independiente.
