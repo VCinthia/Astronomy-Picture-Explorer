@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-08-13
-Status: P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 PLANNED
+Status: P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 READY FOR PROMOTION
 
 ## Verdict
 
@@ -21,7 +21,7 @@ aceptación local antes de producción; W14 conserva proveedores/deploy. P3-W12 
 el stack local reproducible, con secretos locales
 file-backed, sin proveedores productivos ni llamadas NASA/Resend.
 
-P3-W13 cerró el 2026-07-22 con fecha antes de búsqueda en Explorer, stepper UTC solo
+P3-W13 cerró el 2026-07-22 con fecha antes de búsqueda en Explorer, stepper entonces UTC
 sobre la imagen Home, subrayado activo desktop/mobile y búsqueda FTS probada sin
 distinción de mayúsculas. El login muestra exclusivamente `Signed in successfully.`
 durante 650 ms antes de navegar a retorno interno o Home. El smoke LocalLog y Compose
@@ -94,8 +94,9 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 
 - Build backend PASS con 0 warnings y 0 errors.
 - 31/31 tests W4 y 78/78 backend PASS; cache/persistencia usan PostgreSQL Testcontainers.
-- `GET /api/apod/today` usa fecha UTC inyectable y `/date/{date}` acepta exclusivamente
-  `1995-06-16..hoy`; formato/rango y upstream devuelven ProblemDetails observables.
+- P3-W4 usaba entonces fecha UTC inyectable para `GET /api/apod/today`; ADR-0005 la
+  reemplaza por la fecha de producto Argentina. Formato/rango y upstream conservan los
+  ProblemDetails observables.
 - El adaptador valida imagen/video, URLs HTTP(S), fecha solicitada y `service_version=v1`;
   opcionales vacios pasan a null y metadata NASA no cruza el DTO app-owned.
 - `X-Api-Key` queda fuera de la query y redacted en logging; redirects y 429 no se
@@ -143,8 +144,8 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - Los tres endpoints `/api/favorites` requieren Bearer y derivan el usuario exclusivamente
   del claim JWT `sub`; la ausencia de Bearer devuelve 401 y un `sub` firmado no GUID
   devuelve `401 invalid_authenticated_user` sin aceptar identificadores del cliente.
-- POST acepta solo `{ "apod_date": "YYYY-MM-DD" }`; POST/DELETE validan
-  `1995-06-16..UTC today` antes de acceder a cache/NASA y sus fechas invalidas devuelven
+- P3-W7 validaba originalmente `1995-06-16..UTC today`; ADR-0005 aplica ahora la fecha
+  de producto Argentina antes de cache/NASA y las fechas inválidas siguen devolviendo
   `400 invalid_favorite_apod_date`.
 - Un miss de POST usa `ApodCacheService`; errores NASA conservan ProblemDetails APOD
   sanitizados. `ON CONFLICT DO NOTHING` deja una sola relacion bajo POST concurrente.
@@ -220,7 +221,8 @@ P3-W2 se cerro sin cuentas Resend ni mutaciones productivas:
 - `switchMap` cancela solicitudes APOD/search obsoletas. `requestedDate` mantiene el
   input valido en curso y `selectedDate` se actualiza exclusivamente con la respuesta;
   una fecha invalida cancela el request previo antes de exponer su error.
-- El control de fecha nativo limita UTC `1995-06-16..hoy` y el stepper opera dias UTC.
+- En P3-W10 el control de fecha y stepper usaban UTC; ADR-0005 reemplaza el límite
+  funcional por el calendario Argentina.
   Home/Explorer presentan loading, upstream/cold-start, empty y `catalog_not_ready` con
   Retry y aria-live. Auth, logout y control de cuenta W9 permanecen same-origin.
 - `npm ci`, `npm run build`, 100/100 ChromeHeadless y `git diff --check` PASS. `npm audit
@@ -389,11 +391,27 @@ advertencia NU1903 en una dependencia transitiva de pruebas; no altera el artefa
 desplegado y queda para mantenimiento de dependencias. El fast-forward P4 y el smoke
 público posterior se completaron el mismo día; P4 queda `DONE`.
 
-## Recommended next step
+## P5 assurance record (2026-08-13)
 
-P5 corrige la semántica de fecha APOD observada después de P4: durante la franja nocturna
-de Argentina, UTC ya permite solicitar la fecha siguiente aunque NASA todavía no la haya
-publicado. ADR-0005 establece `America/Argentina/Buenos_Aires` como calendario funcional;
-la API conserva la autoridad y el frontend sólo alinea su UX. No se cambia la región ni el
-reloj de Netlify/Render, ni timestamps de seguridad. La fase y sus gates viven en
+P5 dejó la documentación y el artefacto de integración preparados para promoción,
+condicionados a repetir la regresión Docker/Testcontainers bloqueada. La política explícita
+de Argentina limita API, favoritos y catálogo local; Angular alinea picker, validación y
+stepper. Los instantes de seguridad/persistencia siguen UTC, no se cambió región ni
+proveedor y no existe fallback automático ante una demora NASA.
+
+- `npm run build` y 131/131 ChromeHeadless pasaron. El build conserva las advertencias
+  preexistentes de selectores CSS omitidos.
+- `dotnet build backend/AstronomyExplorer.sln --no-restore` y 27 tests focalizados de
+  calendario/catálogo pasaron. La advertencia NU1903 transitiva de pruebas permanece
+  registrada como mantenimiento separado.
+- Docker Desktop no estaba disponible. `docker compose config` pasó y no había listeners
+  locales de Compose, pero la regresión de integración Testcontainers/APOD/favoritos queda
+  **BLOCKED**, no aprobada, hasta que el daemon vuelva a estar disponible. No se inició ni
+  detuvo ningún contenedor ni se hizo llamada NASA/sync real.
+- Una pestaña abierta no programa actualización a medianoche Argentina; reevalúa el límite
+  al recargar o ante una interacción/re-render relevante. No se añadió timer y API conserva
+  la validación final.
+
+Antes de promover, repetir la regresión Testcontainers bloqueada y realizar el smoke
+same-origin posterior al fast-forward. La fase y sus gates viven en
 [`P5`](plans/astronomy-p5-apod-calendar-plan.md).

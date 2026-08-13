@@ -66,6 +66,9 @@ publique exactamente a medianoche argentina.
   ambas plataformas.
 - Un navegador puede tener otro timezone local; el producto seguirá deliberadamente la
   referencia Argentina para su calendario APOD.
+- Una pestaña abierta no actualiza por sí sola sus controles al cruzar medianoche
+  Argentina. Se actualizan con una recarga o interacción/re-render relevante; P5 no
+  agrega un timer porque la API mantiene la validación autoritativa.
 
 ## Verification impact
 

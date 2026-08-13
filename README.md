@@ -46,9 +46,10 @@ flowchart LR
 
 The browser talks only to the application's public routes. The API retrieves an
 APOD entry when needed, keeps reusable catalog data in PostgreSQL, and associates
-saved entries with the signed-in account. Search uses PostgreSQL full-text search
-across APOD titles and explanations. Email confirmation and password recovery are
-delivered through a transactional email service.
+saved entries with the signed-in account. APOD's product date follows the Argentina
+calendar, so Home does not request tomorrow's entry during the local evening. Search
+uses PostgreSQL full-text search across APOD titles and explanations. Email confirmation
+and password recovery are delivered through a transactional email service.
 
 Operational credentials and deployment configuration are intentionally kept out of
 the repository and out of the browser bundle.

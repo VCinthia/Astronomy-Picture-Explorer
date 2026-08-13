@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-08-13
-Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 PLANNED
+Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 READY FOR PROMOTION
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -96,7 +96,8 @@ P3-W4 quedo DONE el 2026-07-17:
 
 - Typed NASA client con credential protegido, redirects deshabilitados y retry acotado.
 - DTO app-owned exacto; metadata provider-only se valida pero no se expone ni persiste.
-- Endpoints UTC today/date con ProblemDetails y cache memoria -> PostgreSQL -> NASA.
+- En W4 histórico, endpoints UTC today/date con ProblemDetails y cache memoria ->
+  PostgreSQL -> NASA; ADR-0005 reemplaza ese límite funcional por Argentina.
 - Single-flight removible y `ON CONFLICT` evitan duplicados; 31/31 tests W4 y 78/78
   backend PASS sin llamadas NASA reales.
 
@@ -162,7 +163,8 @@ P3-W10 quedo DONE el 2026-07-20:
   real y FTS paginado; `switchMap` cancela solicitudes obsoletas y Retry comunica
   cold-start/upstream, empty y `catalog_not_ready` de manera accesible.
 - `requestedDate` separa la seleccion valida pendiente de `selectedDate`, que solo se
-  confirma con la fecha real devuelta por API. El stepper opera dias UTC en el rango APOD.
+  confirma con la fecha real devuelta por API. Históricamente el stepper operaba días UTC;
+  ADR-0005 lo alinea con el calendario Argentina.
 - W9 sigue intacta; la fachada temporal P2 de favoritos queda explicitamente destinada a
   su reemplazo sin migracion en W11. Build y 100/100 pruebas ChromeHeadless PASS.
 
@@ -196,7 +198,8 @@ P3-W12 quedo DONE el 2026-07-20:
 P3-W13 quedo DONE el 2026-07-22:
 
 - Explorer ubica la fecha antes de Search y alinea ambos controles en desktop; Home toma
-  el stepper UTC sobre su imagen, sin dejar controles de fecha en el header global.
+  el stepper sobre su imagen, sin dejar controles de fecha en el header global. El límite
+  UTC de la implementación histórica queda reemplazado por ADR-0005.
 - Las navegaciones primaria desktop y mobile muestran una sola ruta activa mediante
   `aria-current` y una única línea inferior de acento. La búsqueda conserva la
   capitalización escrita y las tres variantes de `astronomy` retornan el mismo fixture FTS local.
@@ -217,7 +220,7 @@ Identity de un solo uso, reset sin auto-login y revocación masiva de refresh se
 No crea recursos externos; reutiliza el correo LocalLog/Resend ya diseñado y amplía el
 smoke local antes de que W14 use un sender real.
 
-### P5 - PLANNED: calendario funcional APOD
+### P5 - READY FOR PROMOTION: calendario funcional APOD
 
 La observación posterior al release confirmó un límite de producto, no de infraestructura:
 durante la noche de Argentina, UTC avanzaba a la fecha siguiente antes de que APOD estuviera
@@ -263,7 +266,8 @@ timestamps UTC de seguridad, sesión, caché o persistencia.
   `main` y smoke posterior completados.
   `docs/plans/astronomy-p4-documentation-alignment-plan.md`.
 - [ ] **P5 - Calendario funcional APOD**: autoridad de fecha Argentina, catálogo y UX
-  alineados, con promoción única después de la regresión.
+  alineados; queda listo para promoción después de repetir la regresión Testcontainers
+  actualmente bloqueada y ejecutar smoke posterior.
   `docs/plans/astronomy-p5-apod-calendar-plan.md`.
 
 ## 7. P3 wave map
@@ -304,10 +308,10 @@ La autoridad de límites públicos/operativos es ADR-0004.
 
 | Wave | Resultado |
 |---|---|
-| W1 | Política de calendario backend, API y favoritos |
-| W2 | Límite coherente del catálogo local |
-| W3 | Picker, validación y stepper Angular |
-| W4 | Documentación, regresión, smoke y promoción P5 |
+| W1 | DONE — Política de calendario backend, API y favoritos |
+| W2 | DONE — Límite coherente del catálogo local |
+| W3 | DONE — Picker, validación y stepper Angular |
+| W4 | READY FOR PROMOTION — Documentación y assurance; integración Docker pendiente |
 
 La autoridad de fecha APOD es ADR-0005; no se modifica el timezone del host.
 

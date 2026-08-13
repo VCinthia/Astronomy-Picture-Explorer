@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-13
-Status: P1 DONE; P2 DONE; P3 DONE in production; P4 DONE in production; P5 PLANNED
+Status: P1 DONE; P2 DONE; P3 DONE in production; P4 DONE in production; P5 READY FOR PROMOTION
 
 ## Vision
 
@@ -72,6 +72,9 @@ evolucion full-stack segura sin costo monetario de operacion.
 - Timestamps, sesiones, expiraciones, caché y persistencia continúan en UTC.
 - La aplicación no oculta una demora real de NASA con fallback automático al día anterior;
   el estado Retry continúa siendo la experiencia honesta para un upstream no disponible.
+- Una pestaña ya abierta no programa un refresco al cruzar medianoche Argentina: los
+  controles se reevalúan al recargar o ante una interacción/re-render relevante. No se
+  introduce un timer; la API sigue siendo la validación final.
 
 ### App-owned APOD contract
 

@@ -1,8 +1,8 @@
 # P3 - Panorama de flujos, arquitectura y datos
 
-Date: 2026-08-12
+Date: 2026-08-13
 Status: P3 DONE - W1 through W15 accepted; production cutover verified by P4-W1
-Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`
+Source: ADR-0003 + `docs/plans/astronomy-p3-backend-plan.md`; calendar clarification: ADR-0005
 
 Este documento une la propuesta de P3 en un mapa operativo. Los contratos normativos
 viven en ADR-0003; las unidades de ejecucion viven en las waves W1-W15.
@@ -136,8 +136,8 @@ borde público. La API no convierte headers no verificados en identidad de visit
 W10 deja `/home` como ruta canonica y hace que `/` solo redirija. Home consulta
 `GET /api/apod/today`; Explorer consulta `GET /api/apod/date/{date}` y search usa
 `GET /api/apod/search?q=&page=1&pageSize=12`. El navegador no conserva un archivo
-APOD, `availableDates` ni chips. El input nativo acepta `1995-06-16..UTC hoy` y el
-stepper suma/resta dias UTC.
+APOD, `availableDates` ni chips. Esta descripción conserva la semántica histórica de
+W10; P5 sustituye su límite UTC por el calendario de producto documentado más abajo.
 
 El servicio separa `requestedDate` (fecha valida pendiente) de `selectedDate` (fecha
 confirmada por la respuesta real) y usa `switchMap` para cancelar date/search obsoletos.
@@ -303,7 +303,7 @@ sequenceDiagram
     API-->>FE: ApodEntryDto[] hidratado
 ```
 
-POST/DELETE validan `1995-06-16..UTC today` antes de cache/NASA. POST usa
+POST/DELETE validan `1995-06-16..última fecha de producto APOD` antes de cache/NASA. POST usa
 `ON CONFLICT DO NOTHING` y DELETE filtra simultaneamente por `user_id` del claim literal
 `sub` y fecha; ambos devuelven `204` para sus dos resultados idempotentes. GET es una
 proyeccion/join unica, ordenada por fecha descendente, sin N+1 ni limite silencioso de la
@@ -395,14 +395,30 @@ La migracion inicial implementa el diagrama con estas precisiones:
 
 ### W4 APOD/provider alignment
 
-- `today` se define como fecha UTC del backend mediante `TimeProvider` y converge con la
-  misma validacion/cache usada por `date/{date}`.
+- Históricamente, W4 definió `today` con fecha UTC inyectable. P5 reemplaza ese límite
+  funcional por ADR-0005, sin modificar la cache ni los instantes UTC del proveedor.
 - La API key NASA viaja en `X-Api-Key`, queda redacted en logs y nunca forma parte de la
   URI. Redirects automaticos estan deshabilitados.
 - Cada miss concurrente por fecha comparte una operacion con scope propio; memory cache
   queda acotada y PostgreSQL resuelve reinicios antes de volver a NASA.
 - El upsert `ON CONFLICT` es seguro entre instancias. Fallos no se cachean y liberan el
   single-flight para que Retry pueda recuperar.
+
+### P5 calendario funcional APOD
+
+- La fecha máxima de producto se calcula con `America/Argentina/Buenos_Aires`; no depende
+  de la región del host ni del timezone del navegador. La API aplica ese límite en
+  `/today`, fecha explícita, favoritos y validación del catálogo local antes de consultar
+  cache/NASA o mutar datos.
+- Angular refleja el mismo límite para la fecha inicial, picker, validación previa y el
+  siguiente de Home. La fecha retornada por API continúa confirmando el estado visible;
+  un cliente adelantado no puede autorizar una fecha futura.
+- `DateOnly` sigue siendo la identidad de una edición. Timestamps de persistencia, caché,
+  sesión, expiración y rate limiting permanecen UTC. Una demora real de NASA conserva
+  Retry: P5 no elige silenciosamente la edición previa.
+- No existe un timer de medianoche. Una pestaña que ya estaba abierta reevalúa sus
+  controles al recargar o ante una interacción/re-render relevante, mientras la API
+  mantiene la validación final.
 
 ### W5 catalog ingestion alignment
 

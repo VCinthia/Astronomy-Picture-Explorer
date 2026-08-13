@@ -4,7 +4,8 @@ ASP.NET Core 10 API for Astronomy Picture Explorer. P3 delivered PostgreSQL pers
 Identity accounts with confirmation and password recovery, short-lived sessions, an
 app-owned APOD contract, layered caching, a manually operated catalog loader, PostgreSQL
 full-text search and protected per-user favorites. P4 keeps this technical guide aligned
-with the released application without publishing operational production configuration.
+with the released application without publishing operational production configuration;
+P5 defines the APOD product calendar without changing infrastructure timestamps.
 
 ## Prerequisites
 
@@ -119,6 +120,23 @@ Public APOD endpoints are:
 - `GET /api/apod/catalog-status`
 - `GET /api/apod/search?q=<text>&page=1&pageSize=12`
 
+## APOD product calendar
+
+The maximum APOD date is calculated explicitly from the Argentina product calendar.
+The API is authoritative for today, an explicit date, favorites and local catalog range
+validation; it rejects a future product date before a cache or provider request. The
+browser mirrors that boundary only to prevent an impossible selection, and the API
+response remains the date actually displayed.
+
+This policy is deliberately separate from infrastructure time. Persisted timestamps,
+cache freshness, sessions, expirations and rate limiting remain UTC. It does not change
+hosting region or provider configuration, and it does not hide a real provider delay by
+falling back to an earlier entry.
+
+An already-open browser tab does not schedule a midnight refresh. Its date controls
+re-evaluate after a reload or a relevant interaction/re-render; API validation remains the
+final protection in the meantime.
+
 `catalog-status` reports total cached rows and global coverage. Readiness is anchored to
 the exact optional `Catalog__RequiredFrom`/`Catalog__RequiredTo` range; W13 sets both to
 the approved seed target. Without that configuration it reports `not_started`. With a
@@ -145,7 +163,7 @@ Favorites endpoints require an access Bearer token:
   silently paginated or truncated because the frontend loads the complete collection
   once per authenticated portfolio session.
 - `POST /api/favorites` accepts only `{ "apod_date": "YYYY-MM-DD" }`; it validates
-  the supported APOD range before cache/NASA, obtains the user only from the literal JWT
+  the supported APOD product range before cache/NASA, obtains the user only from the literal JWT
   `sub` claim, ensures a cache entry and returns `204` for either creation or duplicate.
 - `DELETE /api/favorites/{date}` validates the same range, filters `sub + date` and
   returns `204` whether or not that favorite existed.
@@ -169,7 +187,7 @@ dotnet run --project backend/AstronomyExplorer.Catalog -- `
 
 Live execution requires `ConnectionStrings__Postgres` and a personal
 `NasaApod__ApiKey`; `DEMO_KEY` is rejected. Ranges must remain within
-`1995-06-16..UTC today` and batch size within `1..30`. Run migrations first, inspect the
+`1995-06-16..current APOD product date` and batch size within `1..30`. Run migrations first, inspect the
 dry-run estimate, then execute locally:
 
 ```powershell

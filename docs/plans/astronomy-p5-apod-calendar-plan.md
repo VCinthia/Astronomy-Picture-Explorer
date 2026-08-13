@@ -1,7 +1,7 @@
 # Phase Plan P5 - Calendario funcional APOD
 
 Date: 2026-08-13
-Status: IN PROGRESS (P5-W1 through P5-W3 DONE)
+Status: READY FOR PROMOTION
 Phase: `P5`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0005-apod-product-calendar.md`
@@ -61,7 +61,8 @@ refleja para una UX consistente.
 - [x] **R5.1** Definir y aplicar la política Argentina autoritativa en API/favoritos (W1).
 - [x] **R5.2** Alinear CLI y validación del catálogo con esa autoridad (W2).
 - [x] **R5.3** Alinear fecha inicial, picker, validación y stepper Angular (W3).
-- [ ] **R5.4** Actualizar contratos/documentación y ejecutar regresión/smoke/promoción (W4).
+- [x] **R5.4** Actualizar contratos/documentación y ejecutar assurance previo a promoción
+  (W4; regresión Testcontainers y smoke posterior pendientes de sus prerrequisitos).
 
 ## 6. Waves
 
@@ -70,7 +71,7 @@ refleja para una UX consistente.
 | P5-W1 | P4 DONE | DONE — Política backend APOD + rutas/favoritos y tests de borde |
 | P5-W2 | W1 | DONE — Límite coherente del catálogo local |
 | P5-W3 | W2 | DONE — Picker, validación y stepper Angular con calendario Argentina |
-| P5-W4 | W3 | Documentación, regresión, smoke y promoción P5 |
+| P5-W4 | W3 | READY FOR PROMOTION — Documentación y assurance; Docker/Testcontainers bloqueado |
 
 ## 7. Phase exit criteria
 

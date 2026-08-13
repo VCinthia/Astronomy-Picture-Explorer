@@ -496,3 +496,14 @@ P4-W1 confirmó el fast-forward a `main` en `48ac901`, el origen de producción 
 superficies en `main` y el smoke posterior saludable de health y catálogo same-origin.
 Por ello P3 queda `DONE`; esta ADR mantiene los contratos técnicos y no incorpora
 configuración operativa, valores de entorno ni datos personales.
+
+## Aclaración terminal P5-W4 - calendario APOD (2026-08-13)
+
+Las referencias históricas de W4/W5/W10 a una fecha APOD UTC describen la implementación
+cerrada en ese momento. El contrato vigente de fecha de producto es ADR-0005: una política
+explícita de calendario Argentina limita `/today`, fecha explícita, favoritos y el CLI
+local. Angular sólo evita selecciones imposibles; la API conserva la autoridad y los
+ProblemDetails/DTO públicos no cambian. UTC permanece para instantes de seguridad,
+persistencia y caché, sin fallback silencioso ante una demora real del proveedor ni cambio
+de región/proveedor. Una pestaña abierta reevalúa los controles al recargar o ante una
+interacción/re-render relevante; no se incorporó un timer.
