@@ -1,8 +1,8 @@
 # PRD - Astronomy Picture Explorer
 
 Date: 2026-07-08
-Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE; P3 DONE in production; P4 DONE in production
+Last revised: 2026-08-13
+Status: P1 DONE; P2 DONE; P3 DONE in production; P4 DONE in production; P5 PLANNED
 
 ## Vision
 
@@ -60,6 +60,18 @@ evolucion full-stack segura sin costo monetario de operacion.
   `aria-current` y una única línea inferior fina de acento en desktop y mobile.
 - Estados loading, empty, upstream error, catalog-not-ready y cold-start son accesibles y
   recuperables mediante Retry.
+
+## Scope P5 - calendario funcional APOD
+
+- La fecha máxima disponible para APOD se interpreta en
+  `America/Argentina/Buenos_Aires`, no en la zona horaria del host ni en UTC.
+- La API es la autoridad: `/today`, la consulta explícita por fecha, favoritos y el
+  catálogo local aplican la misma política antes de consultar NASA o persistir datos.
+- Angular replica esa regla sólo para el límite visible del picker, la validación previa y
+  el stepper; una respuesta de la API sigue determinando la fecha realmente mostrada.
+- Timestamps, sesiones, expiraciones, caché y persistencia continúan en UTC.
+- La aplicación no oculta una demora real de NASA con fallback automático al día anterior;
+  el estado Retry continúa siendo la experiencia honesta para un upstream no disponible.
 
 ### App-owned APOD contract
 

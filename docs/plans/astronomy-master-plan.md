@@ -1,8 +1,8 @@
 # Master Plan - Astronomy Picture Explorer
 
 Date: 2026-06-25
-Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 DONE in production
+Last revised: 2026-08-13
+Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 PLANNED
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -18,13 +18,17 @@ persistente y desplegado sin costo monetario.
 3. `docs/adr/0002-canvas-color-palette-extraction.md`
 4. `docs/adr/0003-backend-auth-apod-stack.md`
 5. `docs/adr/0004-public-documentation-boundaries.md`
-6. `docs/engineering-readiness.md`
-7. Phase plans bajo `docs/plans/`
-8. Wave plans bajo `docs/plans/waves/`
-9. `docs/architecture/p3-flow-overview.md`
+6. `docs/adr/0005-apod-product-calendar.md`
+7. `docs/engineering-readiness.md`
+8. Phase plans bajo `docs/plans/`
+9. Wave plans bajo `docs/plans/waves/`
+10. `docs/architecture/p3-flow-overview.md`
 
 Ante contradiccion P3, ADR-0003 prevalece y los planes deben sincronizarse antes de
 implementar.
+
+Para la fecha funcional APOD de P5, ADR-0005 prevalece sobre las referencias históricas a
+UTC que pertenecen al contrato P3 anterior.
 
 ## 3. Program state
 
@@ -213,6 +217,14 @@ Identity de un solo uso, reset sin auto-login y revocación masiva de refresh se
 No crea recursos externos; reutiliza el correo LocalLog/Resend ya diseñado y amplía el
 smoke local antes de que W14 use un sender real.
 
+### P5 - PLANNED: calendario funcional APOD
+
+La observación posterior al release confirmó un límite de producto, no de infraestructura:
+durante la noche de Argentina, UTC avanzaba a la fecha siguiente antes de que APOD estuviera
+publicado. P5 adopta una política explícita `America/Argentina/Buenos_Aires`, con la API
+como autoridad y Angular alineado para UX. No cambia las regiones de hosting ni los
+timestamps UTC de seguridad, sesión, caché o persistencia.
+
 ## 4. Execution contract
 
 - Branch por wave: `wave/p<n>-w<m>-<slug>` o nombre sugerido en la wave.
@@ -250,6 +262,9 @@ smoke local antes de que W14 use un sender real.
 - [x] **P4 - Documentación pública/alineación de release**: auditoría, fast-forward a
   `main` y smoke posterior completados.
   `docs/plans/astronomy-p4-documentation-alignment-plan.md`.
+- [ ] **P5 - Calendario funcional APOD**: autoridad de fecha Argentina, catálogo y UX
+  alineados, con promoción única después de la regresión.
+  `docs/plans/astronomy-p5-apod-calendar-plan.md`.
 
 ## 7. P3 wave map
 
@@ -285,7 +300,18 @@ El grafo normativo esta en P3 y `p3-flow-overview.md`.
 
 La autoridad de límites públicos/operativos es ADR-0004.
 
-## 9. Program exit criteria
+## 9. P5 wave map
+
+| Wave | Resultado |
+|---|---|
+| W1 | Política de calendario backend, API y favoritos |
+| W2 | Límite coherente del catálogo local |
+| W3 | Picker, validación y stepper Angular |
+| W4 | Documentación, regresión, smoke y promoción P5 |
+
+La autoridad de fecha APOD es ADR-0005; no se modifica el timezone del host.
+
+## 10. Program exit criteria
 
 - P1/P2 permanecen funcionales hasta que P3 sustituye sus fuentes de datos.
 - P3 cumple todos sus exit criteria y smoke productivo.
@@ -294,8 +320,10 @@ La autoridad de límites públicos/operativos es ADR-0004.
 - No quedan mock/localStorage como fuente runtime de P3.
 - No existe configuracion capaz de generar cargos automaticos.
 - PRD/ADR/readiness/master/phases/waves/runbooks coinciden con la implementacion final.
+- La fecha APOD no adelanta el día de Argentina y todos los puntos de entrada respetan la
+  misma política de producto.
 
-## 10. Canonical validation
+## 11. Canonical validation
 
 ```powershell
 npm ci

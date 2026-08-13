@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
-Date: 2026-08-12
-Status: P2 DONE in production; P3 DONE in production; P4 DONE in production
+Date: 2026-08-13
+Status: P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 PLANNED
 
 ## Verdict
 
@@ -391,7 +391,9 @@ público posterior se completaron el mismo día; P4 queda `DONE`.
 
 ## Recommended next step
 
-P4 está cerrada en `main`. La evidencia detallada de la auditoría, promoción y smoke vive
-en [`P4-W5`](plans/waves/astronomy-p4-w5-documentation-assurance-wave.md). La repetición
-del suite backend depende de restaurar Docker Desktop y es mantenimiento de verificación,
-no una condición pendiente de P4.
+P5 corrige la semántica de fecha APOD observada después de P4: durante la franja nocturna
+de Argentina, UTC ya permite solicitar la fecha siguiente aunque NASA todavía no la haya
+publicado. ADR-0005 establece `America/Argentina/Buenos_Aires` como calendario funcional;
+la API conserva la autoridad y el frontend sólo alinea su UX. No se cambia la región ni el
+reloj de Netlify/Render, ni timestamps de seguridad. La fase y sus gates viven en
+[`P5`](plans/astronomy-p5-apod-calendar-plan.md).
