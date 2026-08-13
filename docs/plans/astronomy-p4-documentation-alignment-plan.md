@@ -1,7 +1,7 @@
 # Phase Plan P4 - Documentación pública y alineación de release
 
 Date: 2026-08-12
-Status: IN PROGRESS - P4-W1 DONE
+Status: IN PROGRESS - P4-W1 AND P4-W2 DONE
 Phase: `P4`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Documentation boundary: `docs/adr/0004-public-documentation-boundaries.md`
@@ -64,7 +64,7 @@ operación o seguridad.
 ## 5. Requirements checklist
 
 - [x] **R4.1** Registrar cutover P3, estado canónico e inventario documental (W1).
-- [ ] **R4.2** Reescribir README público y reemplazar/remover la captura obsoleta (W2).
+- [x] **R4.2** Reescribir README público y reemplazar la captura obsoleta (W2).
 - [ ] **R4.3** Alinear documentación técnica y operacional P3 sin exponer datos sensibles
   (W3).
 - [ ] **R4.4** Añadir aclaraciones históricas y corroborar los flujos documentados (W4).
@@ -80,7 +80,7 @@ directos.
 
 | Clase | Artefactos relevantes y hallazgo actual | Responsable |
 |---|---|---|
-| Pública | `README.md` aún describe la experiencia pre-P3/local; `screenshots/home.png` representa UI anterior. | P4-W2 reemplaza el relato público y la captura anónima. |
+| Pública | `README.md` describe la experiencia P3 publicada; `screenshots/home.png` contiene una captura anónima actual de Explorer. | P4-W2 DONE; W5 vuelve a comprobar enlaces y activo. |
 | Técnica, canónica | PRD, readiness, master, plan P3, ADR-0003, flow overview, P3-W14 y P3-W15 ahora registran P3 como DONE. | P4-W3 revisa redacción, contratos y enlaces contra la implementación actual. |
 | Técnica, de apoyo | `backend/README.md`, runbooks local/deploy/setup y política de framework omiten o anteceden partes de P3, incluida recuperación de contraseña y cierre de proveedores. | P4-W3 los alinea y sanea. |
 | Operativa, saneada | `docs/deploy/p3-deploy-runbook.md` preserva evidencia fechada de smoke y el cierre P4-W1. | P4-W3 elimina detalle operativo innecesario y conserva guía segura reproducible. |
@@ -98,7 +98,7 @@ configuración de la aplicación.
 | Wave | Dependencia | Resultado acotado |
 |---|---|---|
 | P4-W1 | P3 cutover | Evidencia post-cutover + estados P3 sincronizados + inventario ✅ |
-| P4-W2 | W1 | README público actual, captura anónima y guía local segura |
+| P4-W2 | W1 | README público actual, captura anónima y guía local segura ✅ |
 | P4-W3 | W1 | Contratos y runbooks P3 alineados y sanitizados |
 | P4-W4 | W1 + W3 | Aclaraciones P1/P2 y revisión de flujos documentados |
 | P4-W5 | W2 + W3 + W4 | Auditoría final, gates y promoción P4 |
