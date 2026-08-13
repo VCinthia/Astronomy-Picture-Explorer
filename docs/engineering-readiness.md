@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-08-12
-Status: P2 DONE in production; P3 DONE in production; P4 READY FOR PROMOTION
+Status: P2 DONE in production; P3 DONE in production; P4 DONE in production
 
 ## Verdict
 
@@ -386,10 +386,12 @@ límites ADR-0004 y smoke same-origin. Build y 128/128 pruebas frontend pasaron.
 backend no pudo completar sus pruebas Testcontainers con Docker Desktop detenido: 59
 pasaron y 119 quedaron bloqueadas antes de ejecutar assertions. También se registró una
 advertencia NU1903 en una dependencia transitiva de pruebas; no altera el artefacto
-desplegado y queda para mantenimiento de dependencias. P4 queda `READY FOR PROMOTION`.
+desplegado y queda para mantenimiento de dependencias. El fast-forward P4 y el smoke
+público posterior se completaron el mismo día; P4 queda `DONE`.
 
 ## Recommended next step
 
-El orquestador debe fast-forward `codex/p4-integration` a `main`, hacer push y repetir el
-smoke público. Solo entonces P4 puede marcarse `DONE`. La evidencia detallada vive en
-[`P4-W5`](plans/waves/astronomy-p4-w5-documentation-assurance-wave.md).
+P4 está cerrada en `main`. La evidencia detallada de la auditoría, promoción y smoke vive
+en [`P4-W5`](plans/waves/astronomy-p4-w5-documentation-assurance-wave.md). La repetición
+del suite backend depende de restaurar Docker Desktop y es mantenimiento de verificación,
+no una condición pendiente de P4.

@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 READY FOR PROMOTION
+Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 DONE in production
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -247,8 +247,8 @@ smoke local antes de que W14 use un sender real.
 - [x] **P2 - Favorites/search local**: `docs/plans/astronomy-p2-favorites-search-plan.md`.
 - [x] **P3 - Backend/auth/persistence/deploy** (cutover y smoke post-release verificados):
   `docs/plans/astronomy-p3-backend-plan.md`.
-- [ ] **P4 - Documentación pública/alineación de release**: auditoría completa y
-  `READY FOR PROMOTION`; el fast-forward y smoke posterior permanecen como gate terminal.
+- [x] **P4 - Documentación pública/alineación de release**: auditoría, fast-forward a
+  `main` y smoke posterior completados.
   `docs/plans/astronomy-p4-documentation-alignment-plan.md`.
 
 ## 7. P3 wave map
@@ -281,7 +281,7 @@ El grafo normativo esta en P3 y `p3-flow-overview.md`.
 | W2 | README público actual y captura anónima ✅ |
 | W3 | Documentación técnica/operativa P3 alineada ✅ |
 | W4 | Aclaraciones P1/P2 y revisión de flujos documentados ✅ |
-| W5 | Auditoría documental y gates completos; READY FOR PROMOTION ✅ |
+| W5 | Auditoría documental, promoción y smoke posterior ✅ |
 
 La autoridad de límites públicos/operativos es ADR-0004.
 
@@ -333,5 +333,5 @@ fase independiente.
 P4-W5 pasó la revisión documental, build/frontend tests, configuración Compose y smoke
 público same-origin. El suite backend quedó parcialmente bloqueado porque Docker Desktop
 no estaba disponible para Testcontainers; no registró una aserción de producto fallida y
-debe repetirse al restaurar ese prerrequisito local. P4 queda `READY FOR PROMOTION`; no
-se marca `DONE` hasta el fast-forward a `main` y su smoke posterior.
+debe repetirse al restaurar ese prerrequisito local. El fast-forward a `main` y el smoke
+público posterior completaron el gate terminal; P4 queda `DONE`.

@@ -1,7 +1,7 @@
 # Phase Plan P4 - Documentación pública y alineación de release
 
 Date: 2026-08-12
-Status: READY FOR PROMOTION - P4-W1 THROUGH P4-W5 audit complete; fast-forward and post-promotion smoke pending
+Status: DONE - P4-W1 THROUGH P4-W5, fast-forward and post-promotion smoke completed
 Phase: `P4`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Documentation boundary: `docs/adr/0004-public-documentation-boundaries.md`
@@ -68,9 +68,8 @@ operación o seguridad.
 - [x] **R4.3** Alinear documentación técnica y operacional P3 sin exponer datos sensibles
   (W3).
 - [x] **R4.4** Añadir aclaraciones históricas y corroborar los flujos documentados (W4).
-- [x] **R4.5** Ejecutar auditoría final y smoke documental controlado (W5); P4 queda
-  `READY FOR PROMOTION`. El fast-forward y su smoke posterior son el gate terminal del
-  orquestador antes de marcar P4 `DONE`.
+- [x] **R4.5** Ejecutar auditoría final, smoke documental controlado, fast-forward a
+  `main` y smoke público posterior (W5). P4 queda `DONE`.
 
 ## 6. Inventario P4-W1 y responsables de acción (2026-08-12)
 
@@ -87,7 +86,7 @@ directos.
 | Técnica, de apoyo | `backend/README.md`, runbooks local/deploy/setup y política de framework fueron alineados con P3, incluida recuperación de contraseña y cierre de proveedores. | P4-W3 DONE; W5 vuelve a revisar enlaces y límites públicos. |
 | Operativa, saneada | `docs/deploy/p3-deploy-runbook.md` preserva evidencia fechada de smoke y el cierre P4-W1. | P4-W3 DONE; W5 verifica que continúe saneada. |
 | Histórica | Planes/waves P1/P2 y notas Figma conservan su evidencia original; el borrador Figma mobile quedó archivado. | P4-W4 DONE; W5 comprueba que no reaparezcan pendientes activos. |
-| Control P4 | ADR-0004, este phase plan y las waves P4 definen el límite de documentación pública. | P4-W5 audita el conjunto final antes de promover. |
+| Control P4 | ADR-0004, este phase plan y las waves P4 definen el límite de documentación pública. | P4-W5 auditó, promovió y revalidó el conjunto final. |
 | Local/secreta | `.env`, `.secrets/` e `IMPLEMENTATION_NOTES.md` están ignorados y no trackeados; `docs/` sigue trackeado. | W1 solo verificó; no se autoriza cambiar `.gitignore`. |
 
 P4-W3 y P4-W4 cerraron las comprobaciones cruzadas de límites documentales, referencias
@@ -103,7 +102,7 @@ no cambia proveedores ni configuración de la aplicación.
 | P4-W2 | W1 | README público actual, captura anónima y guía local segura ✅ |
 | P4-W3 | W1 | Contratos y runbooks P3 alineados y sanitizados ✅ |
 | P4-W4 | W1 + W3 | Aclaraciones P1/P2 y revisión de flujos documentados ✅ |
-| P4-W5 | W2 + W3 + W4 | Auditoría final y gates completados; READY FOR PROMOTION ✅ |
+| P4-W5 | W2 + W3 + W4 | Auditoría final, promoción y smoke posterior ✅ |
 
 W2 y W3 pueden ser analizadas en paralelo, pero su implementación se integra de forma
 serial para mantener un único conjunto documental coherente.
@@ -129,4 +128,5 @@ same-origin. Frontend build y 128/128 pruebas ChromeHeadless pasaron. El suite b
 requiere Docker/Testcontainers: con Docker Desktop detenido, 59 pruebas pasaron y 119
 quedaron bloqueadas por el entorno local antes de ejecutar assertions; la configuración
 Compose sí validó. El detalle sanitizado y los warnings conocidos están en P4-W5. P4 queda
-`READY FOR PROMOTION`; no se declara `DONE` hasta el fast-forward y la revalidación pública.
+`DONE`: el orquestador hizo fast-forward a `main`, lo publicó y el smoke público posterior
+pasó con sitio disponible, catálogo `ready` y health saludable.

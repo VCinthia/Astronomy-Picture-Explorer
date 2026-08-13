@@ -1,7 +1,7 @@
 # Wave P4-W5 - Auditoría y promoción documental
 
 Date: 2026-08-12
-Status: READY FOR PROMOTION - audit completed 2026-08-12; orchestrator fast-forward and post-promotion smoke remain
+Status: DONE - audit, orchestrator fast-forward and post-promotion smoke completed 2026-08-12
 Wave ID: `P4-W5`
 Source Phase: `P4`
 Source Phase Plan: `docs/plans/astronomy-p4-documentation-alignment-plan.md`
@@ -22,7 +22,7 @@ promover el conjunto completo a `main`.
 - [x] W5.3 Ejecutar build/test/documentation commands aplicables y smoke público same-origin.
 - [x] W5.4 Verificar que todos los estados P3/P4, checklist R4 y wave plans coinciden.
 - [x] W5.5a Registrar la auditoría y crear el commit final de assurance.
-- [ ] W5.5b Revisión del orquestador, fast-forward P4 a `main` y revalidación pública
+- [x] W5.5b Revisión del orquestador, fast-forward P4 a `main` y revalidación pública
   posterior a la promoción.
 
 ## Acceptance criteria
@@ -50,7 +50,7 @@ del scan no expone ni omite contexto sensible en la evidencia.
 ## Parent plan sync
 
 - [x] Marcar R4.5 y P4 `READY FOR PROMOTION` después de la auditoría.
-- [ ] Marcar P4 `DONE` únicamente después de promoción/revalidación.
+- [x] Marcar P4 `DONE` después de promoción/revalidación.
 
 ## Audit record (2026-08-12)
 
@@ -104,6 +104,7 @@ provider configuration or `.gitignore` entry is part of it.
 
 ### Promotion gate
 
-P4 is `READY FOR PROMOTION`, not `DONE`. The orchestrator must fast-forward
-`codex/p4-integration` to `main`, push it and repeat the public smoke before changing
-this wave and phase to `DONE`.
+The orchestrator fast-forwarded `codex/p4-integration` to `main`, pushed it and repeated
+the read-only public smoke. The site returned HTTP 200; the same-origin catalog remained
+`completed` and `ready` with a positive count; the platform health check was healthy. This
+wave and P4 are `DONE`.

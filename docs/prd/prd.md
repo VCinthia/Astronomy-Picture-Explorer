@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE; P3 DONE in production; P4 READY FOR PROMOTION
+Status: P1 DONE; P2 DONE; P3 DONE in production; P4 DONE in production
 
 ## Vision
 
@@ -275,5 +275,5 @@ P4-W5 verificó que la documentación describe el producto P3 publicado sin expo
 operativos, y que README, flujos, planes y evidencias coinciden. Build, pruebas frontend,
 configuración Compose y smoke same-origin pasaron. Las pruebas backend que usan
 Testcontainers deben repetirse con Docker Desktop disponible; el bloqueo local no reveló
-una aserción funcional fallida. P4 queda `READY FOR PROMOTION` hasta que el orquestador
-realice el fast-forward a `main` y repita el smoke público.
+una aserción funcional fallida. El orquestador promovió P4 a `main` y el smoke público
+posterior pasó; P4 queda `DONE`.
