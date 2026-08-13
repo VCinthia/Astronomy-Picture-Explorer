@@ -1,7 +1,7 @@
 # Phase Plan P5 - Calendario funcional APOD
 
 Date: 2026-08-13
-Status: READY FOR PROMOTION
+Status: DONE in production
 Phase: `P5`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Architecture decision: `docs/adr/0005-apod-product-calendar.md`
@@ -61,8 +61,9 @@ refleja para una UX consistente.
 - [x] **R5.1** Definir y aplicar la política Argentina autoritativa en API/favoritos (W1).
 - [x] **R5.2** Alinear CLI y validación del catálogo con esa autoridad (W2).
 - [x] **R5.3** Alinear fecha inicial, picker, validación y stepper Angular (W3).
-- [x] **R5.4** Actualizar contratos/documentación y ejecutar assurance previo a promoción
-  (W4; regresión Testcontainers y smoke posterior pendientes de sus prerrequisitos).
+- [x] **R5.4** Actualizar contratos/documentación, ejecutar assurance y registrar la
+  promoción (W4; regresión Testcontainers registrada como bloqueo local externo y smoke
+  público posterior PASS).
 
 ## 6. Waves
 
@@ -71,7 +72,7 @@ refleja para una UX consistente.
 | P5-W1 | P4 DONE | DONE — Política backend APOD + rutas/favoritos y tests de borde |
 | P5-W2 | W1 | DONE — Límite coherente del catálogo local |
 | P5-W3 | W2 | DONE — Picker, validación y stepper Angular con calendario Argentina |
-| P5-W4 | W3 | READY FOR PROMOTION — Documentación y assurance; Docker/Testcontainers bloqueado |
+| P5-W4 | W3 | DONE in production — Documentación, assurance y smoke posterior; Docker/Testcontainers BLOCKED local |
 
 ## 7. Phase exit criteria
 
@@ -82,3 +83,11 @@ refleja para una UX consistente.
 - Build, pruebas frontend/backend aplicables, Compose y smoke público posterior a la
   promoción pasan o una limitación externa se registra sin presentarla como éxito.
 - No se cambia proveedor, región, secreto, costo ni timestamp de seguridad.
+
+## 8. Terminal promotion record
+
+La fase se promovió completa a `main` en `f403e94`, sin publicar una unidad intermedia.
+La evidencia del deploy de frontend identifica `main@f403e94`; el backend respondió sano.
+El smoke same-origin posterior comprobó Home disponible, `today` para la fecha de producto
+actual y `400` para la fecha siguiente. Docker Desktop seguía indisponible para la regresión
+Testcontainers; ese bloqueo externo permanece explícito y no se presenta como éxito.

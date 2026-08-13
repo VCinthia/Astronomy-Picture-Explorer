@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-13
-Status: P1 DONE; P2 DONE; P3 DONE in production; P4 DONE in production; P5 READY FOR PROMOTION
+Status: P1 DONE; P2 DONE; P3 DONE in production; P4 DONE in production; P5 DONE in production
 
 ## Vision
 

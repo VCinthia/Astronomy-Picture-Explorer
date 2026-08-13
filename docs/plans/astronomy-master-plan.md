@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-08-13
-Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 READY FOR PROMOTION
+Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 DONE in production
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -220,7 +220,7 @@ Identity de un solo uso, reset sin auto-login y revocación masiva de refresh se
 No crea recursos externos; reutiliza el correo LocalLog/Resend ya diseñado y amplía el
 smoke local antes de que W14 use un sender real.
 
-### P5 - READY FOR PROMOTION: calendario funcional APOD
+### P5 - DONE in production: calendario funcional APOD
 
 La observación posterior al release confirmó un límite de producto, no de infraestructura:
 durante la noche de Argentina, UTC avanzaba a la fecha siguiente antes de que APOD estuviera
@@ -265,9 +265,9 @@ timestamps UTC de seguridad, sesión, caché o persistencia.
 - [x] **P4 - Documentación pública/alineación de release**: auditoría, fast-forward a
   `main` y smoke posterior completados.
   `docs/plans/astronomy-p4-documentation-alignment-plan.md`.
-- [ ] **P5 - Calendario funcional APOD**: autoridad de fecha Argentina, catálogo y UX
-  alineados; queda listo para promoción después de repetir la regresión Testcontainers
-  actualmente bloqueada y ejecutar smoke posterior.
+- [x] **P5 - Calendario funcional APOD**: autoridad de fecha Argentina, catálogo y UX
+  alineados; promoción única a `main` y smoke público posterior verificados. La regresión
+  Testcontainers permanece registrada como bloqueo local externo, no como PASS.
   `docs/plans/astronomy-p5-apod-calendar-plan.md`.
 
 ## 7. P3 wave map
@@ -311,7 +311,7 @@ La autoridad de límites públicos/operativos es ADR-0004.
 | W1 | DONE — Política de calendario backend, API y favoritos |
 | W2 | DONE — Límite coherente del catálogo local |
 | W3 | DONE — Picker, validación y stepper Angular |
-| W4 | READY FOR PROMOTION — Documentación y assurance; integración Docker pendiente |
+| W4 | DONE in production — Documentación, assurance y smoke posterior; Testcontainers local BLOCKED |
 
 La autoridad de fecha APOD es ADR-0005; no se modifica el timezone del host.
 

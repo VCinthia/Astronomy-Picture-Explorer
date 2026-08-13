@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-08-13
-Status: P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 READY FOR PROMOTION
+Status: P2 DONE in production; P3 DONE in production; P4 DONE in production; P5 DONE in production
 
 ## Verdict
 
@@ -393,11 +393,10 @@ público posterior se completaron el mismo día; P4 queda `DONE`.
 
 ## P5 assurance record (2026-08-13)
 
-P5 dejó la documentación y el artefacto de integración preparados para promoción,
-condicionados a repetir la regresión Docker/Testcontainers bloqueada. La política explícita
-de Argentina limita API, favoritos y catálogo local; Angular alinea picker, validación y
-stepper. Los instantes de seguridad/persistencia siguen UTC, no se cambió región ni
-proveedor y no existe fallback automático ante una demora NASA.
+P5 dejó la documentación y el artefacto de integración preparados para promoción. La
+política explícita de Argentina limita API, favoritos y catálogo local; Angular alinea
+picker, validación y stepper. Los instantes de seguridad/persistencia siguen UTC, no se
+cambió región ni proveedor y no existe fallback automático ante una demora NASA.
 
 - `npm run build` y 131/131 ChromeHeadless pasaron. El build conserva las advertencias
   preexistentes de selectores CSS omitidos.
@@ -412,6 +411,15 @@ proveedor y no existe fallback automático ante una demora NASA.
   al recargar o ante una interacción/re-render relevante. No se añadió timer y API conserva
   la validación final.
 
-Antes de promover, repetir la regresión Testcontainers bloqueada y realizar el smoke
-same-origin posterior al fast-forward. La fase y sus gates viven en
-[`P5`](plans/astronomy-p5-apod-calendar-plan.md).
+La regresión Testcontainers sigue **BLOCKED** por ausencia local de Docker Desktop y queda
+como verificación de mantenimiento pendiente, no como resultado PASS. No impide el criterio
+de salida de P5 porque sus límites de producto tienen cobertura determinista y la limitación
+externa quedó registrada sin ocultarla.
+
+### Cierre de promoción P5 (2026-08-13)
+
+P5 se promovió íntegramente a `main` en `f403e94`. La evidencia del deploy de frontend
+confirma `main@f403e94`; el backend quedó sano. El smoke público same-origin confirmó Home
+disponible, `today` con la fecha actual de producto y rechazo `400` de la fecha siguiente.
+No se documentan URLs operativas, secretos ni configuración de proveedores. Por ello P5 queda
+`DONE in production`.

@@ -1,13 +1,13 @@
 # Wave P5-W4 - Aseguramiento y promoción del calendario
 
 Date: 2026-08-13
-Status: READY FOR PROMOTION
+Status: DONE in production
 Wave ID: `P5-W4`
 Source Phase: `P5`
 Source Phase Plan: `docs/plans/astronomy-p5-apod-calendar-plan.md`
 Suggested Branch: `wave/p5-w4-calendar-assurance`
 Depends On: P5-W3 DONE
-Unblocks: P5 promotion to `main`
+Unblocks: P5 promotion to `main` (complete)
 
 ## Goal
 
@@ -63,9 +63,11 @@ docker compose config
   listeners locales para smoke y la regresión Testcontainers/APOD/favoritos queda
   **BLOCKED**, no PASS. Esta wave no inició ni detuvo contenedores, ni llamó NASA, ni
   sincronizó catálogo.
-- `main` y `origin/main` permanecían en el mismo commit base de P5; la integración sólo
-  está por delante y puede promoverse en fast-forward. Tras repetir el bloqueo Docker,
-  queda pendiente el smoke público same-origin posterior.
+- La integración P5 se promovió íntegramente a `main` en `f403e94`. La evidencia del
+  deploy de frontend confirma `main@f403e94`; el backend respondió sano y el smoke
+  same-origin posterior confirmó Home disponible, `today` para la fecha de producto y
+  `400` para la fecha siguiente. No se registran URLs, secretos ni configuración de
+  proveedores en esta evidencia.
 - Limitación aceptada: una pestaña abierta no actualiza controles automáticamente al
   cruzar 00:00 Argentina. Se reevalúan con recarga o interacción/re-render relevante; no
   se añadió timer y la API conserva la autoridad.
