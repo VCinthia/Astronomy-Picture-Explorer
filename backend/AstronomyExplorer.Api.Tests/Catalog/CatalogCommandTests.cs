@@ -1,10 +1,11 @@
 using AstronomyExplorer.Catalog;
+using AstronomyExplorer.Api.Apod;
 
 namespace AstronomyExplorer.Api.Tests.Catalog;
 
 public sealed class CatalogCommandTests
 {
-  private static readonly DateOnly TodayUtc = new(2026, 7, 17);
+  private static readonly DateOnly LatestSupportedDate = new(2026, 7, 17);
 
   [Fact]
   public void NasaClientFactory_UsesBatchAppropriateTimeout()
@@ -34,7 +35,7 @@ public sealed class CatalogCommandTests
       },
       output,
       error,
-      TodayUtc,
+      CalendarAt(new DateTimeOffset(2026, 7, 17, 12, 0, 0, TimeSpan.Zero)),
       CancellationToken.None);
 
     Assert.Equal(0, exitCode);
@@ -54,7 +55,7 @@ public sealed class CatalogCommandTests
   {
     Assert.Throws<CatalogUsageException>(() => CatalogCommandParser.Parse(
       ["catalog", "sync", "--from", from, "--to", to, "--batch-size", batch],
-      TodayUtc));
+      LatestSupportedDate));
   }
 
   [Theory]
@@ -77,7 +78,7 @@ public sealed class CatalogCommandTests
     }
 
     Assert.Throws<CatalogUsageException>(() =>
-      CatalogCommandParser.Parse(args.ToArray(), TodayUtc));
+      CatalogCommandParser.Parse(args.ToArray(), LatestSupportedDate));
   }
 
   [Theory]
@@ -91,7 +92,7 @@ public sealed class CatalogCommandTests
         "catalog", "sync", "--from", "2026-07-01", "--to", "2026-07-02",
         "--allow-local-production"
       ],
-      TodayUtc);
+      LatestSupportedDate);
     var values = ValidEnvironment();
     values["DOTNET_ENVIRONMENT"] = "Production";
     values[marker] = value;
@@ -107,7 +108,7 @@ public sealed class CatalogCommandTests
   {
     var command = CatalogCommandParser.Parse(
       ["catalog", "sync", "--from", "2026-07-01", "--to", "2026-07-02"],
-      TodayUtc);
+      LatestSupportedDate);
     var values = ValidEnvironment();
     values["DOTNET_ENVIRONMENT"] = "Production";
 
@@ -126,7 +127,7 @@ public sealed class CatalogCommandTests
   {
     var command = CatalogCommandParser.Parse(
       ["catalog", "sync", "--from", "2026-07-01", "--to", "2026-07-02"],
-      TodayUtc);
+      LatestSupportedDate);
     var values = ValidEnvironment();
     values["DOTNET_ENVIRONMENT"] = "   ";
     values["ASPNETCORE_ENVIRONMENT"] = "Production";
@@ -140,7 +141,7 @@ public sealed class CatalogCommandTests
   {
     var command = CatalogCommandParser.Parse(
       ["catalog", "sync", "--from", "2026-07-01", "--to", "2026-07-02"],
-      TodayUtc);
+      LatestSupportedDate);
     var values = ValidEnvironment();
     values["NasaApod__ApiKey"] = "DEMO_KEY";
 
@@ -148,10 +149,61 @@ public sealed class CatalogCommandTests
       CatalogPreflight.ValidateLive(command, key => values.GetValueOrDefault(key)));
   }
 
+  [Theory]
+  [InlineData(2, 59, 59, 2, "2026-08-12")]
+  [InlineData(3, 0, 0, 0, null)]
+  public async Task DryRun_UsesArgentinaCalendarBoundaryForLatestSupportedDate(
+    int hour,
+    int minute,
+    int second,
+    int expectedExitCode,
+    string? expectedError)
+  {
+    var output = new StringWriter();
+    var error = new StringWriter();
+    var environmentReads = 0;
+
+    var exitCode = await CatalogProgram.RunAsync(
+      [
+        "catalog", "sync", "--from", "2026-08-12", "--to", "2026-08-13",
+        "--dry-run"
+      ],
+      _ =>
+      {
+        environmentReads++;
+        throw new InvalidOperationException("Dry-run must not inspect live configuration.");
+      },
+      output,
+      error,
+      CalendarAt(new DateTimeOffset(2026, 8, 13, hour, minute, second, TimeSpan.Zero)),
+      CancellationToken.None);
+
+    Assert.Equal(expectedExitCode, exitCode);
+    Assert.Equal(0, environmentReads);
+    Assert.DoesNotContain("UTC today", error.ToString(), StringComparison.Ordinal);
+    if (expectedError is null)
+    {
+      Assert.Contains("Dry run complete", output.ToString(), StringComparison.Ordinal);
+      Assert.Equal(string.Empty, error.ToString());
+    }
+    else
+    {
+      Assert.Contains(expectedError, error.ToString(), StringComparison.Ordinal);
+    }
+  }
+
+  private static IApodProductCalendar CalendarAt(DateTimeOffset utcNow) =>
+    new ApodProductCalendar(new FixedTimeProvider(utcNow));
+
   private static Dictionary<string, string?> ValidEnvironment() => new()
   {
     ["ConnectionStrings__Postgres"] = "Host=localhost;Database=test",
     ["NasaApod__ApiKey"] = "personal-key",
     ["DOTNET_ENVIRONMENT"] = "Development"
   };
+
+  private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider
+  {
+    public override DateTimeOffset GetUtcNow() => utcNow;
+  }
 }

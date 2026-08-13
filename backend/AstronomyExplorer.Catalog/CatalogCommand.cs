@@ -22,7 +22,7 @@ public sealed record CatalogSyncCommand(
 
 public static class CatalogCommandParser
 {
-  public static CatalogSyncCommand Parse(string[] args, DateOnly todayUtc)
+  public static CatalogSyncCommand Parse(string[] args, DateOnly latestSupportedDate)
   {
     if (args.Length < 2 || args[0] != "catalog" || args[1] != "sync")
     {
@@ -78,10 +78,11 @@ public static class CatalogCommandParser
 
     var from = ParseDate(fromValue, "--from");
     var to = ParseDate(toValue, "--to");
-    if (from < CatalogSyncCommand.FirstApodDate || from > to || to > todayUtc)
+    if (from < CatalogSyncCommand.FirstApodDate || from > to || to > latestSupportedDate)
     {
       throw new CatalogUsageException(
-        $"Range must be within {CatalogSyncCommand.FirstApodDate:yyyy-MM-dd} and UTC today.");
+        $"Range must be within {CatalogSyncCommand.FirstApodDate:yyyy-MM-dd} and the " +
+        $"latest supported APOD date ({latestSupportedDate:yyyy-MM-dd}).");
     }
 
     if (batchSize is < 1 or > CatalogSyncCommand.MaximumBatchSize)

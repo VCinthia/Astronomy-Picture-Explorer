@@ -1,3 +1,4 @@
+using AstronomyExplorer.Api.Apod;
 using AstronomyExplorer.Api.Data;
 using Microsoft.EntityFrameworkCore;
 
@@ -21,7 +22,7 @@ public static class CatalogProgram
         Environment.GetEnvironmentVariable,
         Console.Out,
         Console.Error,
-        DateOnly.FromDateTime(DateTime.UtcNow),
+        new ApodProductCalendar(TimeProvider.System),
         cancellation.Token);
     }
     finally
@@ -35,12 +36,12 @@ public static class CatalogProgram
     Func<string, string?> readEnvironment,
     TextWriter output,
     TextWriter error,
-    DateOnly todayUtc,
+    IApodProductCalendar calendar,
     CancellationToken cancellationToken)
   {
     try
     {
-      var command = CatalogCommandParser.Parse(args, todayUtc);
+      var command = CatalogCommandParser.Parse(args, calendar.GetLatestAvailableDate());
       await WritePreflightAsync(output, command);
       if (command.DryRun)
       {
