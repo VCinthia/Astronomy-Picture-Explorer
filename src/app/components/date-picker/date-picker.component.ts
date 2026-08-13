@@ -1,6 +1,6 @@
 import { ChangeDetectionStrategy, Component, input, output } from '@angular/core';
 
-import { APOD_FIRST_DATE, isApodDate, utcToday } from '../../services/astronomy.service';
+import { APOD_FIRST_DATE, apodToday, isApodDate } from '../../services/astronomy.service';
 
 /** Native date control for every date supported by APOD, not a preloaded archive subset. */
 @Component({
@@ -29,7 +29,7 @@ export class DatePickerComponent {
 
   readonly inputId = 'apod-date-picker';
   readonly minDate = APOD_FIRST_DATE;
-  readonly maxDate = utcToday();
+  readonly maxDate = apodToday();
 
   onDateChange(event: Event): void {
     const date = (event.target as HTMLInputElement).value;

@@ -1,10 +1,10 @@
 import { ChangeDetectionStrategy, Component, OnInit, computed, inject } from '@angular/core';
 
 import { PictureCardComponent } from '../../components/picture-card/picture-card.component';
-import { APOD_FIRST_DATE, AstronomyService, utcToday } from '../../services/astronomy.service';
+import { APOD_FIRST_DATE, AstronomyService, apodToday } from '../../services/astronomy.service';
 import { formatApodDate } from '../../utils/format-date';
 
-/** Landing view backed by the API's UTC `today` endpoint. */
+/** Landing view backed by the API's product-calendar `today` endpoint. */
 @Component({
   selector: 'app-home',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -107,7 +107,7 @@ export class HomeComponent implements OnInit {
   readonly activeDate = this.astronomy.requestedDate;
   readonly formattedDate = computed(() => formatApodDate(this.activeDate()));
   readonly canPrev = computed(() => this.activeDate() > APOD_FIRST_DATE);
-  readonly canNext = computed(() => this.activeDate() < utcToday());
+  readonly canNext = computed(() => this.activeDate() < apodToday());
 
   ngOnInit(): void {
     this.astronomy.loadToday();
@@ -119,19 +119,24 @@ export class HomeComponent implements OnInit {
 
   prev(): void {
     if (this.canPrev()) {
-      this.astronomy.selectDate(stepUtcDate(this.activeDate(), -1));
+      this.astronomy.selectDate(stepApodDate(this.activeDate(), -1));
     }
   }
 
   next(): void {
     if (this.canNext()) {
-      this.astronomy.selectDate(stepUtcDate(this.activeDate(), 1));
+      this.astronomy.selectDate(stepApodDate(this.activeDate(), 1));
     }
   }
 }
 
-function stepUtcDate(date: string, days: number): string {
-  const value = new Date(`${date}T00:00:00.000Z`);
+function stepApodDate(date: string, days: number): string {
+  const [year, month, day] = date.split('-').map(Number);
+  const value = new Date(Date.UTC(year, month - 1, day));
   value.setUTCDate(value.getUTCDate() + days);
-  return value.toISOString().slice(0, 10);
+  return [
+    value.getUTCFullYear(),
+    String(value.getUTCMonth() + 1).padStart(2, '0'),
+    String(value.getUTCDate()).padStart(2, '0')
+  ].join('-');
 }

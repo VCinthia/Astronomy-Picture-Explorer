@@ -3,7 +3,13 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 
 import type { ApodEntry } from '../models/apod.model';
-import { AstronomyService, APOD_FIRST_DATE, isApodDate } from './astronomy.service';
+import {
+  APOD_FIRST_DATE,
+  APOD_PRODUCT_TIME_ZONE,
+  AstronomyService,
+  apodToday,
+  isApodDate
+} from './astronomy.service';
 
 const imageEntry: ApodEntry = {
   date: '2026-05-22',
@@ -79,6 +85,17 @@ describe('AstronomyService', () => {
     expect(http.match(() => true)).toEqual([]);
     expect(service.error()?.code).toBe('invalid_apod_date');
     expect(isApodDate(APOD_FIRST_DATE)).toBeTrue();
+  });
+
+  it('uses the Argentina APOD calendar at the UTC midnight boundary', () => {
+    const beforeMidnightArgentina = new Date('2026-08-13T02:59:59.000Z');
+    const atMidnightArgentina = new Date('2026-08-13T03:00:00.000Z');
+
+    expect(APOD_PRODUCT_TIME_ZONE).toBe('America/Argentina/Buenos_Aires');
+    expect(apodToday(beforeMidnightArgentina)).toBe('2026-08-12');
+    expect(apodToday(atMidnightArgentina)).toBe('2026-08-13');
+    expect(isApodDate('2026-08-13', beforeMidnightArgentina)).toBeFalse();
+    expect(isApodDate('2026-08-13', atMidnightArgentina)).toBeTrue();
   });
 
   it('maps date ProblemDetails into a retryable UI error', () => {

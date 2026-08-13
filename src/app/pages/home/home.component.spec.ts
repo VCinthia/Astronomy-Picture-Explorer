@@ -39,7 +39,7 @@ describe('HomeComponent', () => {
     expect((fixture.nativeElement as HTMLElement).querySelector('app-picture-card')).not.toBeNull();
   });
 
-  it('places accessible date controls over the displayed picture and requests the next UTC date', () => {
+  it('places accessible date controls over the displayed picture and requests the next APOD date', () => {
     fixture.detectChanges();
     http.expectOne('/api/apod/today').flush(entry);
     fixture.detectChanges();
@@ -55,6 +55,23 @@ describe('HomeComponent', () => {
 
     (controls?.querySelector('button[aria-label="Next date"]') as HTMLButtonElement).click();
     http.expectOne('/api/apod/date/2026-05-23').flush({ ...entry, date: '2026-05-23' });
+  });
+
+  it('keeps the next control disabled before Argentina midnight', () => {
+    jasmine.clock().install();
+    try {
+      jasmine.clock().mockDate(new Date('2026-08-13T02:59:59.000Z'));
+      fixture.detectChanges();
+      http.expectOne('/api/apod/today').flush({ ...entry, date: '2026-08-12' });
+      fixture.detectChanges();
+
+      const next = (fixture.nativeElement as HTMLElement).querySelector(
+        'button[aria-label="Next date"]'
+      ) as HTMLButtonElement;
+      expect(next.disabled).toBeTrue();
+    } finally {
+      jasmine.clock().uninstall();
+    }
   });
 
   it('communicates a recoverable cold-start failure and retries today', () => {

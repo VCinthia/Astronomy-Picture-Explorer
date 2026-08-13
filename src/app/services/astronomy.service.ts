@@ -6,8 +6,16 @@ import type { ApodEntry } from '../models/apod.model';
 
 export const APOD_FIRST_DATE = '1995-06-16';
 export const APOD_SEARCH_PAGE_SIZE = 12;
+export const APOD_PRODUCT_TIME_ZONE = 'America/Argentina/Buenos_Aires';
 
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const apodCalendarFormatter = new Intl.DateTimeFormat('en-US', {
+  timeZone: APOD_PRODUCT_TIME_ZONE,
+  calendar: 'gregory',
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit'
+});
 
 export interface ApodRequestError {
   readonly code: string | null;
@@ -40,7 +48,7 @@ export class AstronomyService {
   /** Date confirmed by the latest APOD response; absent until the first response arrives. */
   readonly selectedDate = signal<string | null>(null);
   /** Valid date currently requested by the user while its response is pending. */
-  readonly requestedDate = signal(utcToday());
+  readonly requestedDate = signal(apodToday());
   readonly currentPicture = signal<ApodEntry | null>(null);
   readonly loading = signal(false);
   readonly error = signal<ApodRequestError | null>(null);
@@ -120,7 +128,7 @@ export class AstronomyService {
 
   }
 
-  /** Loads the backend's UTC picture of the day. */
+  /** Loads the backend's product-calendar picture of the day. */
   loadToday(): void {
     this.pictureRequests.next({ endpoint: '/api/apod/today' });
   }
@@ -159,16 +167,38 @@ export class AstronomyService {
 
 }
 
-export function utcToday(): string {
-  return new Date().toISOString().slice(0, 10);
+/**
+ * Returns the date the product can currently request from APOD.
+ *
+ * This deliberately uses the product's Argentina calendar instead of the
+ * browser's local timezone or UTC. `now` keeps boundary tests independent of
+ * the machine and browser running them.
+ */
+export function apodToday(now: Date = new Date()): string {
+  const dateParts = apodCalendarFormatter.formatToParts(now);
+  const year = dateParts.find((part) => part.type === 'year')?.value;
+  const month = dateParts.find((part) => part.type === 'month')?.value;
+  const day = dateParts.find((part) => part.type === 'day')?.value;
+
+  if (!year || !month || !day) {
+    throw new Error('The APOD product calendar could not format a complete date.');
+  }
+
+  return `${year}-${month}-${day}`;
 }
 
-export function isApodDate(value: string): boolean {
-  if (!DATE_PATTERN.test(value) || value < APOD_FIRST_DATE || value > utcToday()) {
+export function isApodDate(value: string, now: Date = new Date()): boolean {
+  if (!DATE_PATTERN.test(value) || value < APOD_FIRST_DATE || value > apodToday(now)) {
     return false;
   }
 
-  return new Date(`${value}T00:00:00.000Z`).toISOString().slice(0, 10) === value;
+  const [year, month, day] = value.split('-').map(Number);
+  const utcDate = new Date(Date.UTC(year, month - 1, day));
+  return (
+    utcDate.getUTCFullYear() === year &&
+    utcDate.getUTCMonth() === month - 1 &&
+    utcDate.getUTCDate() === day
+  );
 }
 
 function toRequestError(error: unknown): ApodRequestError {
