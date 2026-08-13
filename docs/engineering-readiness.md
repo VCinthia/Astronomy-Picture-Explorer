@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-08-12
-Status: P2 DONE in production; P3 READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
+Status: P2 DONE in production; P3 release cutover awaiting P4-W1 verification; P4 PLANNED
 
 ## Verdict
 
@@ -370,7 +370,10 @@ docker compose down
 
 ## Recommended next step
 
-P3-W14 está cerrada. Para cerrar P3 se promueve el candidato validado a `main`, se
-actualizan los providers a esa rama y se repite health + catálogo público. La evidencia
-sanitizada y el procedimiento están en
-[`docs/deploy/p3-deploy-runbook.md`](deploy/p3-deploy-runbook.md).
+P3-W14 está cerrada y el candidato fue promovido a `main`. P4-W1 debe confirmar en los
+dashboards que Netlify publica `main`, que Render usa el mismo commit o un sucesor
+compatible y repetir el smoke público después del cutover. Sólo entonces puede cambiarse
+P3 a `DONE` en los documentos canónicos. La evidencia sanitizada y el procedimiento están
+en [`docs/deploy/p3-deploy-runbook.md`](deploy/p3-deploy-runbook.md); P4 usa
+[`docs/plans/astronomy-p4-documentation-alignment-plan.md`](plans/astronomy-p4-documentation-alignment-plan.md)
+para actualizar documentación sin exponer configuración de producción.

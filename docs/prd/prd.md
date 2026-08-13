@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE; P3 READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
+Status: P1 DONE; P2 DONE; P3 release cutover awaiting P4-W1 verification; P4 PLANNED
 
 ## Vision
 
@@ -20,6 +20,8 @@ evolucion full-stack segura sin costo monetario de operacion.
 - P1/P2 entregan valor sin backend; P3 incorpora .NET/PostgreSQL/Auth.
 - Primera visita entendible incluso durante cold start de servicios gratuitos.
 - Arquitectura operable con planes $0 y sin riesgo de cargos automaticos.
+- Documentación pública que explique el producto desplegado sin publicar configuración
+  operativa, secretos ni datos personales (ADR-0004).
 
 ## Users and stakeholders
 

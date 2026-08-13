@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE in production; P3 READY FOR PROMOTION - W1-W15 and W14 acceptance complete; main/provider branch cutover pending
+Status: P1 DONE; P2 DONE in production; P3 release cutover awaiting P4-W1 verification; P4 PLANNED
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -17,10 +17,11 @@ persistente y desplegado sin costo monetario.
 2. `docs/adr/0001-angular-standalone-signals-tailwind.md`
 3. `docs/adr/0002-canvas-color-palette-extraction.md`
 4. `docs/adr/0003-backend-auth-apod-stack.md`
-5. `docs/engineering-readiness.md`
-6. Phase plans bajo `docs/plans/`
-7. Wave plans bajo `docs/plans/waves/`
-8. `docs/architecture/p3-flow-overview.md`
+5. `docs/adr/0004-public-documentation-boundaries.md`
+6. `docs/engineering-readiness.md`
+7. Phase plans bajo `docs/plans/`
+8. Wave plans bajo `docs/plans/waves/`
+9. `docs/architecture/p3-flow-overview.md`
 
 Ante contradiccion P3, ADR-0003 prevalece y los planes deben sincronizarse antes de
 implementar.
@@ -243,8 +244,10 @@ smoke local antes de que W14 use un sender real.
 
 - [x] **P1 - Frontend mock**: `docs/plans/astronomy-p1-frontend-mock-plan.md`.
 - [x] **P2 - Favorites/search local**: `docs/plans/astronomy-p2-favorites-search-plan.md`.
-- [ ] **P3 - Backend/auth/persistence/deploy**:
+- [ ] **P3 - Backend/auth/persistence/deploy** (cierre administrativo pendiente de P4-W1):
   `docs/plans/astronomy-p3-backend-plan.md`.
+- [ ] **P4 - Documentación pública/alineación de release**:
+  `docs/plans/astronomy-p4-documentation-alignment-plan.md`.
 
 ## 7. P3 wave map
 
@@ -268,7 +271,19 @@ smoke local antes de que W14 use un sender real.
 
 El grafo normativo esta en P3 y `p3-flow-overview.md`.
 
-## 8. Program exit criteria
+## 8. P4 wave map
+
+| Wave | Resultado |
+|---|---|
+| W1 | Verificación post-cutover P3, estados e inventario documental |
+| W2 | README público actual y captura anónima |
+| W3 | Documentación técnica/operativa P3 alineada |
+| W4 | Aclaraciones P1/P2 y revisión de flujos documentados |
+| W5 | Auditoría documental, gates y promoción P4 |
+
+La autoridad de límites públicos/operativos es ADR-0004.
+
+## 9. Program exit criteria
 
 - P1/P2 permanecen funcionales hasta que P3 sustituye sus fuentes de datos.
 - P3 cumple todos sus exit criteria y smoke productivo.
@@ -278,7 +293,7 @@ El grafo normativo esta en P3 y `p3-flow-overview.md`.
 - No existe configuracion capaz de generar cargos automaticos.
 - PRD/ADR/readiness/master/phases/waves/runbooks coinciden con la implementacion final.
 
-## 9. Canonical validation
+## 10. Canonical validation
 
 ```powershell
 npm ci
