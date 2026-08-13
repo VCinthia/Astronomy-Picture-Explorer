@@ -41,6 +41,7 @@ public static class FavoriteEndpoints
     CreateFavoriteRequest request,
     HttpContext httpContext,
     TimeProvider timeProvider,
+    IApodProductCalendar calendar,
     ApodCacheService apodCacheService,
     FavoriteService favoriteService,
     CancellationToken cancellationToken)
@@ -50,7 +51,7 @@ public static class FavoriteEndpoints
       return FavoriteProblems.InvalidAuthenticatedUser();
     }
 
-    if (!TryGetValidApodDate(request.ApodDate, timeProvider, out var apodDate))
+    if (!TryGetValidApodDate(request.ApodDate, calendar, out var apodDate))
     {
       return FavoriteProblems.InvalidFavoriteDate();
     }
@@ -75,7 +76,7 @@ public static class FavoriteEndpoints
   private static async Task<IResult> RemoveAsync(
     string date,
     HttpContext httpContext,
-    TimeProvider timeProvider,
+    IApodProductCalendar calendar,
     FavoriteService favoriteService,
     CancellationToken cancellationToken)
   {
@@ -90,7 +91,7 @@ public static class FavoriteEndpoints
           CultureInfo.InvariantCulture,
           DateTimeStyles.None,
           out var parsedDate) ||
-        !TryGetValidApodDate(parsedDate, timeProvider, out var apodDate))
+        !TryGetValidApodDate(parsedDate, calendar, out var apodDate))
     {
       return FavoriteProblems.InvalidFavoriteDate();
     }
@@ -106,14 +107,13 @@ public static class FavoriteEndpoints
 
   private static bool TryGetValidApodDate(
     DateOnly? candidate,
-    TimeProvider timeProvider,
+    IApodProductCalendar calendar,
     out DateOnly apodDate)
   {
     apodDate = candidate.GetValueOrDefault();
-    var todayUtc = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
     return candidate is not null &&
       apodDate >= ApodEndpoints.FirstApodDate &&
-      apodDate <= todayUtc;
+      apodDate <= calendar.GetLatestAvailableDate();
   }
 }
 

@@ -11,7 +11,7 @@ public sealed class CatalogOptions
   public DateOnly? RequiredTo { get; init; }
 }
 
-public sealed class CatalogOptionsValidator(TimeProvider timeProvider)
+public sealed class CatalogOptionsValidator(IApodProductCalendar calendar)
   : IValidateOptions<CatalogOptions>
 {
   public ValidateOptionsResult Validate(string? name, CatalogOptions options)
@@ -21,15 +21,15 @@ public sealed class CatalogOptionsValidator(TimeProvider timeProvider)
       return ValidateOptionsResult.Success;
     }
 
-    var todayUtc = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
+    var latestAvailableDate = calendar.GetLatestAvailableDate();
     if (options.RequiredFrom is null ||
         options.RequiredTo is null ||
         options.RequiredFrom < ApodEndpoints.FirstApodDate ||
         options.RequiredFrom > options.RequiredTo ||
-        options.RequiredTo > todayUtc)
+        options.RequiredTo > latestAvailableDate)
     {
       return ValidateOptionsResult.Fail(
-        "Catalog:RequiredFrom and Catalog:RequiredTo must define a valid APOD range through UTC today.");
+        "Catalog:RequiredFrom and Catalog:RequiredTo must define a valid APOD range through the current APOD product date.");
     }
 
     return ValidateOptionsResult.Success;

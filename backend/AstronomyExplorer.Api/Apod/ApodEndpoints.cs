@@ -61,20 +61,23 @@ public static class ApodEndpoints
 
   private static Task<IResult> GetTodayAsync(
     ApodCacheService cacheService,
-    TimeProvider timeProvider,
+    IApodProductCalendar calendar,
     CancellationToken cancellationToken)
   {
-    var todayUtc = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
-    return GetValidatedAsync(todayUtc, todayUtc, cacheService, cancellationToken);
+    var latestAvailableDate = calendar.GetLatestAvailableDate();
+    return GetValidatedAsync(
+      latestAvailableDate,
+      latestAvailableDate,
+      cacheService,
+      cancellationToken);
   }
 
   private static Task<IResult> GetByDateAsync(
     string date,
     ApodCacheService cacheService,
-    TimeProvider timeProvider,
+    IApodProductCalendar calendar,
     CancellationToken cancellationToken)
   {
-    var todayUtc = DateOnly.FromDateTime(timeProvider.GetUtcNow().UtcDateTime);
     if (!DateOnly.TryParseExact(
           date,
           "yyyy-MM-dd",
@@ -85,16 +88,20 @@ public static class ApodEndpoints
       return Task.FromResult(ApodProblems.InvalidDate());
     }
 
-    return GetValidatedAsync(requestedDate, todayUtc, cacheService, cancellationToken);
+    return GetValidatedAsync(
+      requestedDate,
+      calendar.GetLatestAvailableDate(),
+      cacheService,
+      cancellationToken);
   }
 
   private static async Task<IResult> GetValidatedAsync(
     DateOnly date,
-    DateOnly todayUtc,
+    DateOnly latestAvailableDate,
     ApodCacheService cacheService,
     CancellationToken cancellationToken)
   {
-    if (date < FirstApodDate || date > todayUtc)
+    if (date < FirstApodDate || date > latestAvailableDate)
     {
       return ApodProblems.InvalidDate();
     }

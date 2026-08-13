@@ -104,6 +104,55 @@ public sealed class FavoriteEndpointTests(PostgreSqlFixture database)
   }
 
   [Fact]
+  public async Task Post_NextArgentinaDateBeforeMidnight_ReturnsProblemBeforeCacheOrProvider()
+  {
+    var userId = await CreateUserAsync("future-argentina-favorite");
+    var provider = new FakeNasaApodClient();
+    using var factory = CreateFactory(
+      provider,
+      timeProvider: new MutableTimeProvider(
+        new DateTimeOffset(2026, 8, 13, 2, 59, 59, TimeSpan.Zero)));
+    using var client = factory.CreateClient();
+
+    using var response = await SendAsync(
+      client,
+      HttpMethod.Post,
+      "/api/favorites",
+      CreateAccessToken(userId),
+      new { apod_date = "2026-08-13" });
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("invalid_favorite_apod_date", await ReadProblemCodeAsync(response));
+    Assert.Equal(0, provider.CallCount);
+    await using var context = database.CreateDbContext();
+    Assert.False(await context.Favorites.AnyAsync(
+      favorite => favorite.UserId == userId && favorite.ApodDate == new DateOnly(2026, 8, 13)));
+  }
+
+  [Fact]
+  public async Task Post_NewArgentinaDateAtMidnight_ContinuesToProvider()
+  {
+    var userId = await CreateUserAsync("current-argentina-favorite");
+    var apodDate = new DateOnly(2026, 8, 13);
+    var provider = new FakeNasaApodClient();
+    using var factory = CreateFactory(
+      provider,
+      timeProvider: new MutableTimeProvider(
+        new DateTimeOffset(2026, 8, 13, 3, 0, 0, TimeSpan.Zero)));
+    using var client = factory.CreateClient();
+
+    using var response = await SendAsync(
+      client,
+      HttpMethod.Post,
+      "/api/favorites",
+      CreateAccessToken(userId),
+      new { apod_date = apodDate });
+
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Equal(1, provider.CallCount);
+  }
+
+  [Fact]
   public async Task Post_MissingApodDate_ReturnsProblemBeforeCacheOrProvider()
   {
     var userId = await CreateUserAsync("missing-favorite-date");
@@ -256,6 +305,59 @@ public sealed class FavoriteEndpointTests(PostgreSqlFixture database)
   }
 
   [Fact]
+  public async Task Delete_NextArgentinaDateBeforeMidnight_ReturnsProblemWithoutRemovingFavorite()
+  {
+    var apodDate = new DateOnly(2026, 8, 13);
+    var userId = await CreateUserAsync("delete-future-argentina-favorite");
+    await SeedFavoriteAsync(userId, apodDate);
+    var provider = new FakeNasaApodClient();
+    using var factory = CreateFactory(
+      provider,
+      timeProvider: new MutableTimeProvider(
+        new DateTimeOffset(2026, 8, 13, 2, 59, 59, TimeSpan.Zero)));
+    using var client = factory.CreateClient();
+
+    using var response = await SendAsync(
+      client,
+      HttpMethod.Delete,
+      $"/api/favorites/{apodDate:yyyy-MM-dd}",
+      CreateAccessToken(userId));
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("invalid_favorite_apod_date", await ReadProblemCodeAsync(response));
+    Assert.Equal(0, provider.CallCount);
+    await using var context = database.CreateDbContext();
+    Assert.True(await context.Favorites.AnyAsync(
+      favorite => favorite.UserId == userId && favorite.ApodDate == apodDate));
+  }
+
+  [Fact]
+  public async Task Delete_NewArgentinaDateAtMidnight_RemovesFavorite()
+  {
+    var apodDate = new DateOnly(2026, 8, 13);
+    var userId = await CreateUserAsync("delete-current-argentina-favorite");
+    await SeedFavoriteAsync(userId, apodDate);
+    var provider = new FakeNasaApodClient();
+    using var factory = CreateFactory(
+      provider,
+      timeProvider: new MutableTimeProvider(
+        new DateTimeOffset(2026, 8, 13, 3, 0, 0, TimeSpan.Zero)));
+    using var client = factory.CreateClient();
+
+    using var response = await SendAsync(
+      client,
+      HttpMethod.Delete,
+      $"/api/favorites/{apodDate:yyyy-MM-dd}",
+      CreateAccessToken(userId));
+
+    Assert.Equal(HttpStatusCode.NoContent, response.StatusCode);
+    Assert.Equal(0, provider.CallCount);
+    await using var context = database.CreateDbContext();
+    Assert.False(await context.Favorites.AnyAsync(
+      favorite => favorite.UserId == userId && favorite.ApodDate == apodDate));
+  }
+
+  [Fact]
   public async Task SignedTokenWithMalformedSubject_ReturnsAppOwnedUnauthorizedProblem()
   {
     var provider = new FakeNasaApodClient();
@@ -274,8 +376,9 @@ public sealed class FavoriteEndpointTests(PostgreSqlFixture database)
 
   private FavoritesApiFactory CreateFactory(
     FakeNasaApodClient provider,
-    DbCommandCounter? commandCounter = null) =>
-    new(database.ConnectionString, provider, commandCounter);
+    DbCommandCounter? commandCounter = null,
+    TimeProvider? timeProvider = null) =>
+    new(database.ConnectionString, provider, commandCounter, timeProvider ?? new MutableTimeProvider(CurrentTime));
 
   private async Task<Guid> CreateUserAsync(string prefix)
   {
@@ -391,7 +494,8 @@ public sealed class FavoriteEndpointTests(PostgreSqlFixture database)
   private sealed class FavoritesApiFactory(
     string connectionString,
     FakeNasaApodClient provider,
-    DbCommandCounter? commandCounter) : WebApplicationFactory<Program>
+    DbCommandCounter? commandCounter,
+    TimeProvider timeProvider) : WebApplicationFactory<Program>
   {
     protected override void ConfigureWebHost(IWebHostBuilder builder)
     {
@@ -407,7 +511,7 @@ public sealed class FavoriteEndpointTests(PostgreSqlFixture database)
         services.RemoveAll<INasaApodClient>();
         services.RemoveAll<TimeProvider>();
         services.AddSingleton<INasaApodClient>(provider);
-        services.AddSingleton<TimeProvider>(new MutableTimeProvider(CurrentTime));
+        services.AddSingleton(timeProvider);
         if (commandCounter is not null)
         {
           services.RemoveAll<DbContextOptions<AppDbContext>>();

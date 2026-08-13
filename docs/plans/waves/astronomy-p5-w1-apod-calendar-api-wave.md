@@ -1,7 +1,7 @@
 # Wave P5-W1 - Política APOD autoritativa en API
 
 Date: 2026-08-13
-Status: PLANNED
+Status: DONE
 Wave ID: `P5-W1`
 Source Phase: `P5`
 Source Phase Plan: `docs/plans/astronomy-p5-apod-calendar-plan.md`
@@ -23,15 +23,15 @@ producto que aceptan una fecha, sin alterar los instantes UTC de infraestructura
 
 ## Checklist
 
-- [ ] W1.1 Implementar una política inyectable basada en `TimeProvider` y resolución
+- [x] W1.1 Implementar una política inyectable basada en `TimeProvider` y resolución
   explícita `America/Argentina/Buenos_Aires`, con compatibilidad Windows/Linux y fallo
   visible si no puede resolverse.
-- [ ] W1.2 Aplicarla a `/api/apod/today` y `/api/apod/date/{date}`; preservar contrato y
+- [x] W1.2 Aplicarla a `/api/apod/today` y `/api/apod/date/{date}`; preservar contrato y
   ProblemDetails actuales.
-- [ ] W1.3 Aplicarla a crear/eliminar favoritos y a la validación de target de catálogo.
-- [ ] W1.4 Añadir pruebas deterministas antes/después de `03:00Z`, incluyendo que la fecha
+- [x] W1.3 Aplicarla a crear/eliminar favoritos y a la validación de target de catálogo.
+- [x] W1.4 Añadir pruebas deterministas antes/después de `03:00Z`, incluyendo que la fecha
   siguiente se rechaza sin llamar NASA ni cambiar favoritos.
-- [ ] W1.5 Confirmar que sesiones, cache timestamps, auth y rate limiting conservan UTC.
+- [x] W1.5 Confirmar que sesiones, cache timestamps, auth y rate limiting conservan UTC.
 
 ## Acceptance criteria
 
@@ -48,3 +48,15 @@ dotnet test backend/AstronomyExplorer.sln --filter "FullyQualifiedName~Apod|Full
 ```
 
 Ejecutar los tests de borde con `TimeProvider` fijo; no cambiar el reloj del equipo.
+
+## Implementation record
+
+- `IApodProductCalendar` resuelve explícitamente la zona IANA y su equivalente Windows;
+  no usa la zona del host y falla al inicializar si ninguna está disponible.
+- Las rutas APOD, los dos flujos de favoritos y `CatalogOptionsValidator` usan esa
+  autoridad. Los timestamps de caché y favoritos, autenticación, sesiones y rate limiting
+  siguen recibiendo el `TimeProvider` UTC existente.
+- `dotnet build backend/AstronomyExplorer.sln --no-restore` pasó. Los tests puros de
+  calendario/opciones pasaron (9). El filtro de integración APOD/favoritos quedó pendiente
+  de Docker/Testcontainers: el daemon local no estaba disponible; no se interpreta como
+  una prueba aprobada.

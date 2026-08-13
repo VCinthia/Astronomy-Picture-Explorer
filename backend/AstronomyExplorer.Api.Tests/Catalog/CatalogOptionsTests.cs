@@ -10,7 +10,8 @@ public sealed class CatalogOptionsTests
   [Fact]
   public void Validate_UnconfiguredCanonicalRange_IsValid()
   {
-    var result = new CatalogOptionsValidator(Clock).Validate(null, new CatalogOptions());
+    var result = new CatalogOptionsValidator(new ApodProductCalendar(Clock))
+      .Validate(null, new CatalogOptions());
 
     Assert.True(result.Succeeded);
   }
@@ -22,13 +23,43 @@ public sealed class CatalogOptionsTests
   [InlineData("2026-07-01", "2026-07-18")]
   public void Validate_InvalidCanonicalRange_Fails(string from, string? to)
   {
-    var result = new CatalogOptionsValidator(Clock).Validate(null, new CatalogOptions
+    var result = new CatalogOptionsValidator(new ApodProductCalendar(Clock)).Validate(null, new CatalogOptions
     {
       RequiredFrom = DateOnly.Parse(from),
       RequiredTo = to is null ? null : DateOnly.Parse(to)
     });
 
     Assert.True(result.Failed);
+  }
+
+  [Fact]
+  public void Validate_NextUtcDateBeforeArgentinaMidnight_Fails()
+  {
+    var clock = new FixedTimeProvider(
+      new DateTimeOffset(2026, 8, 13, 2, 59, 59, TimeSpan.Zero));
+
+    var result = new CatalogOptionsValidator(new ApodProductCalendar(clock)).Validate(null, new CatalogOptions
+    {
+      RequiredFrom = new DateOnly(2026, 8, 12),
+      RequiredTo = new DateOnly(2026, 8, 13)
+    });
+
+    Assert.True(result.Failed);
+  }
+
+  [Fact]
+  public void Validate_NewArgentinaDateAtMidnight_IsValid()
+  {
+    var clock = new FixedTimeProvider(
+      new DateTimeOffset(2026, 8, 13, 3, 0, 0, TimeSpan.Zero));
+
+    var result = new CatalogOptionsValidator(new ApodProductCalendar(clock)).Validate(null, new CatalogOptions
+    {
+      RequiredFrom = new DateOnly(2026, 8, 12),
+      RequiredTo = new DateOnly(2026, 8, 13)
+    });
+
+    Assert.True(result.Succeeded);
   }
 
   private sealed class FixedTimeProvider(DateTimeOffset utcNow) : TimeProvider

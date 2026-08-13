@@ -117,24 +117,79 @@ public sealed class ApodCacheEndpointTests(PostgreSqlFixture database)
   }
 
   [Fact]
-  public async Task GetToday_UsesUtcDateAndReturnsExactAppOwnedShape()
+  public async Task GetToday_BeforeArgentinaMidnight_ReturnsArgentinaDateAndExactAppOwnedShape()
   {
-    var date = new DateOnly(2025, 6, 4);
+    var date = new DateOnly(2026, 8, 12);
     await DeleteEntryAsync(date);
     var provider = new FakeNasaApodClient();
     using var factory = CreateFactory(
       provider,
-      new MutableTimeProvider(new DateTimeOffset(2025, 6, 4, 0, 5, 0, TimeSpan.Zero)));
+      new MutableTimeProvider(new DateTimeOffset(2026, 8, 13, 2, 59, 59, TimeSpan.Zero)));
     using var client = CreateClient(factory);
 
     var response = await client.GetAsync("/api/apod/today");
     using var document = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
 
     Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-    Assert.Equal("2025-06-04", document.RootElement.GetProperty("date").GetString());
+    Assert.Equal("2026-08-12", document.RootElement.GetProperty("date").GetString());
     Assert.Equal(
       ["copyright", "date", "explanation", "hdurl", "media_type", "thumbnail_url", "title", "url"],
       document.RootElement.EnumerateObject().Select(property => property.Name).Order().ToArray());
+    Assert.Equal(1, provider.CallCount);
+  }
+
+  [Fact]
+  public async Task GetToday_AtArgentinaMidnight_ReturnsNewArgentinaDate()
+  {
+    var date = new DateOnly(2026, 8, 13);
+    await DeleteEntryAsync(date);
+    var provider = new FakeNasaApodClient();
+    using var factory = CreateFactory(
+      provider,
+      new MutableTimeProvider(new DateTimeOffset(2026, 8, 13, 3, 0, 0, TimeSpan.Zero)));
+    using var client = CreateClient(factory);
+
+    var response = await client.GetAsync("/api/apod/today");
+    var entry = await response.Content.ReadFromJsonAsync<ApodEntryDto>();
+
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    Assert.Equal(date, entry?.Date);
+    Assert.Equal(1, provider.CallCount);
+  }
+
+  [Fact]
+  public async Task GetByDate_NextArgentinaDateBeforeMidnight_ReturnsStableProblemWithoutProviderCall()
+  {
+    var provider = new FakeNasaApodClient();
+    using var factory = CreateFactory(
+      provider,
+      new MutableTimeProvider(new DateTimeOffset(2026, 8, 13, 2, 59, 59, TimeSpan.Zero)));
+    using var client = CreateClient(factory);
+
+    var response = await client.GetAsync("/api/apod/date/2026-08-13");
+    using var problem = JsonDocument.Parse(await response.Content.ReadAsStringAsync());
+
+    Assert.Equal(HttpStatusCode.BadRequest, response.StatusCode);
+    Assert.Equal("invalid_apod_date", problem.RootElement.GetProperty("code").GetString());
+    Assert.Equal(0, provider.CallCount);
+  }
+
+  [Fact]
+  public async Task GetByDate_NewArgentinaDateAtMidnight_ContinuesToProvider()
+  {
+    var date = new DateOnly(2026, 8, 13);
+    await DeleteEntryAsync(date);
+    var provider = new FakeNasaApodClient();
+    using var factory = CreateFactory(
+      provider,
+      new MutableTimeProvider(new DateTimeOffset(2026, 8, 13, 3, 0, 0, TimeSpan.Zero)));
+    using var client = CreateClient(factory);
+
+    var response = await client.GetAsync($"/api/apod/date/{date:yyyy-MM-dd}");
+    var entry = await response.Content.ReadFromJsonAsync<ApodEntryDto>();
+
+    Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+    Assert.Equal(date, entry?.Date);
     Assert.Equal(1, provider.CallCount);
   }
 
