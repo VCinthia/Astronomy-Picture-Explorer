@@ -93,9 +93,17 @@ Tokens reconciliados 1:1 con Figma (`#08080f`/`#11111c`/`#191927`/`#1e1e30`, tex
 ## Post-implementation clarification (2026-07-16)
 
 El date picker/listbox y stepper indexado se diseñaron para un archivo mock acotado.
+
 P3-W10 conserva layout/accesibilidad, reemplaza chips por `input[type=date]` y hace
 prev/next por dia calendario contra backend.
 
 P3-W10 se implemento con limites UTC `1995-06-16..hoy`, stepper de dias UTC y estados
 accesibles de loading/error/retry. El patron listbox original queda como evidencia P1,
 no como contrato activo de la rama P3.
+
+## Aclaración terminal P4-W4 - decisión histórica de paleta (2026-08-12)
+
+La recomendación de proxy para la extracción Canvas era una decisión abierta de este
+momento histórico; P1-W3 documentó su resolución y las pruebas correspondientes. P3
+reemplazó después el origen mock de imágenes. Esta nota conserva el hallazgo original,
+pero evita interpretarlo como un pendiente de la UI o del despliegue actual.

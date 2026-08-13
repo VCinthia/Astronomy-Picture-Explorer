@@ -109,3 +109,10 @@ obligatorias no alteran el alcance ni los resultados registrados de P1-W1.
 P3-W10 completo despues la migracion de datos prevista: retiro el asset mock y reemplazo
 el lookup O(1) por endpoints HTTP cancelables. La diferencia pertenece a la arquitectura
 P3 y no altera este registro de implementacion P1-W1.
+
+## Aclaración terminal P4-W4 - decisiones históricas cerradas (2026-08-12)
+
+Los valores de tokens y el destino de deploy marcados como pendientes arriba eran
+dependencias explícitas de P1-W2/P1-W3 en el momento de esta wave. Esas decisiones se
+cerraron en las waves posteriores; P3 reemplazó el runtime mock. No constituyen trabajo
+pendiente ni configuración vigente de la aplicación publicada.

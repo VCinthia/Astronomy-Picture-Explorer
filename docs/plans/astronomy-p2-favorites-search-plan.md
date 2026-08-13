@@ -219,7 +219,9 @@ el layout de `ExplorerComponent`.
 - `Mobile – Home`: agregar bottom nav (Home activo)
 - `Mobile – Favorites`: agregar bottom nav (Favorites activo)
 - `Mobile – Explorer` (nuevo): agregar bottom nav (Explore activo)
-- Pendiente de ejecución: ver `docs/figma/pending-mobile-explorer.md`
+- Registro histórico: el borrador Figma asociado se conserva en
+  `docs/figma/pending-mobile-explorer.md`; P4-W4 lo archivó y no representa trabajo
+  pendiente de la aplicación publicada.
 
 ---
 
@@ -248,3 +250,11 @@ P2 conserva su diseño y evidencia historica. P3 sustituye fuentes temporales:
 - La ruta `/favorites` recibe AuthGuard cuando existe bootstrap de sesion.
 - W9 y W10 ya materializaron guard/session y APOD/search HTTP; W11 completa favoritos.
   Ninguno modifica lo que P2 entrego ni su smoke productivo historico.
+
+## Aclaración terminal P4-W4 - decisiones visuales históricas (2026-08-12)
+
+DD-02/DD-03 y el enlace al borrador Figma describen el contexto de decisión de P2, no
+un backlog activo. La navegación mobile con SVG se entregó en P2-W4; P3 migró Home,
+fecha, búsqueda y favoritos a rutas y datos reales. El archivo Figma archivado no debe
+usarse para modificar la UI actual; la autoridad de flujos es ADR-0003 y
+`docs/architecture/p3-flow-overview.md`.

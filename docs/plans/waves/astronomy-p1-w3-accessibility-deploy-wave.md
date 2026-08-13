@@ -95,3 +95,11 @@ La publicacion P2 permanece sin cambios hasta la promocion autorizada por W14.
 - El `NODE_VERSION 20` que acompañaba al deploy histórico P1/P2 deja de ser compatible
   con Angular 22. P3-W14 lo eleva a `22.22.3`, sin alterar la evidencia funcional o de
   accesibilidad de esta wave.
+
+## Aclaración terminal P4-W4 - handoff de deploy histórico (2026-08-12)
+
+Los ítems W3.6/W3.7 y sus referencias a una URL pendiente se preservan como handoff de
+2026-06-10; no son pendientes activos. P1/P2 sí llegaron a publicarse y P3 reemplazó
+posteriormente esa release por la aplicación con backend. La documentación pública actual
+es `README.md`, mientras que la trazabilidad de release P3 está en el runbook P3. Esta
+aclaración no cambia los checks, resultados, fecha ni hash originales de P1-W3.

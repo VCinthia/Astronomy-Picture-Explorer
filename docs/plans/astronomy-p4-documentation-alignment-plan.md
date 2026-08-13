@@ -1,7 +1,7 @@
 # Phase Plan P4 - Documentación pública y alineación de release
 
 Date: 2026-08-12
-Status: IN PROGRESS - P4-W1 THROUGH P4-W3 DONE
+Status: IN PROGRESS - P4-W1 THROUGH P4-W4 DONE
 Phase: `P4`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Documentation boundary: `docs/adr/0004-public-documentation-boundaries.md`
@@ -67,7 +67,7 @@ operación o seguridad.
 - [x] **R4.2** Reescribir README público y reemplazar la captura obsoleta (W2).
 - [x] **R4.3** Alinear documentación técnica y operacional P3 sin exponer datos sensibles
   (W3).
-- [ ] **R4.4** Añadir aclaraciones históricas y corroborar los flujos documentados (W4).
+- [x] **R4.4** Añadir aclaraciones históricas y corroborar los flujos documentados (W4).
 - [ ] **R4.5** Ejecutar auditoría final, smoke y promoción documental controlada (W5).
 
 ## 6. Inventario P4-W1 y responsables de acción (2026-08-12)
@@ -81,17 +81,17 @@ directos.
 | Clase | Artefactos relevantes y hallazgo actual | Responsable |
 |---|---|---|
 | Pública | `README.md` describe la experiencia P3 publicada; `screenshots/home.png` contiene una captura anónima actual de Explorer. | P4-W2 DONE; W5 vuelve a comprobar enlaces y activo. |
-| Técnica, canónica | PRD, readiness, master, plan P3, ADR-0003, flow overview, P3-W14 y P3-W15 ahora registran P3 como DONE. | P4-W3 revisa redacción, contratos y enlaces contra la implementación actual. |
-| Técnica, de apoyo | `backend/README.md`, runbooks local/deploy/setup y política de framework omiten o anteceden partes de P3, incluida recuperación de contraseña y cierre de proveedores. | P4-W3 los alinea y sanea. |
-| Operativa, saneada | `docs/deploy/p3-deploy-runbook.md` preserva evidencia fechada de smoke y el cierre P4-W1. | P4-W3 elimina detalle operativo innecesario y conserva guía segura reproducible. |
-| Histórica | Planes/waves P1/P2 y notas Figma conservan su evidencia original; la nota Figma mobile-pending contradice la UI responsive implementada. | P4-W4 añade aclaraciones terminales y valida referencias de flujo sin reescribir historia. |
+| Técnica, canónica | PRD, readiness, master, plan P3, ADR-0003, flow overview, P3-W14 y P3-W15 registran P3 como DONE. | P4-W3 DONE; W5 valida el conjunto final. |
+| Técnica, de apoyo | `backend/README.md`, runbooks local/deploy/setup y política de framework fueron alineados con P3, incluida recuperación de contraseña y cierre de proveedores. | P4-W3 DONE; W5 vuelve a revisar enlaces y límites públicos. |
+| Operativa, saneada | `docs/deploy/p3-deploy-runbook.md` preserva evidencia fechada de smoke y el cierre P4-W1. | P4-W3 DONE; W5 verifica que continúe saneada. |
+| Histórica | Planes/waves P1/P2 y notas Figma conservan su evidencia original; el borrador Figma mobile quedó archivado. | P4-W4 DONE; W5 comprueba que no reaparezcan pendientes activos. |
 | Control P4 | ADR-0004, este phase plan y las waves P4 definen el límite de documentación pública. | P4-W5 audita el conjunto final antes de promover. |
 | Local/secreta | `.env`, `.secrets/` e `IMPLEMENTATION_NOTES.md` están ignorados y no trackeados; `docs/` sigue trackeado. | W1 solo verificó; no se autoriza cambiar `.gitignore`. |
 
-Las comprobaciones cruzadas abiertas asignadas a W3/W4 incluyen el texto de límites edge
-de W15, referencias de proveedor en futuro, la separación README público/local y las
-referencias Figma P1/P2. Son únicamente tareas documentales: P4 no cambia proveedores ni
-configuración de la aplicación.
+P4-W3 y P4-W4 cerraron las comprobaciones cruzadas de límites documentales, referencias
+de proveedor en futuro, separación README público/local y referencias Figma P1/P2. W5
+verifica el conjunto completo antes de promover. Son únicamente tareas documentales: P4
+no cambia proveedores ni configuración de la aplicación.
 
 ## 7. Waves
 
@@ -100,7 +100,7 @@ configuración de la aplicación.
 | P4-W1 | P3 cutover | Evidencia post-cutover + estados P3 sincronizados + inventario ✅ |
 | P4-W2 | W1 | README público actual, captura anónima y guía local segura ✅ |
 | P4-W3 | W1 | Contratos y runbooks P3 alineados y sanitizados ✅ |
-| P4-W4 | W1 + W3 | Aclaraciones P1/P2 y revisión de flujos documentados |
+| P4-W4 | W1 + W3 | Aclaraciones P1/P2 y revisión de flujos documentados ✅ |
 | P4-W5 | W2 + W3 + W4 | Auditoría final, gates y promoción P4 |
 
 W2 y W3 pueden ser analizadas en paralelo, pero su implementación se integra de forma

@@ -1,11 +1,16 @@
-# Pending Figma write — Mobile Explorer + Bottom Nav
+# Archived Figma draft — Mobile Explorer + Bottom Nav
 
-**Status:** OBSOLETO — no ejecutar. El codigo usa glifos Unicode como iconos y debe
-reescribirse con vectores/SVG segun la regla de iconografia aprobada el 2026-07-08.
-**Acción:** regenerar Home, Explore, Favorites, search y calendar como vectores antes
-de usar `use_figma` con fileKey `miqqmNJAcF0Mbe1WizAJIu`.
+**Status:** ARCHIVED — do not execute. Este archivo conserva el borrador de Figma de
+2026-07-08 para dar contexto a P1/P2. No es una tarea pendiente ni una especificación de
+la UI publicada. P2-W4 entregó iconos SVG y navegación mobile; P3 sustituyó el mock y el
+selector de fechas por los flujos de aplicación vigentes. P4-W4 archivó el borrador sin
+reescribir su contenido histórico.
 
-## Qué hace este código
+Para contexto histórico puede consultarse [`frames.md`](frames.md). La autoridad actual
+de flujos es [`../architecture/p3-flow-overview.md`](../architecture/p3-flow-overview.md)
+y ADR-0003.
+
+## Contenido histórico del borrador
 
 1. Agrega **bottom nav** (Home ⌂ | Explore ◎ | Favorites ♥) al frame `Mobile – Home`
 2. Agrega **bottom nav** al frame `Mobile – Favorites`

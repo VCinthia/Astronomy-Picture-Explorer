@@ -1,7 +1,7 @@
 # Wave P4-W4 - Aclaraciones históricas y auditoría de flujos
 
 Date: 2026-08-12
-Status: PLANNED
+Status: DONE - 2026-08-12
 Wave ID: `P4-W4`
 Source Phase: `P4`
 Source Phase Plan: `docs/plans/astronomy-p4-documentation-alignment-plan.md`
@@ -24,13 +24,13 @@ flujos reflejan el producto P3 sin reescribir cronología ya cerrada.
 
 ## Checklist
 
-- [ ] W4.1 Identificar cada pendiente P1/P2 que quedó históricamente abierto y añadir una
+- [x] W4.1 Identificar cada pendiente P1/P2 que quedó históricamente abierto y añadir una
   aclaración terminal fechada que apunte al documento canónico P3/P4.
-- [ ] W4.2 Resolver la contradicción Figma: el pendiente de vector mobile es obsoleto y no
+- [x] W4.2 Resolver la contradicción Figma: el pendiente de vector mobile es obsoleto y no
   puede presentarse como requisito activo de la UI publicada.
-- [ ] W4.3 Verificar los flujos de visitante, fecha/búsqueda, sesión, confirmación, reset y
+- [x] W4.3 Verificar los flujos de visitante, fecha/búsqueda, sesión, confirmación, reset y
   favoritos contra las rutas/contratos actuales; ajustar sólo las narrativas que difieran.
-- [ ] W4.4 Conservar los resultados, hashes y fechas de P1/P2 como evidencia histórica;
+- [x] W4.4 Conservar los resultados, hashes y fechas de P1/P2 como evidencia histórica;
   no cambiar sus checklists de implementación para simular trabajo retrospectivo.
 
 ## Acceptance criteria
@@ -52,4 +52,12 @@ pendiente realmente activo.
 
 ## Parent plan sync
 
-- [ ] Marcar R4.4 DONE sin modificar evidencia histórica previa a P4.
+- [x] Marcar R4.4 DONE sin modificar evidencia histórica previa a P4.
+
+## Completion record
+
+- El borrador Figma mobile fue archivado explícitamente; sus detalles siguen disponibles
+  como contexto histórico, no como una orden de ejecución.
+- Las aclaraciones P1/P2 conservan fechas, hashes, resultados y checklists originales.
+- La auditoría de rutas, endpoints y pruebas quedó registrada en el flow overview; no
+  encontró contradicciones funcionales que requieran cambios de aplicación.

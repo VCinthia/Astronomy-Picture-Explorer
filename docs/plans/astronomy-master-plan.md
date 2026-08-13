@@ -279,7 +279,7 @@ El grafo normativo esta en P3 y `p3-flow-overview.md`.
 | W1 | Verificación post-cutover P3, estados e inventario documental ✅ |
 | W2 | README público actual y captura anónima ✅ |
 | W3 | Documentación técnica/operativa P3 alineada ✅ |
-| W4 | Aclaraciones P1/P2 y revisión de flujos documentados |
+| W4 | Aclaraciones P1/P2 y revisión de flujos documentados ✅ |
 | W5 | Auditoría documental, gates y promoción P4 |
 
 La autoridad de límites públicos/operativos es ADR-0004.

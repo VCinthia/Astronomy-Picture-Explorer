@@ -520,3 +520,22 @@ El texto inmediatamente anterior es evidencia previa al cutover. P4-W1 confirmó
 promoción a `main` en `48ac901`, el uso de `main` por las dos superficies de producción y
 el smoke posterior PASS para health y catálogo same-origin. P3 queda `DONE`; la revisión
 de esta explicación técnica y de sus límites de documentación continúa en P4-W3.
+
+## Auditoría de flujos P4-W4 (2026-08-12)
+
+P4-W4 contrastó esta narrativa con `src/app/app.routes.ts`, los endpoint mappers de
+`Auth`, `Apod` y `Favorites`, y sus pruebas de componente, servicio y endpoint. La
+revisión encontró los siguientes flujos alineados; los nombres de ruta son relativos al
+origen público y no describen infraestructura operativa.
+
+| Flujo | Ruta de interfaz y contrato | Evidencia revisada | Resultado |
+|---|---|---|---|
+| Visita, Home, fecha y búsqueda | `/` redirige a `/home`; Home consulta today y Explorer consulta fecha o búsqueda sobre `/api/apod/*`. | `app.routes.ts`, `AstronomyService`, pruebas Home/Explorer/servicio APOD y endpoints APOD. | Alineado. |
+| Registro y confirmación | `/register` solicita cuenta; `/confirm-email` valida parámetros, limpia la historia y confirma solo mediante POST. | `AccountEndpoints`, `ConfirmEmailComponent` y sus pruebas. | Alineado; no inicia sesión automáticamente. |
+| Sesión y acceso protegido | Bootstrap intenta refresh una vez; `/favorites` espera el guard y conserva retorno interno; login y logout actualizan sesión en memoria. | `auth.guard`, `AuthService`, interceptor y sus pruebas. | Alineado. |
+| Recuperación de contraseña | `/forgot-password` solicita recuperación con respuesta genérica; `/reset-password` conserva la capacidad solo en memoria y vuelve a Login tras éxito. | `AccountEndpoints`, componentes forgot/reset y sus pruebas. | Alineado; el reset invalida sesiones renovables. |
+| Favoritos | Cards y `/favorites` usan la colección autenticada; listar, agregar y borrar usan `/api/favorites`. | `FavoriteEndpoints`, `FavoritesService` y pruebas de componente/endpoint. | Alineado; no usa el almacenamiento local de P2. |
+
+No se modificó el comportamiento de la aplicación durante esta auditoría. La evidencia
+dinámica de release permanece en el runbook P3; este registro solo cierra la revisión de
+coherencia documental requerida por P4-W4.
