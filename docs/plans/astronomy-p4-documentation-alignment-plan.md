@@ -1,7 +1,7 @@
 # Phase Plan P4 - Documentación pública y alineación de release
 
 Date: 2026-08-12
-Status: IN PROGRESS - P4-W1 THROUGH P4-W4 DONE
+Status: READY FOR PROMOTION - P4-W1 THROUGH P4-W5 audit complete; fast-forward and post-promotion smoke pending
 Phase: `P4`
 Source master plan: `docs/plans/astronomy-master-plan.md`
 Documentation boundary: `docs/adr/0004-public-documentation-boundaries.md`
@@ -68,7 +68,9 @@ operación o seguridad.
 - [x] **R4.3** Alinear documentación técnica y operacional P3 sin exponer datos sensibles
   (W3).
 - [x] **R4.4** Añadir aclaraciones históricas y corroborar los flujos documentados (W4).
-- [ ] **R4.5** Ejecutar auditoría final, smoke y promoción documental controlada (W5).
+- [x] **R4.5** Ejecutar auditoría final y smoke documental controlado (W5); P4 queda
+  `READY FOR PROMOTION`. El fast-forward y su smoke posterior son el gate terminal del
+  orquestador antes de marcar P4 `DONE`.
 
 ## 6. Inventario P4-W1 y responsables de acción (2026-08-12)
 
@@ -101,7 +103,7 @@ no cambia proveedores ni configuración de la aplicación.
 | P4-W2 | W1 | README público actual, captura anónima y guía local segura ✅ |
 | P4-W3 | W1 | Contratos y runbooks P3 alineados y sanitizados ✅ |
 | P4-W4 | W1 + W3 | Aclaraciones P1/P2 y revisión de flujos documentados ✅ |
-| P4-W5 | W2 + W3 + W4 | Auditoría final, gates y promoción P4 |
+| P4-W5 | W2 + W3 + W4 | Auditoría final y gates completados; READY FOR PROMOTION ✅ |
 
 W2 y W3 pueden ser analizadas en paralelo, pero su implementación se integra de forma
 serial para mantener un único conjunto documental coherente.
@@ -118,3 +120,13 @@ serial para mantener un único conjunto documental coherente.
 - Build/test aplicables y el smoke público same-origin pasan; enlaces y screenshot del
   README son válidos.
 - P4 se promueve en un único fast-forward desde `codex/p4-integration` a `main`.
+
+## P4-W5 audit readiness (2026-08-12)
+
+La auditoría final sobre el baseline integrado `30b3ad4` pasó revisión de README/captura,
+enlaces relativos, estados canónicos, flujos, clasificación ADR-0004, secretos y smoke
+same-origin. Frontend build y 128/128 pruebas ChromeHeadless pasaron. El suite backend
+requiere Docker/Testcontainers: con Docker Desktop detenido, 59 pruebas pasaron y 119
+quedaron bloqueadas por el entorno local antes de ejecutar assertions; la configuración
+Compose sí validó. El detalle sanitizado y los warnings conocidos están en P4-W5. P4 queda
+`READY FOR PROMOTION`; no se declara `DONE` hasta el fast-forward y la revalidación pública.

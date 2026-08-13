@@ -2,7 +2,7 @@
 
 Date: 2026-06-25
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 IN PROGRESS
+Status: P1 DONE; P2 DONE in production; P3 DONE in production; P4 READY FOR PROMOTION
 Owner: `CinthiaRV`
 
 ## 1. Goal
@@ -247,7 +247,8 @@ smoke local antes de que W14 use un sender real.
 - [x] **P2 - Favorites/search local**: `docs/plans/astronomy-p2-favorites-search-plan.md`.
 - [x] **P3 - Backend/auth/persistence/deploy** (cutover y smoke post-release verificados):
   `docs/plans/astronomy-p3-backend-plan.md`.
-- [ ] **P4 - Documentación pública/alineación de release**:
+- [ ] **P4 - Documentación pública/alineación de release**: auditoría completa y
+  `READY FOR PROMOTION`; el fast-forward y smoke posterior permanecen como gate terminal.
   `docs/plans/astronomy-p4-documentation-alignment-plan.md`.
 
 ## 7. P3 wave map
@@ -280,7 +281,7 @@ El grafo normativo esta en P3 y `p3-flow-overview.md`.
 | W2 | README público actual y captura anónima ✅ |
 | W3 | Documentación técnica/operativa P3 alineada ✅ |
 | W4 | Aclaraciones P1/P2 y revisión de flujos documentados ✅ |
-| W5 | Auditoría documental, gates y promoción P4 |
+| W5 | Auditoría documental y gates completos; READY FOR PROMOTION ✅ |
 
 La autoridad de límites públicos/operativos es ADR-0004.
 
@@ -326,3 +327,11 @@ La afirmación precedente describe el estado histórico anterior a la promoción
 confirmó que las superficies de producción usan `main` y el smoke posterior de health y
 catálogo same-origin pasó. P3 queda `DONE`; P4 conserva la auditoría documental como
 fase independiente.
+
+## Estado de auditoría P4-W5 (2026-08-12)
+
+P4-W5 pasó la revisión documental, build/frontend tests, configuración Compose y smoke
+público same-origin. El suite backend quedó parcialmente bloqueado porque Docker Desktop
+no estaba disponible para Testcontainers; no registró una aserción de producto fallida y
+debe repetirse al restaurar ese prerrequisito local. P4 queda `READY FOR PROMOTION`; no
+se marca `DONE` hasta el fast-forward a `main` y su smoke posterior.

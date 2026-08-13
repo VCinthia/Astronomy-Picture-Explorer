@@ -2,7 +2,7 @@
 
 Date: 2026-07-08
 Last revised: 2026-08-12
-Status: P1 DONE; P2 DONE; P3 DONE in production; P4 IN PROGRESS
+Status: P1 DONE; P2 DONE; P3 DONE in production; P4 READY FOR PROMOTION
 
 ## Vision
 
@@ -268,3 +268,12 @@ P4-W3 alineó los contratos y runbooks P3 con las rutas y pruebas finales, inclu
 recuperación de contraseña. La evidencia histórica conserva su fecha y resultado, pero la
 documentación activa usa descripciones de arquitectura y resultados sanitizados en lugar de
 configuración de proveedor, orígenes directos o mecanismos de protección operativa.
+
+## Estado de auditoría P4-W5 (2026-08-12)
+
+P4-W5 verificó que la documentación describe el producto P3 publicado sin exponer datos
+operativos, y que README, flujos, planes y evidencias coinciden. Build, pruebas frontend,
+configuración Compose y smoke same-origin pasaron. Las pruebas backend que usan
+Testcontainers deben repetirse con Docker Desktop disponible; el bloqueo local no reveló
+una aserción funcional fallida. P4 queda `READY FOR PROMOTION` hasta que el orquestador
+realice el fast-forward a `main` y repita el smoke público.

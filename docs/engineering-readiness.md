@@ -1,7 +1,7 @@
 # Engineering Readiness - Astronomy Picture Explorer
 
 Date: 2026-08-12
-Status: P2 DONE in production; P3 DONE in production; P4 IN PROGRESS
+Status: P2 DONE in production; P3 DONE in production; P4 READY FOR PROMOTION
 
 ## Verdict
 
@@ -379,8 +379,17 @@ recovery donde faltaba y saneó los runbooks/documentos técnicos conforme ADR-0
 evidencia histórica conserva sus fechas y resultados, pero no funciona como una guía para
 recrear configuración productiva.
 
+## P4-W5 audit readiness (2026-08-12)
+
+La auditoría final verificó README/captura, enlaces locales, estados P3/P4, flujos,
+límites ADR-0004 y smoke same-origin. Build y 128/128 pruebas frontend pasaron. El suite
+backend no pudo completar sus pruebas Testcontainers con Docker Desktop detenido: 59
+pasaron y 119 quedaron bloqueadas antes de ejecutar assertions. También se registró una
+advertencia NU1903 en una dependencia transitiva de pruebas; no altera el artefacto
+desplegado y queda para mantenimiento de dependencias. P4 queda `READY FOR PROMOTION`.
+
 ## Recommended next step
 
-P4-W4 debe añadir las aclaraciones históricas P1/P2 y corroborar sus flujos documentados.
-La fase P4 y sus dependencias viven en
-[`docs/plans/astronomy-p4-documentation-alignment-plan.md`](plans/astronomy-p4-documentation-alignment-plan.md).
+El orquestador debe fast-forward `codex/p4-integration` a `main`, hacer push y repetir el
+smoke público. Solo entonces P4 puede marcarse `DONE`. La evidencia detallada vive en
+[`P4-W5`](plans/waves/astronomy-p4-w5-documentation-assurance-wave.md).
